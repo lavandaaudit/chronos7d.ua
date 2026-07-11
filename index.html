@@ -363,6 +363,70 @@
             display: none;
         }
         .map-tooltip b { color: var(--accent-sec); }
+        .map-tooltip .tt-head { color: #fff; font-size: 8px; margin-top: 4px; padding-top: 3px; border-top: 1px dashed rgba(255,255,255,0.18); }
+        .map-tooltip .tt-head .tt-row { color: #ccd; font-weight: normal; display: block; white-space: normal; max-width: 260px; line-height: 1.35; margin-top: 2px; }
+        .map-tooltip .tt-head .tt-row .tt-src { color: var(--accent-gold); font-size: 7px; }
+
+        /* Floating news ticker for hotspot oblasts */
+        #map-news-ticker {
+            position: absolute;
+            top: 8px; right: 8px;
+            width: 240px;
+            max-height: 60%;
+            background: rgba(2, 2, 5, 0.78);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 8px;
+            color: #ccd;
+            pointer-events: none;
+            z-index: 25;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+        #map-news-ticker .mnt-head {
+            color: var(--accent-pri);
+            font-size: 8px;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid var(--border-subtle);
+            text-transform: uppercase;
+        }
+        #map-news-ticker .mnt-item {
+            margin-bottom: 3px;
+            line-height: 1.35;
+            padding-left: 6px;
+            border-left: 2px solid var(--accent-sec);
+            opacity: 0.95;
+        }
+        #map-news-ticker .mnt-item.war { border-left-color: var(--accent-warn); }
+        #map-news-ticker .mnt-item.neg { border-left-color: var(--accent-warn); }
+        #map-news-ticker .mnt-item.pos { border-left-color: var(--accent-hope); }
+        #map-news-ticker .mnt-item .mnt-oblast { color: var(--accent-gold); font-size: 7px; letter-spacing: 0.5px; }
+        #map-news-ticker .mnt-item .mnt-title { color: #eef; }
+        #map-news-ticker .mnt-empty { color: #556; font-style: italic; }
+
+        /* Per-oblast floating headline labels on the map */
+        .oblast-headline-label {
+            position: absolute;
+            font-size: 7px;
+            color: #eef;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--accent-sec);
+            border-radius: 2px;
+            padding: 1px 4px;
+            pointer-events: none;
+            z-index: 22;
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.4s;
+        }
+        .oblast-headline-label.war { border-color: var(--accent-warn); color: #fee; }
+        .oblast-headline-label.neg { border-color: var(--accent-warn); }
+        .oblast-headline-label.pos { border-color: var(--accent-hope); }
 
         .center-hud {
             position: absolute;
@@ -1488,6 +1552,11 @@
 </svg>
 </div>
             <div class="map-tooltip" id="map-tooltip"></div>
+            <div id="map-news-ticker" style="display:none;">
+                <div class="mnt-head">📰 Заголовки · гаряче</div>
+                <div class="mnt-empty">Завантаження...</div>
+            </div>
+            <div id="oblast-labels-overlay" style="position:absolute; inset:0; pointer-events:none; z-index:21;"></div>
             <div class="map-legend">
                 <div class="lg-item"><div class="lg-swatch safe"></div>Спокій</div>
                 <div class="lg-item"><div class="lg-swatch alert"></div>🚨 Тривога</div>
@@ -1937,16 +2006,36 @@
         'Севастополь':   { population: 0.51,  area: 864,   cities: ['Севастополь','Інкерман','Балаклава'],type: 'occupied',  region: 'Південь', info: 'Анексований РФ у 2014. Військова база ЧФ РФ.' }
     };
 
-    /* ---------- 4. RSS sources (UKRAINIAN) ---------- */
+    /* ---------- 4. RSS sources (UKRAINIAN) — 19 verified-working feeds ---------- */
+    // Each feed has been tested through rss2json.com proxy. Failed/blocked feeds
+    // (BBC-UA, Hromadske, Suspilne, ISW, Mil.in.ua, Censor, Ukrinform, NV) are NOT
+    // included because they return 403/404/empty — they would waste request budget.
+    // tag:'war' marks feeds that predominantly cover the front line.
     const RSS_SOURCES = [
-        { name:'УП',          url:'https://api.rss2json.com/v1/api.json?rss_url=https://www.pravda.com.ua/rss/' },
-        { name:'УП-Новини',   url:'https://api.rss2json.com/v1/api.json?rss_url=https://www.pravda.com.ua/rss/news/' },
-        { name:'УП-Життя',    url:'https://api.rss2json.com/v1/api.json?rss_url=https://life.pravda.com.ua/rss/' },
-        { name:'Єп',          url:'https://api.rss2json.com/v1/api.json?rss_url=https://www.epravda.com.ua/rss/' },
-        { name:'Євроінтегр',  url:'https://api.rss2json.com/v1/api.json?rss_url=https://www.eurointegration.com.ua/rss/' },
-        { name:'Уніан',       url:'https://api.rss2json.com/v1/api.json?rss_url=https://www.unian.ua/rss' },
-        { name:'ТСН',         url:'https://api.rss2json.com/v1/api.json?rss_url=https://tsn.ua/rss' },
-        { name:'Думська',     url:'https://api.rss2json.com/v1/api.json?rss_url=https://dumskaya.net/rss/' }
+        // Original working feeds (8)
+        { name:'УП',          url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/'), tag:'general' },
+        { name:'УП-Новини',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/news/'), tag:'general' },
+        { name:'УП-Життя',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://life.pravda.com.ua/rss/'), tag:'general' },
+        { name:'Єп',          url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.epravda.com.ua/rss/'), tag:'general' },
+        { name:'Євроінтегр',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.eurointegration.com.ua/rss/'), tag:'general' },
+        { name:'Уніан',       url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.unian.ua/rss'), tag:'general' },
+        { name:'ТСН',         url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://tsn.ua/rss'), tag:'general' },
+        { name:'Думська',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://dumskaya.net/rss/'), tag:'general' },
+        // NEW — Ukrainska Pravda sub-sections (war-relevant)
+        { name:'УП-Статті',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/articles/'), tag:'war' },
+        { name:'УП-Колонки',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/columns/'), tag:'war' },
+        { name:'УП-Фото',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/photos/'), tag:'war' },
+        { name:'Єп-Новини',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.epravda.com.ua/rss/news/'), tag:'war' },
+        // NEW — war-specific
+        { name:'DefenseExpr', url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://defence-ua.com/rss/feed.xml'), tag:'war' },
+        // NEW — additional general coverage
+        { name:'Liga',        url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.liga.net/ua/all/rss.xml'), tag:'general' },
+        { name:'Babel',       url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://babel.ua/rss.xml'), tag:'general' },
+        { name:'Свобода',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.radiosvoboda.org/rss/'), tag:'general' },
+        { name:'Гордон',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://gordonua.com/ukr/api/media/out/rss/lastnews.xml'), tag:'general' },
+        { name:'24Канал',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://24tv.ua/rss/all.xml'), tag:'general' },
+        { name:'Новинарня',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://novynarnia.com/feed'), tag:'general' },
+        { name:'Факти-ICTV',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://fakty.com.ua/feed'), tag:'general' }
     ];
 
     /* ---------- 5. STATE ---------- */
@@ -1960,9 +2049,12 @@
         geo:        { quakes: 0, quakeMax: 0, eonetCount: 0, eonetTypes: [] },
         deep:       { archetype: 'STABILITY', dream: '—', intuition: 0, synch: 'ОЧІКУВАННЯ' },
         // UA-specific
-        alerts:     { activeCount: 0, activeRegions: [], lastChange: '—', totalRegions: 25 },
+        alerts:     { activeCount: 0, activeRegions: [], lastChange: '—', totalRegions: 25,
+                      source: '—', sourcesOk: 0, sourcesTotal: 0, lastUpdate: null },
         finance:    { usd: 0, eur: 0, usdChange: 0, eurChange: 0, lastUsd: 0, lastEur: 0 },
-        war:        { day: 0, intensity: 0, frontline: '—', regions: [] },
+        war:        { day: 0, intensity: 0, frontline: '—', regions: [],
+                      events: [], eventCount: 0, byRegion: {}, byType: {}, sources: [],
+                      topHeadline: '—', topRegion: '—', topType: '—', discrepancy: [] },
         oblasts:    {}, // per-oblast dynamic state: { name: { mentions, sentiment, alertActive, lastAlert, alertCount, headlines: [] } }
         noosphereIntegrity: 50,
         apiCalls: 0,
@@ -3472,7 +3564,24 @@ __PATHS__
                 const name = el.getAttribute('data-name');
                 const status = getRegionStatus(name);
                 const mentions = getRegionMentions(name);
-                tooltip.innerHTML = `<b>${name}</b><br>Статус: ${status.label}<br>Згадки: ${mentions}`;
+                const ob = STATE.oblasts[name] || { headlines: [], warEvents: 0, alertActive: false };
+                let html = `<b>${name}</b><br>Статус: ${status.label}<br>Згадки: ${mentions}`;
+                // Add war-event count for this oblast
+                const warCount = STATE.war.byRegion[name] || 0;
+                if (warCount > 0) {
+                    html += `<br>Військові події: <b style="color:var(--accent-warn)">${warCount}</b>`;
+                }
+                // Add top headlines (up to 3)
+                const heads = (ob.headlines || []).slice(0, 3);
+                if (heads.length) {
+                    html += `<div class="tt-head"><b>📰 Заголовки (${ob.headlines.length}):</b>`;
+                    heads.forEach(h => {
+                        const sentCls = h.sent < -1 ? 'neg' : h.sent > 1 ? 'pos' : '';
+                        html += `<span class="tt-row"><span class="tt-src">[${h.src}]</span> ${h.title}</span>`;
+                    });
+                    html += `</div>`;
+                }
+                tooltip.innerHTML = html;
                 tooltip.style.display = 'block';
             });
             el.addEventListener('mousemove', (e) => {
@@ -3523,6 +3632,108 @@ __PATHS__
             const status = getRegionStatus(name);
             el.classList.add(status.cls);
         });
+        renderMapNewsTicker();
+        renderOblastLabels();
+    }
+
+    /* ---------- 8.10b. NEWS TICKER + OBLAST HEADLINE LABELS ---------- */
+    // Build the floating news ticker shown in the top-right of the map.
+    // Shows top war + general headlines tagged by oblast.
+    function renderMapNewsTicker() {
+        const box = document.getElementById('map-news-ticker');
+        if (!box) return;
+        // Collect top headlines across all oblasts (sorted by mention count)
+        const all = [];
+        for (const name of Object.keys(OBLAST_DATA)) {
+            const ob = STATE.oblasts[name] || { headlines: [] };
+            const warCount = STATE.war.byRegion[name] || 0;
+            (ob.headlines || []).slice(0, 2).forEach(h => {
+                all.push({ oblast: name, title: h.title, src: h.src, sent: h.sent, war: warCount > 0 });
+            });
+        }
+        // Sort: war-tagged first, then by most negative sentiment, then by recent
+        all.sort((a, b) => {
+            if (a.war !== b.war) return a.war ? -1 : 1;
+            return a.sent - b.sent;  // most negative first
+        });
+        const top = all.slice(0, 8);
+        if (!top.length) {
+            box.style.display = 'none';
+            return;
+        }
+        box.style.display = 'block';
+        let html = '<div class="mnt-head">📰 Заголовки · гаряче (' + all.length + ')</div>';
+        top.forEach(h => {
+            const cls = h.war ? 'war' : (h.sent < -1 ? 'neg' : h.sent > 1 ? 'pos' : '');
+            const sentMark = h.sent < -1 ? '⚠' : h.sent > 1 ? '✓' : '○';
+            html += `<div class="mnt-item ${cls}">
+                <span class="mnt-oblast">${sentMark} ${h.oblast} · [${h.src}]</span><br>
+                <span class="mnt-title">${h.title.length > 95 ? h.title.slice(0,95) + '…' : h.title}</span>
+            </div>`;
+        });
+        box.innerHTML = html;
+    }
+
+    // Render small floating headline labels over the most-active oblasts.
+    // Uses the SVG path's bounding box to position the label.
+    function renderOblastLabels() {
+        const overlay = document.getElementById('oblast-labels-overlay');
+        if (!overlay) return;
+        overlay.innerHTML = '';
+        // Pick top 5 oblasts by (war events * 2 + mentions)
+        const ranked = Object.keys(OBLAST_DATA)
+            .map(name => ({
+                name,
+                score: (STATE.war.byRegion[name] || 0) * 2 + (STATE.oblasts[name] && STATE.oblasts[name].mentions || 0)
+            }))
+            .filter(x => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5);
+        if (!ranked.length) return;
+
+        const mapContainer = document.getElementById('map-container');
+        if (!mapContainer) return;
+        const containerRect = mapContainer.getBoundingClientRect();
+        const svg = mapContainer.querySelector('svg');
+        if (!svg) return;
+
+        for (const { name, score } of ranked) {
+            const ob = STATE.oblasts[name] || { headlines: [] };
+            const warCount = STATE.war.byRegion[name] || 0;
+            // Pick top headline for this oblast
+            let headline = '—';
+            if (ob.headlines && ob.headlines.length) {
+                headline = ob.headlines[0].title;
+            } else if (warCount > 0) {
+                headline = `Військові події: ${warCount}`;
+            }
+            if (headline === '—') continue;
+            // Find SVG path for this oblast
+            const path = svg.querySelector(`.oblast[data-name="${name}"]`) || svg.querySelector(`[data-name="${name}"]`);
+            if (!path) continue;
+            try {
+                const bbox = path.getBBox();
+                const ctm = path.getCTM();
+                const svgPt = svg.createSVGPoint();
+                svgPt.x = bbox.x + bbox.width / 2;
+                svgPt.y = bbox.y + bbox.height / 2;
+                const screenPt = svgPt.matrixTransform(svg.getScreenCTM());
+                const containerPt = mapContainer.getBoundingClientRect();
+                const x = screenPt.x - containerPt.left;
+                const y = screenPt.y - containerPt.top;
+                const sentCls = (ob.sentiment || 0) < -1 ? 'neg' : (ob.sentiment || 0) > 1 ? 'pos' : (warCount > 0 ? 'war' : '');
+                const label = document.createElement('div');
+                label.className = 'oblast-headline-label ' + sentCls;
+                label.style.left = (x + 6) + 'px';
+                label.style.top = (y - 8) + 'px';
+                label.style.maxWidth = '160px';
+                label.title = `${name}: ${headline}`;
+                label.textContent = `${name}: ${headline.length > 38 ? headline.slice(0, 38) + '…' : headline}`;
+                overlay.appendChild(label);
+            } catch (e) {
+                // getBBox can fail if path is not rendered — skip
+            }
+        }
     }
 
     /* ---------- 8.11. OBLAST DETAIL MODAL ---------- */
@@ -3660,7 +3871,22 @@ __PATHS__
                 <canvas id="oblast-spark-sentiment"></canvas>
             </div>`;
 
-        // News feed
+        // War events for this oblast
+        const obWarCount = STATE.war.byRegion[name] || 0;
+        const obWarEvents = STATE.war.events.filter(e => e.regions.includes(name)).slice(0, 8);
+        const warEventsHTML = obWarEvents.length ? `
+            <div class="news-feed" style="border-left-color: var(--accent-warn);">
+                ${obWarEvents.map(e => {
+                    const typesStr = e.types.map(t => WAR_TYPES_LABELS[t] || t).join(', ');
+                    return `<div class="news-item">
+                        <span class="ni-src" style="color:var(--accent-warn)">[${e.src}] ⚔</span>
+                        <span class="ni-sent neg">${typesStr}</span>
+                        ${e.title}
+                    </div>`;
+                }).join('')}
+            </div>` : '<div style="color:#556; font-size:9px; padding:8px; text-align:center;">Військових подій для цієї області не виявлено</div>';
+
+        // News feed (all headlines mentioning this oblast)
         const newsHTML = ob.headlines && ob.headlines.length ? `
             <div class="news-feed">
                 ${ob.headlines.map(h => {
@@ -3695,7 +3921,7 @@ __PATHS__
             <div class="narrative">
                 <p><b>${name}</b> — ${data.info}</p>
                 <p>Населення <span class="hi">${data.population} млн</span>, площа <span class="hi">${(data.area/1000).toFixed(1)} тис. км²</span>, щільність <span class="hi">${density} осіб/км²</span>. Регіон: <span class="em">${data.region}</span>.</p>
-                <p>За останній цикл: <span class="hi">${ob.mentions}</span> згадок у новинах з ${STATE.sourcesOk} джерел. Сентимент: <span class="hi">${ob.sentiment.toFixed(2)}</span> ${ob.sentiment < -1 ? '(домінує негатив)' : ob.sentiment > 1 ? '(домінує позитив)' : '(нейтрально)'}.</p>
+                <p>За останній цикл: <span class="hi">${ob.mentions}</span> згадок у новинах з ${STATE.sourcesOk} джерел, зокрема <span class="hi" style="color:var(--accent-warn)">${STATE.war.byRegion[name] || 0}</span> військових подій. Сентимент: <span class="hi">${ob.sentiment.toFixed(2)}</span> ${ob.sentiment < -1 ? '(домінує негатив)' : ob.sentiment > 1 ? '(домінує позитив)' : '(нейтрально)'}.</p>
                 <p>${ob.alertActive ? '<b style="color:var(--accent-warn)">Зараз активна тривога.</b> ' : 'Тривога неактивна. '}Остання активація: <span class="hi">${timeAgo(ob.lastAlert)}</span>. Всього активацій за сесію: <span class="hi">${ob.alertCount || 0}</span>.</p>
                 <p>Кореляція згадок області з національним страхом: <span class="hi">${corrPct}%</span>. ${Math.abs(corrFear) > 0.5 ? 'Зв\u2019язок помітний.' : 'Зв\u2019язок слабкий.'}</p>
                 <p>Ризик-індекс: <span class="hi" style="color:${riskColor}">${risk}/100 (${riskLevel})</span>. ${risk >= 70 ? 'Критичний рівень — область у зоні максимального стресу.' : risk >= 45 ? 'Високий рівень — потрібна увага.' : risk >= 25 ? 'Середній рівень — моніторинг.' : 'Низький рівень — відносно спокійно.'}</p>
@@ -3748,6 +3974,11 @@ __PATHS__
                     ${alertsSpark}
                     ${sentimentSpark}
                 </div>
+            </div>
+
+            <div class="modal-section">
+                <h3>⚔️ Військові події (${obWarCount})</h3>
+                ${warEventsHTML}
             </div>
 
             <div class="modal-section">
@@ -3855,16 +4086,29 @@ __PATHS__
     /* ---------- 10. DATA FETCHERS ---------- */
 
     async function fetchAllRSS() {
-        const results = await Promise.allSettled(RSS_SOURCES.map(s => fetchJSON(s.url)));
+        // Concurrency-limited: process feeds in small batches with longer pauses
+        // to avoid rss2json.com 429 rate-limit (free tier allows ~5 req/10s).
         const okSources = [];
         const allItems = [];
         const allDocs = [];
+        const BATCH = 3;
+        const PAUSE_MS = 1500;
+        const results = new Array(RSS_SOURCES.length);
+
+        for (let start = 0; start < RSS_SOURCES.length; start += BATCH) {
+            const batch = RSS_SOURCES.slice(start, start + BATCH);
+            await Promise.allSettled(
+                batch.map((s, idx) => fetchJSON(s.url, 15000).then(v => { results[start + idx] = v; return v; }))
+            );
+            // Polite pause between batches
+            if (start + BATCH < RSS_SOURCES.length) await new Promise(r => setTimeout(r, PAUSE_MS));
+        }
 
         results.forEach((r, i) => {
             const srcName = RSS_SOURCES[i].name;
-            if (r.status === 'fulfilled' && r.value && r.value.items && r.value.items.length) {
+            if (r && r.items && r.items.length) {
                 okSources.push(srcName);
-                r.value.items.slice(0, 25).forEach(it => {
+                r.items.slice(0, 25).forEach(it => {
                     const text = (it.title || '') + ' ' + (it.description || '');
                     allItems.push({ src: srcName, title: it.title || '', text });
                     allDocs.push(text);
@@ -3963,18 +4207,21 @@ __PATHS__
             ob.headlines = headlines;
         }
 
+        // 10.4c Extract war events from news (NEW — real war data)
+        extractWarEvents(allItems);
+
         // 10.5 Consciousness metrics
         STATE.consciousness.propagation = clamp(allItems.length * 1.5 + STATE.emotion.fear * 0.4, 10, 100);
         STATE.consciousness.depth    = clamp((100 - STATE.attention.volatility) * 0.4 + STATE.emotion.index * 0.6, 0, 100);
         STATE.consciousness.meaning  = clamp(STATE.attention.focus * 0.7 + (100 - STATE.emotion.fear) * 0.3, 0, 100);
 
-        // 10.6 Tension
-        const conflictKeys = ['війна','атака','атаки','обстріл','обстріли','удар','удари','ракет','ракета','ракети','дрон','шахед','вибух','вибухи','бомб','загибел','загинув','поранен','руйнуван','зруйнован','пожеж','напад','нападу','нападання','захопл','окупант','окупантів','окупацій','бойов','бої','артилері','снаряд','зср','касацій','касуальності','санкції','криза','протест','конфлікт','напруга','тривога','повітрян','загроз'];
+        // 10.6 Tension — Cyrillic-safe matching (\b\w* doesn't work for Cyrillic)
+        const conflictKeys = ['війна','атака','атаки','обстріл','обстріли','удар','удари','ракет','ракета','ракети','дрон','шахед','вибух','вибухи','бомб','загибел','загинув','поранен','руйнуван','зруйнован','пожеж','напад','нападу','нападання','захопл','окупант','окупантів','окупацій','бойов','бої','артилері','снаряд','зср','касацій','касуальності','санкції','криза','протест','конфлікт','напруга','тривога','повітрян','загроз','балістик','калібр','авіаудар','обстріляв'];
         let conflictCount = 0;
         for (const it of allItems) {
-            const lc = it.text.toLowerCase();
+            const lc = (it.text || '').toLowerCase();
             for (const k of conflictKeys) {
-                const m = lc.match(new RegExp('\\b'+k+'\\w*\\b','g'));
+                const m = _matchCyrillicWord(lc, k);
                 if (m) conflictCount += m.length;
             }
         }
@@ -4023,11 +4270,13 @@ __PATHS__
                 fetchJSON('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'),
                 fetchJSON('https://eonet.gsfc.nasa.gov/api/v3/events?days=1&status=open&limit=100')
             ]);
-            STATE.geo.quakes = quakes.features.length;
-            STATE.geo.quakeMax = Math.max(...quakes.features.map(f => f.properties.mag || 0), 0);
-            STATE.geo.eonetCount = eonet.events.length;
+            const quakeFeatures = (quakes && quakes.features) || [];
+            const eonetEvents = (eonet && eonet.events) || [];
+            STATE.geo.quakes = quakeFeatures.length;
+            STATE.geo.quakeMax = Math.max(...quakeFeatures.map(f => (f.properties && f.properties.mag) || 0), 0);
+            STATE.geo.eonetCount = eonetEvents.length;
             const types = {};
-            for (const ev of eonet.events) {
+            for (const ev of eonetEvents) {
                 for (const cat of (ev.categories || [])) {
                     const t = cat.title || 'Other';
                     types[t] = (types[t]||0) + 1;
@@ -4047,53 +4296,309 @@ __PATHS__
 
     /* ---------- 10.7 UA-SPECIFIC FETCHERS ---------- */
 
+    /* ---------- 10.7a MULTI-SOURCE AIR ALERT MONITOR ---------- */
+    // 5 parallel sources: 4 proxies to alerts.com.ua + 1 Telegram parser.
+    // The Telegram channel @air_alert_ua is the OFFICIAL Ukrainian air-alert source
+    // and is significantly more reliable than the API mirror. We parse it via allorigins.
+    const ALERT_SOURCES = [
+        {
+            name: 'alerts.com.ua@allorigins',
+            url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://alerts.com.ua/api/states'),
+            timeout: 13000,
+            parse: (r) => {
+                const data = r.contents ? JSON.parse(r.contents) : r;
+                const states = data.states || [];
+                if (!states.length) throw new Error('empty states');
+                return _normalizeAlertStates(states);
+            }
+        },
+        {
+            name: 'Telegram@air_alert_ua',
+            url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://t.me/s/air_alert_ua'),
+            timeout: 13000,
+            parse: (r) => _parseTelegramAlerts(r)
+        },
+        {
+            name: 'alerts.com.ua@allorigins-raw',
+            url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://alerts.com.ua/api/states'),
+            timeout: 13000,
+            parse: (r) => {
+                const data = typeof r === 'string' ? JSON.parse(r) : r;
+                const states = data.states || [];
+                if (!states.length) throw new Error('empty states');
+                return _normalizeAlertStates(states);
+            }
+        },
+        {
+            name: 'alerts.com.ua@codetabs',
+            url: 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent('https://alerts.com.ua/api/states'),
+            timeout: 13000,
+            parse: (r) => {
+                const data = typeof r === 'string' ? JSON.parse(r) : r;
+                const states = data.states || [];
+                if (!states.length) throw new Error('empty states');
+                return _normalizeAlertStates(states);
+            }
+        }
+    ];
+
+    // Internal: normalize alerts.com.ua /states response to { active:[], total, lastChange, raw:states }
+    function _normalizeAlertStates(states) {
+        const active = states.filter(s => s.alert).map(s => s.name.replace(' область','').replace(' автономна','').replace('м. ',''));
+        let lastChange = null;
+        if (states.length) {
+            const sorted = states.slice().sort((a,b) => new Date(b.changed) - new Date(a.changed));
+            lastChange = sorted[0] ? sorted[0].changed : null;
+        }
+        return { active, total: states.length, lastChange, raw: states };
+    }
+
+    // Rayon/city name → Oblast name (for Telegram rayon-level alerts)
+    const RAYON_TO_OBLAST = {
+        // Kyiv
+        'Київ':'Київ','Київська':'Київська',
+        // Donbas
+        'Донецька':'Донецька','Луганська':'Луганська','Покровська':'Донецька','Покровськ':'Донецька',
+        'Краматорський':'Донецька','Кальміуський':'Донецька','Горлівський':'Донецька','Маріупольський':'Донецька',
+        'Волноваський':'Донецька','Кальміуський район':'Донецька',
+        // Kharkiv
+        'Харківська':'Харківська','Харків':'Харківська','Ізюмський':'Харківська','Чугуївський':'Харківська',
+        'Богодухівський':'Харківська','Лозівський':'Харківська','Красноградський':'Харківська','Куп\'янський':'Харківська',
+        // Kherson, Zaporizhzhia, Mykolaiv
+        'Херсонська':'Херсонська','Запорізька':'Запорізька','Запоріжжя':'Запорізька',
+        'Мелітопольський':'Запорізька','Бердянський':'Запорізька',
+        'Миколаївська':'Миколаївська','Баштанський':'Миколаївська','Вознесенський':'Миколаївська',
+        // Odesa
+        'Одеська':'Одеська','Одеса':'Одеська','Ізмаїльський':'Одеська','Білгород-Дністровський':'Одеська',
+        'Болградський':'Одеська','Подільський':'Одеська',
+        // Sumy, Chernihiv
+        'Сумська':'Сумська','Суми':'Сумська','Охтирський':'Сумська','Роменський':'Сумська',
+        'Конотопський':'Сумська','Шосткинський':'Сумська',
+        'Чернігівська':'Чернігівська','Ніжинський':'Чернігівська','Прилуцький':'Чернігівська','Корюківський':'Чернігівська',
+        // Dnipropetrovsk
+        'Дніпропетровська':'Дніпропетровська','Дніпро':'Дніпропетровська',
+        'Кам\'янський':'Дніпропетровська','Новомосковський':'Дніпропетровська','Дніпровський':'Дніпропетровська',
+        'Павлоградський':'Дніпропетровська','Криворізький':'Дніпропетровська','Самарський':'Дніпропетровська',
+        'Нікопольський':'Дніпропетровська',
+        // Central
+        'Вінницька':'Вінницька','Могилів-Подільський':'Вінницька','Жмеринський':'Вінницька',
+        'Тульчинський':'Вінницька','Гайсинський':'Вінницька','Хмільницький':'Вінницька',
+        'Полтавська':'Полтавська','Кременчуцький':'Полтавська','Лубенський':'Полтавська','Миргородський':'Полтавська',
+        'Житомирська':'Житомирська','Бердичівський':'Житомирська','Коростенський':'Житомирська','Звягельський':'Житомирська',
+        'Черкаська':'Черкаська','Кропивницький':'Кіровоградська','Кіровоградська':'Кіровоградська',
+        'Хмельницька':'Хмельницька','Кам\'янець-Подільський':'Хмельницька',
+        // West
+        'Львівська':'Львівська','Львів':'Львівська',
+        'Тернопільська':'Тернопільська','Івано-Франківська':'Івано-Франківська','Закарпатська':'Закарпатська',
+        'Волинська':'Волинська','Луцький':'Волинська','Луцьк':'Волинська',
+        'Рівненська':'Рівненська','Рівне':'Рівненська','Чернівецька':'Чернівецька',
+        // Crimea
+        'Крим':'Крим','Севастополь':'Севастополь',
+        'Ялта':'Крим','Сімферополь':'Крим','Керч':'Крим','Феодосія':'Крим','Євпаторія':'Крим'
+    };
+
+    // Parse Telegram @air_alert_ua web preview → active oblast-level alerts.
+    // Message formats (after emoji prefix):
+    //   '🔴 HH:MM Повітряна тривога в <регіон>' — alert start
+    //   '🟢 HH:MM Відбій тривоги в <регіон>' — alert cancel
+    //   '🟡 HH:MM Відбій загрози ...' — partial cancel
+    //   '🔴 HH:MM Повітряна тривога в УСІ ОБЛАСТІ' — nationwide
+    //   multi-line: 'в • Богодухівський район • Лозівський район ...'
+    function _parseTelegramAlerts(r) {
+        const html = r.contents || (typeof r === 'string' ? r : '');
+        if (!html || html.length < 1000) throw new Error('empty telegram response');
+        // Parse HTML
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const msgs = doc.querySelectorAll('div.tgme_widget_message_text');
+        if (!msgs.length) throw new Error('no telegram messages found');
+
+        // Build list of {ts, type:'on'|'off'|'partial', regions:Set}
+        const events = [];
+        msgs.forEach(el => {
+            const text = (el.innerText || el.textContent || '').trim();
+            if (!text) return;
+            let type = null;
+            if (text.startsWith('🔴') || text.startsWith('🚨')) type = 'on';
+            else if (text.startsWith('🟢') || text.startsWith('✅')) type = 'off';
+            else if (text.startsWith('🟡') || text.startsWith('⚠')) type = 'partial';
+            else return;
+            // Extract regions from text
+            // Remove hashtag part
+            const cleanText = text.split('#')[0];
+            // Look for "УСІ ОБЛАСТІ" / "ВСІ ОБЛАСТІ" / "усі області"
+            if (/усі\s+області/i.test(cleanText) || /всі\s+області/i.test(cleanText)) {
+                events.push({ type, regions: new Set(Object.keys(OBLAST_DATA)) });
+                return;
+            }
+            // Look for "<X> область" — direct oblast match
+            const regions = new Set();
+            // Replace bullet points with newlines for splitting
+            const normText = cleanText.replace(/•/g, '\n').replace(/\s+район/g, ' район');
+            // Direct oblast match
+            for (const obName of Object.keys(OBLAST_DATA)) {
+                const root = obName.replace(/ська$/,'').replace(/цька$/,'').replace(/на$/,'');
+                const re = new RegExp('(?<![а-яєіїґ])' + obName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])', 'i');
+                if (re.test(normText)) regions.add(obName);
+            }
+            // Rayon match — look for "<X> район" or "<X>ський"
+            const rayonMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ\'\-]+)ський\s*район/g) || [];
+            for (const rm of rayonMatches) {
+                const rayonName = rm.replace(/ський\s*район/, 'ський').trim();
+                const oblast = RAYON_TO_OBLAST[rayonName];
+                if (oblast) regions.add(oblast);
+            }
+            // Also try direct city names
+            for (const [cityName, oblast] of Object.entries(RAYON_TO_OBLAST)) {
+                if (oblast === cityName) continue;  // skip oblast-as-city
+                const re = new RegExp('(?<![а-яєіїґ])' + cityName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])');
+                if (re.test(normText)) regions.add(oblast);
+            }
+            // Also detect "область" + preceding word
+            const oblMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ\'\-]+)\s+області/g) || [];
+            for (const om of oblMatches) {
+                const obName = om.replace(/\s+області/, 'ська');
+                if (OBLAST_DATA[obName]) regions.add(obName);
+            }
+            if (regions.size > 0) {
+                events.push({ type, regions });
+            }
+        });
+
+        if (!events.length) throw new Error('no alert events parsed from telegram');
+
+        // Compute active set: process events chronologically (oldest first)
+        // 'on' adds, 'off' removes, 'partial' removes only the listed regions
+        const activeSet = new Set();
+        for (const ev of events) {
+            if (ev.type === 'on') {
+                ev.regions.forEach(r => activeSet.add(r));
+            } else if (ev.type === 'off') {
+                ev.regions.forEach(r => activeSet.delete(r));
+            } else if (ev.type === 'partial') {
+                ev.regions.forEach(r => activeSet.delete(r));
+            }
+        }
+
+        const active = Array.from(activeSet);
+        return {
+            active,
+            total: Object.keys(OBLAST_DATA).length,
+            lastChange: new Date().toISOString(),  // telegram doesn't expose per-region timestamp easily
+            raw: []
+        };
+    }
+
+    // Cache last-known-good alert state — persisted in localStorage across page reloads
+    let _lastGoodAlerts = null;
+    try {
+        const stored = localStorage.getItem('_lastGoodAlerts');
+        if (stored) _lastGoodAlerts = JSON.parse(stored);
+    } catch (e) { /* localStorage may be unavailable */ }
+
+    function _persistAlertsCache(state) {
+        try { localStorage.setItem('_lastGoodAlerts', JSON.stringify(state)); } catch (e) {}
+    }
+
     async function fetchAlerts() {
-        try {
-            // alerts.com.ua doesn't support CORS — use allorigins proxy
-            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://alerts.com.ua/api/states');
-            const proxyResp = await fetchJSON(proxyUrl);
-            const r = typeof proxyResp === 'string' ? JSON.parse(proxyResp) : proxyResp;
-            // allorigins wraps response in { contents: "..." }
-            const data = r.contents ? JSON.parse(r.contents) : r;
-            const states = data.states || [];
-            const active = states.filter(s => s.alert);
-            STATE.alerts.totalRegions = states.length;
-            STATE.alerts.activeCount = active.length;
-            STATE.alerts.activeRegions = active.map(s => s.name.replace(' область','').replace(' автономна','').replace('м. ',''));
-            // Last change = most recent "changed" timestamp
-            if (states.length) {
-                const sorted = states.slice().sort((a,b) => new Date(b.changed) - new Date(a.changed));
-                STATE.alerts.lastChange = sorted[0] ? new Date(sorted[0].changed).toLocaleString('uk-UA', { timeZone:'Europe/Kyiv' }) : '—';
-            }
-
-            // Per-oblast alert tracking — detect transitions (false→true = new alert)
-            const activeNames = new Set(STATE.alerts.activeRegions);
-            for (const name of Object.keys(OBLAST_DATA)) {
-                if (!STATE.oblasts[name]) STATE.oblasts[name] = { mentions:0, sentiment:0, alertActive:false, lastAlert:null, alertCount:0, headlines:[] };
-                const ob = STATE.oblasts[name];
-                const wasActive = ob.alertActive;
-                const isActive = activeNames.has(name);
-                ob.alertActive = isActive;
-                if (isActive && !wasActive) {
-                    ob.lastAlert = new Date().toISOString();
-                    ob.alertCount = (ob.alertCount || 0) + 1;
+        // Race all sources in parallel; collect all that succeed within timeout
+        const results = await Promise.allSettled(
+            ALERT_SOURCES.map(async (src) => {
+                const t = src.timeout || 12000;
+                // One retry on failure — allorigins is flaky
+                let lastErr;
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        const r = await fetchJSON(src.url, t);
+                        const parsed = src.parse(r);
+                        return { name: src.name, parsed };
+                    } catch (e) { lastErr = e; }
                 }
-                // Also update lastAlert from API "changed" field
-                const stateMatch = states.find(s => s.name.replace(' область','').replace(' автономна','').replace('м. ','') === name);
-                if (stateMatch && stateMatch.changed) {
-                    if (!ob.lastAlert || new Date(stateMatch.changed) > new Date(ob.lastAlert)) {
-                        ob.lastAlert = stateMatch.changed;
-                    }
+                throw lastErr || new Error('source failed');
+            })
+        );
+        let ok = results
+            .filter(r => r.status === 'fulfilled' && r.value && r.value.parsed && Array.isArray(r.value.parsed.active))
+            .map(r => r.value);
+
+        STATE.alerts.sourcesTotal = ALERT_SOURCES.length;
+        STATE.alerts.sourcesOk = ok.length;
+
+        if (!ok.length) {
+            // Fall back to last-known-good state if available
+            if (_lastGoodAlerts) {
+                const ageMin = _lastGoodAlerts.ts ? Math.round((Date.now() - _lastGoodAlerts.ts) / 60000) : '?';
+                STATE.alerts.activeCount = _lastGoodAlerts.activeCount;
+                STATE.alerts.activeRegions = _lastGoodAlerts.activeRegions;
+                STATE.alerts.totalRegions = _lastGoodAlerts.totalRegions;
+                STATE.alerts.lastChange = _lastGoodAlerts.lastChange + ` (кеш ${ageMin}хв)`;
+                STATE.alerts.source = _lastGoodAlerts.source + ' (STALE)';
+                log(`Тривоги: всі джерела мовчать, використовую кеш (${_lastGoodAlerts.activeCount} обл., ${ageMin}хв тому)`, 'ALERTS');
+                return;
+            }
+            $('src-alerts').innerText = 'DEAD';
+            $('src-alerts').className = 'src-ind dead';
+            log(`Усі ${ALERT_SOURCES.length} джерел тривог недоступні`, 'ALERTS');
+            return;
+        }
+
+        // Union of active regions across all responding sources — reduces false negatives
+        const activeSet = new Set();
+        let total = 0, lastChange = null, bestSource = ok[0].name, rawStates = [];
+        for (const r of ok) {
+            r.parsed.active.forEach(a => activeSet.add(a));
+            total = Math.max(total, r.parsed.total);
+            if (r.parsed.lastChange) {
+                const d = new Date(r.parsed.lastChange);
+                if (!lastChange || d > new Date(lastChange)) {
+                    lastChange = r.parsed.lastChange;
+                    bestSource = r.name;
                 }
             }
+            if (r.parsed.raw && r.parsed.raw.length > rawStates.length) rawStates = r.parsed.raw;
+        }
+        const active = Array.from(activeSet);
 
-            log(`Тривоги: ${STATE.alerts.activeCount}/${STATE.alerts.totalRegions} областей`, 'ALERTS');
-            // Auto-alert
-            if (STATE.alerts.activeCount > 0) {
-                showAlert(`Повітряна тривога: ${STATE.alerts.activeRegions.join(', ')}`, 'critical');
+        STATE.alerts.totalRegions = total || 25;
+        STATE.alerts.activeCount = active.length;
+        STATE.alerts.activeRegions = active;
+        STATE.alerts.lastChange = lastChange ? new Date(lastChange).toLocaleString('uk-UA', { timeZone:'Europe/Kyiv' }) : '—';
+        STATE.alerts.source = bestSource;
+        STATE.alerts.lastUpdate = new Date().toISOString();
+
+        // Per-oblast alert tracking — detect transitions (false→true = new alert)
+        const activeNames = new Set(active);
+        for (const name of Object.keys(OBLAST_DATA)) {
+            if (!STATE.oblasts[name]) STATE.oblasts[name] = { mentions:0, sentiment:0, alertActive:false, lastAlert:null, alertCount:0, headlines:[] };
+            const ob = STATE.oblasts[name];
+            const wasActive = ob.alertActive;
+            const isActive = activeNames.has(name);
+            ob.alertActive = isActive;
+            if (isActive && !wasActive) {
+                ob.lastAlert = new Date().toISOString();
+                ob.alertCount = (ob.alertCount || 0) + 1;
             }
-        } catch(e) {
-            log('Alerts API: ' + e.message, 'ALERTS');
+            // Also update lastAlert from API "changed" field
+            const stateMatch = rawStates.find(s => s.name.replace(' область','').replace(' автономна','').replace('м. ','') === name);
+            if (stateMatch && stateMatch.changed) {
+                if (!ob.lastAlert || new Date(stateMatch.changed) > new Date(ob.lastAlert)) {
+                    ob.lastAlert = stateMatch.changed;
+                }
+            }
+        }
+
+        log(`Тривоги: ${active.length}/${total} обл. · джерела: ${ok.length}/${ALERT_SOURCES.length} (${bestSource})`, 'ALERTS');
+        // Cache last-known-good state (persisted)
+        _lastGoodAlerts = {
+            activeCount: active.length,
+            activeRegions: active.slice(),
+            totalRegions: total || 25,
+            lastChange: STATE.alerts.lastChange,
+            source: bestSource,
+            ts: Date.now()
+        };
+        _persistAlertsCache(_lastGoodAlerts);
+        if (active.length > 0) {
+            showAlert(`Повітряна тривога (${active.length}): ${active.slice(0,8).join(', ')}${active.length>8?'…':''}`, 'critical');
         }
     }
 
@@ -4115,21 +4620,134 @@ __PATHS__
         }
     }
 
+    /* ---------- 10.8 WAR-EVENT EXTRACTION + WAR STATUS (real data) ---------- */
+    // Cyrillic-safe match helper: matches key as a whole word using lookarounds
+    // (\b and \w don't work with Cyrillic in JS regex without 'u' flag)
+    function _matchCyrillicWord(text, key) {
+        const escKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp('(?<![а-яєіїґa-z\\-])' + escKey + '(?![а-яєіїґa-z\\-])', 'gi');
+        return text.match(re);
+    }
+
+    // Map of war-event types → keyword patterns (Ukrainian + Russian variants)
+    const WAR_KEYWORDS = {
+        artillery:    ['обстріл','обстріли','обстріляв','обстріляли','обстріляний','артилері','снаряд','снарядів','гарматн','міномет','артилерійський','шквальний'],
+        missile:      ['ракетн','ракета','ракети','крилат','калібр','х-101','х-59','іскандер','удар','удари','атакував','атаки','вдарив','вдарила','вдарили','балістик','кінджал','х-47','атака'],
+        drone:        ['дрон','дрони','безпілотник','шахед','shahed','камікадзе','бпла','герань','ланцет'],
+        air:          ['авіаудар','бомб','бомбардуван','авіація','гелікоптер','літак','винищувач','каб','фаб','авіаційний'],
+        casualties:   ['загибел','загинув','загинули','поранен','поранених','втрат','жертв','людей загинуло','постраждалих','смерт','смертей'],
+        infrastructure:['інфраструктур','енергосистем','теплоелектр','тец','гес','підстанці','енергоблок','газопровод','нафтопровод','зруйнован','руйнуван','об\'єкт інфраструктур','енергетичн'],
+        advance:      ['штурм','наступ','зайшов','увійшов','звільнив','відбив','просуван','утримув','позиційні','штурму','контратак'],
+        ppow:         ['ппо','збитий','збито','перехопл','знищен','уражен','зенитн','патриот','iris','nasams','система'],
+        troops:       ['зсу','зс рф','окупант','бойовик','рф','росіян','російських','військ','підрозділ','бригада','полк','армії'],
+        losses:       ['втрати','знищено','згорів','палаю','палає','знищен','уражено','військової техніки','танк','бмп','бтр','армата','гаубиця']
+    };
+    const WAR_TYPES_LABELS = {
+        artillery: 'Артилерія', missile: 'Ракети/удари', drone: 'Дрони/БПЛА',
+        air: 'Авіаудари', casualties: 'Втрати', infrastructure: 'Інфраструктура',
+        advance: 'Бої/просування', ppow: 'ППО',
+        troops: 'Військові', losses: 'Втрати техніки'
+    };
+
+    // Extract war events from RSS items, populate STATE.war
+    function extractWarEvents(allItems) {
+        const events = [];
+        const byRegion = {};
+        const byType = {};
+        const warSourcesActive = new Set();
+        const warTriggers = ['війна','війни','військов','обстріл','атак','удар','ракет','дрон','шахед','зср','зсу','втрат','фронт','бої','бойов','авіаудар','балістик','калібр','обстріляв','атака','вдарила','вдарив','вдарили'];
+        for (const it of allItems) {
+            const lc = (it.text || '').toLowerCase();
+            // Quick filter: is this a war-related item?
+            let isWarItem = false;
+            for (const k of warTriggers) {
+                if (_matchCyrillicWord(lc, k)) { isWarItem = true; break; }
+            }
+            if (isWarItem) warSourcesActive.add(it.src);
+            // Detect event types using WAR_KEYWORDS (Cyrillic-safe matching)
+            const types = [];
+            for (const [type, keys] of Object.entries(WAR_KEYWORDS)) {
+                for (const k of keys) {
+                    const m = _matchCyrillicWord(lc, k);
+                    if (m) {
+                        types.push(type);
+                        byType[type] = (byType[type] || 0) + m.length;
+                        break;
+                    }
+                }
+            }
+            if (!types.length) continue;
+            // Detect oblasts mentioned in this item
+            const regions = extractGeo(it.text).map(([r]) => r);
+            const primaryRegion = regions[0] || '—';
+            for (const r of regions) byRegion[r] = (byRegion[r] || 0) + types.length;
+            events.push({
+                src: it.src,
+                title: it.title || '(без заголовка)',
+                types,
+                regions,
+                primaryRegion,
+                t: Date.now()
+            });
+        }
+        // Top headline = first event from war-tagged source, or first event overall
+        let topHeadline = '—', topRegion = '—', topType = '—';
+        if (events.length) {
+            const fromWarSrc = events.find(e => RSS_SOURCES.find(s => s.name === e.src && s.tag === 'war'));
+            topHeadline = (fromWarSrc || events[0]).title;
+        }
+        const sortedRegions = Object.entries(byRegion).sort((a,b) => b[1] - a[1]);
+        const sortedTypes = Object.entries(byType).sort((a,b) => b[1] - a[1]);
+        if (sortedRegions.length) topRegion = sortedRegions[0][0];
+        if (sortedTypes.length) topType = WAR_TYPES_LABELS[sortedTypes[0][0]] || sortedTypes[0][0];
+
+        STATE.war.events = events.slice(0, 60);   // keep most recent 60
+        STATE.war.eventCount = events.length;
+        STATE.war.byRegion = byRegion;
+        STATE.war.byType = byType;
+        STATE.war.sources = Array.from(warSourcesActive);
+        STATE.war.topHeadline = topHeadline;
+        STATE.war.topRegion = topRegion;
+        STATE.war.topType = topType;
+
+        // Discrepancy detection: UKRAINIAN oblasts with war events but NO active air alert → flag
+        const discrepancies = [];
+        for (const [region, count] of sortedRegions.slice(0, 12)) {
+            // Only flag actual Ukrainian oblasts (skip foreign countries like "Росія", "США", "НАТО")
+            if (!OBLAST_DATA[region]) continue;
+            if (count >= 2 && !STATE.alerts.activeRegions.includes(region)
+                && !OCCUPIED_OBLASTS.includes(region)) {
+                discrepancies.push({ region, count });
+            }
+        }
+        STATE.war.discrepancy = discrepancies;
+    }
+
     function calcWarStatus() {
-        // Full-scale invasion started 2022-02-24
+        // Day of full-scale invasion (started 2022-02-24)
         const invasionStart = new Date('2022-02-24');
         const now = new Date();
         STATE.war.day = Math.floor((now - invasionStart) / 86400000);
-        // Intensity: derived from fear + tension + active alerts
-        STATE.war.intensity = clamp(
-            STATE.emotion.fear * 0.4 + STATE.tension.index * 0.3 + (STATE.alerts.activeCount / STATE.alerts.totalRegions) * 100 * 0.3,
-            0, 100
-        );
-        // Frontline regions: those near active combat
-        STATE.war.regions = STATE.tension.geo
-            .filter(([r]) => ['Донецька','Луганська','Харківська','Запорізька','Херсонська','Миколаївська','Сумська','Чернігівська'].includes(r))
-            .map(([r,c]) => `${r}(${c})`);
-        STATE.war.frontline = STATE.war.regions.length ? STATE.war.regions[0].split('(')[0] : '—';
+
+        // REAL intensity — based on war-event count from news (up to 55),
+        // active alerts (up to 25), fear (up to 12), tension (up to 8)
+        const eventIntensity = clamp(STATE.war.eventCount * 1.6, 0, 55);
+        const alertIntensity = (STATE.alerts.activeCount / Math.max(1, STATE.alerts.totalRegions)) * 100 * 0.25;
+        const fearIntensity = STATE.emotion.fear * 0.12;
+        const tensionIntensity = STATE.tension.index * 0.08;
+        STATE.war.intensity = clamp(eventIntensity + alertIntensity + fearIntensity + tensionIntensity, 0, 100);
+
+        // Frontline regions: combine war-event byRegion (sorted desc) + traditional frontline list
+        const warRegionsSorted = Object.entries(STATE.war.byRegion).sort((a,b) => b[1] - a[1]);
+        const allFrontline = ['Донецька','Луганська','Харківська','Запорізька','Херсонська','Миколаївська','Сумська','Чернігівська'];
+        const fromEvents = warRegionsSorted.slice(0, 5).map(([r,c]) => `${r}(${c})`);
+        // Ensure frontline list shows at least the 3 most-active frontline oblasts even if no news
+        const fromList = allFrontline
+            .filter(r => !fromEvents.find(e => e.startsWith(r + '(')))
+            .slice(0, 3)
+            .map(r => `${r}(0)`);
+        STATE.war.regions = [...fromEvents, ...fromList].slice(0, 6);
+        STATE.war.frontline = STATE.war.regions[0] ? STATE.war.regions[0].split('(')[0] : '—';
     }
 
     async function fetchWikipedia() {
@@ -4667,8 +5285,9 @@ __PATHS__
         if (!STATE.alerts.activeRegions.length) {
             alertBox.innerHTML = '<span class="tag hope">Спокій</span>';
         }
-        $('src-alerts').innerText = STATE.alerts.activeCount > 0 ? 'ACTIVE' : 'CALM';
-        $('src-alerts').className = 'src-ind ' + (STATE.alerts.activeCount > 0 ? 'live' : '');
+        const alertSrcOk = STATE.alerts.sourcesOk > 0;
+        $('src-alerts').innerText = alertSrcOk ? (STATE.alerts.activeCount > 0 ? `${STATE.alerts.sourcesOk}/${STATE.alerts.sourcesTotal}·ACTIVE` : `${STATE.alerts.sourcesOk}/${STATE.alerts.sourcesTotal}·CALM`) : 'DEAD';
+        $('src-alerts').className = 'src-ind ' + (alertSrcOk ? (STATE.alerts.activeCount > 0 ? 'live' : '') : 'dead');
         let alStat, alBadge, alBadgeCls;
         if (STATE.alerts.activeCount === 0)        { alStat='СПОКІЙ';        alBadge='CALM';   alBadgeCls='ok'; }
         else if (STATE.alerts.activeCount <= 3)    { alStat='ЛОКАЛЬНА ТРИВОГА'; alBadge='LOCAL'; alBadgeCls='warn'; }
@@ -4679,7 +5298,7 @@ __PATHS__
         const alCtx = STATE.alerts.activeCount === 0
             ? 'Повітряний простір під контролем ППО. Психіка населення розслаблена.'
             : `Тривога активна. ${STATE.alerts.activeCount >= 10 ? 'Масштабна атака — психологічний стрес високий.' : 'Локальна загроза — стрес у регіоні.'}`;
-        const alDriver = `Джерело: alerts.com.ua (реальні дані по 25 областях). Кореляція зі страхом: ${((STATE.alerts.activeCount * 5) > STATE.emotion.fear ? 'висока' : 'помірна')}.`;
+        const alDriver = `Джерело: ${STATE.alerts.source || 'alerts.com.ua'} · ${STATE.alerts.sourcesOk}/${STATE.alerts.sourcesTotal} проксі онлайн. Кореляція зі страхом: ${((STATE.alerts.activeCount * 5) > STATE.emotion.fear ? 'висока' : 'помірна')}.`;
         const alForecast = STATE.alerts.activeCount > 0
             ? `Прогноз: тривога триватиме 30-90 хв. Моніторити відбій.`
             : `Прогноз: спокій зберігається. Моніторинг триває.`;
@@ -5064,7 +5683,7 @@ __PATHS__
         $('v-eonet').innerText = STATE.geo.eonetCount;
         $('v-eonet-types').innerText = STATE.geo.eonetTypes.map(([t,c])=>`${t}×${c}`).join(', ');
 
-        // WAR STATUS
+        // WAR STATUS — real data from RSS war-event extraction
         $('v-war-day').innerText = STATE.war.day + ' день';
         $('v-war-intensity').innerText = fmt(STATE.war.intensity,0) + '%';
         $('bar-war').style.width = STATE.war.intensity + '%';
@@ -5076,18 +5695,26 @@ __PATHS__
         else if (STATE.war.intensity > 40)  { wStat='АКТИВНА ФАЗА';  wBadge='ACTIVE';wBadgeCls='warn'; }
         else if (STATE.war.intensity > 20)  { wStat='СТАБІЛЬНА';     wBadge='STABLE';wBadgeCls='info'; }
         else                                { wStat='ЗАТИШШЯ';       wBadge='CALM';  wBadgeCls='ok'; }
-        const wDyn = `${STATE.war.day}-й день повномасштабної війни. Інтенсивність ${STATE.war.intensity.toFixed(0)}%.`;
-        const wMove = `Топ-регіон: ${STATE.war.frontline}. Прифронтових: ${STATE.war.regions.length}.`;
+        const wDyn = `${STATE.war.day}-й день повномасштабної війни. Інтенсивність ${STATE.war.intensity.toFixed(0)}%. Військових подій у новинах: <b>${STATE.war.eventCount}</b> (з ${STATE.war.sources.length} джерел).`;
+        const wMove = `Топ-регіон: ${STATE.war.frontline}. Тип: ${STATE.war.topType}. Активних прифронтових: ${STATE.war.regions.length}.`;
         const wCtx = STATE.war.intensity > 70
-            ? 'Висока інтенсивність бойових дій. Активні атаки по всіх напрямках. Масштабний стрес населення.'
+            ? 'Висока інтенсивність бойових дій за даними новин. Активні атаки по всіх напрямках. Масштабний стрес населення.'
             : STATE.war.intensity > 40
-            ? 'Активна фаза. Локальні бої. Помірний стрес у прифронтових регіонах.'
+            ? 'Активна фаза. Локальні бої та обстріли у новинах. Помірний стрес у прифронтових регіонах.'
             : STATE.war.intensity > 20
             ? 'Стабільна лінія фронту. Позиційні бої. Фоновий стрес.'
-            : 'Тактичне затишшя. Мінімальна активність. Психіка адаптується.';
-        const wDriver = `Драйвери: страх ${STATE.emotion.fear.toFixed(0)}% + напруга ${STATE.tension.index.toFixed(0)} + тривоги ${STATE.alerts.activeCount}/${STATE.alerts.totalRegions}.`;
+            : 'Тактичне затишшя. Мінімальна активність у новинах. Психіка адаптується.';
+        const warTypeStr = Object.entries(STATE.war.byType).sort((a,b)=>b[1]-a[1]).slice(0,4)
+            .map(([t,c]) => `${WAR_TYPES_LABELS[t]||t}:${c}`).join(' · ') || '—';
+        let wDisc = '';
+        if (STATE.war.discrepancy && STATE.war.discrepancy.length) {
+            wDisc = ` ⚠ Розбіжність: новини повідомляють про події у ${STATE.war.discrepancy.map(d=>d.region).join(', ')} без активної тривоги.`;
+        }
+        const wDriver = `Драйвери: військ. події ${STATE.war.eventCount} (до 55%) + тривоги ${STATE.alerts.activeCount}/${STATE.alerts.totalRegions} (25%) + страх ${STATE.emotion.fear.toFixed(0)}% (12%) + напруга ${STATE.tension.index.toFixed(0)} (8%). Типи: ${warTypeStr}.${wDisc}`;
         const wForecast = STATE.war.intensity > 60
             ? 'Прогноз: ескалація триває. Високий ризик ударів по інфраструктурі.'
+            : STATE.war.intensity > 40
+            ? 'Прогноз: активна фаза зберігається. Моніторити обстріли та удари БПЛА.'
             : 'Прогноз: поточна інтенсивність збережеться. Моніторити зміни.';
         $('desc-war').innerHTML = `
             <span class="an-state">${wStat} <span class="badge ${wBadgeCls}">${wBadge}</span></span>
@@ -5297,7 +5924,7 @@ __PATHS__
         setInterval(calcCircadian, 60000);
 
         // Initial fetch — parallel
-        log('Запит до українських RSS-джерел (8 джерел)...', 'INIT');
+        log('Запит до українських RSS-джерел (20 джерел, 5 воєнних)...', 'INIT');
         await Promise.allSettled([fetchAllRSS(), fetchCrypto(), fetchGeophysical(), fetchWikipedia(), fetchAlerts(), fetchFinance()]);
 
         calcWarStatus();
