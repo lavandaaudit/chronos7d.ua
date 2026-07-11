@@ -367,23 +367,28 @@
         .map-tooltip .tt-head .tt-row { color: #ccd; font-weight: normal; display: block; white-space: normal; max-width: 260px; line-height: 1.35; margin-top: 2px; }
         .map-tooltip .tt-head .tt-row .tt-src { color: var(--accent-gold); font-size: 7px; }
 
-        /* Floating news ticker for hotspot oblasts */
+        /* Floating news ticker — bottom-left to avoid covering eastern oblasts.
+           Eastern oblasts (Донецька, Луганська, Харківська) are on the RIGHT side
+           of the Ukraine map, so the ticker MUST be on the LEFT or BOTTOM.
+           Includes a collapse toggle so the user can hide it entirely. */
         #map-news-ticker {
             position: absolute;
-            top: 8px; right: 8px;
-            width: 240px;
-            max-height: 60%;
-            background: rgba(2, 2, 5, 0.78);
+            bottom: 60px; left: 8px;
+            width: 200px;
+            max-height: 50%;
+            background: rgba(2, 2, 5, 0.85);
             border: 1px solid var(--border-subtle);
             border-radius: 4px;
-            padding: 6px 8px;
+            padding: 6px 8px 4px;
             font-size: 8px;
             color: #ccd;
-            pointer-events: none;
+            pointer-events: auto;
             z-index: 25;
             overflow: hidden;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            transition: max-height 0.3s ease, opacity 0.3s;
         }
+        #map-news-ticker.collapsed { max-height: 26px; overflow: hidden; }
         #map-news-ticker .mnt-head {
             color: var(--accent-pri);
             font-size: 8px;
@@ -392,9 +397,27 @@
             padding-bottom: 3px;
             border-bottom: 1px solid var(--border-subtle);
             text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
         }
+        #map-news-ticker .mnt-head .mnt-toggle {
+            color: var(--accent-sec);
+            font-size: 10px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        #map-news-ticker.collapsed .mnt-head .mnt-toggle { transform: rotate(-90deg); }
+        #map-news-ticker .mnt-body {
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        #map-news-ticker .mnt-body::-webkit-scrollbar { width: 3px; }
+        #map-news-ticker .mnt-body::-webkit-scrollbar-thumb { background: rgba(160,0,255,0.4); }
         #map-news-ticker .mnt-item {
-            margin-bottom: 3px;
+            margin-bottom: 4px;
             line-height: 1.35;
             padding-left: 6px;
             border-left: 2px solid var(--accent-sec);
@@ -403,9 +426,9 @@
         #map-news-ticker .mnt-item.war { border-left-color: var(--accent-warn); }
         #map-news-ticker .mnt-item.neg { border-left-color: var(--accent-warn); }
         #map-news-ticker .mnt-item.pos { border-left-color: var(--accent-hope); }
-        #map-news-ticker .mnt-item .mnt-oblast { color: var(--accent-gold); font-size: 7px; letter-spacing: 0.5px; }
+        #map-news-ticker .mnt-item .mnt-oblast { color: var(--accent-gold); font-size: 7px; letter-spacing: 0.5px; display: block; }
         #map-news-ticker .mnt-item .mnt-title { color: #eef; }
-        #map-news-ticker .mnt-empty { color: #556; font-style: italic; }
+        #map-news-ticker .mnt-empty { color: #556; font-style: italic; padding: 8px 0; text-align: center; }
 
         /* Per-oblast floating headline labels on the map */
         .oblast-headline-label {
@@ -644,8 +667,10 @@
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 30px;
+            padding: 20px;
             animation: fadeIn .25s ease-out;
+            /* Allow vertical scroll if modal is taller than viewport */
+            overflow-y: auto;
         }
         .modal-overlay.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -656,10 +681,26 @@
             border-radius: 6px;
             width: 100%;
             max-width: 920px;
-            max-height: 90vh;
+            /* Adaptive: 90vh on big screens, 95vh on small. Body scrolls internally
+               so the header (with close button) stays visible. */
+            max-height: min(90vh, 800px);
             overflow-y: auto;
             box-shadow: 0 20px 80px rgba(160,0,255,0.4), 0 0 100px rgba(0,255,255,0.05);
             animation: modalIn .35s cubic-bezier(.2,.8,.2,1);
+            /* Center within overlay (overlay is flex, so margin auto ensures
+               horizontal centering even when content is wider than expected) */
+            margin: auto;
+        }
+        /* Smaller screens: full-width modal with less padding */
+        @media (max-width: 900px) {
+            .modal-overlay { padding: 8px !important; }
+            .modal { max-height: 95vh; max-width: 100%; }
+            .modal-body { padding: 14px 16px; }
+            .modal-head { padding: 12px 16px; }
+        }
+        /* Larger screens: cap width so it doesn't stretch awkwardly wide */
+        @media (min-width: 1400px) {
+            .modal { max-width: 1000px; }
         }
         @keyframes modalIn {
             from { transform: translateY(30px) scale(0.96); opacity: 0; }
@@ -1370,7 +1411,7 @@
             <!-- 1. EMOTIONAL STATE -->
             <div class="card" id="card-emotion">
                 <div class="card-h">
-                    <span>🌍 1. ЕМОЦІЙНИЙ СТАН ЛЮДСТВА</span>
+                    <span>🇺🇦 1. ЕМОЦІЙНИЙ СТАН УКРАЇНСЬКОГО СУСПІЛЬСТВА</span>
                     <span class="layer-score" id="score-emotion" style="font-size:14px; color:var(--accent-sec)">--</span>
                 </div>
                 <div class="m-row">
@@ -1491,12 +1532,12 @@
             <div class="card" id="card-circadian">
                 <div class="card-h"><span>⏳ 4. ЦИРКАДНА ПСИХІКА</span></div>
                 <div class="m-row">
-                    <span class="m-lbl">Людство прокинулось</span>
+                    <span class="m-lbl">Україна активна</span>
                     <span class="m-val" id="v-awake">--%</span>
                 </div>
                 <div class="mini-bar"><span id="bar-awake" style="width:0%; background:var(--accent-sec)"></span></div>
                 <div class="m-row">
-                    <span class="m-lbl">Регіон пікової активності</span>
+                    <span class="m-lbl">Фаза доби (за Києвом)</span>
                     <span class="m-val" id="v-peak-reg">--</span>
                 </div>
                 <div class="m-row">
@@ -1609,7 +1650,7 @@
                     <span class="m-val" id="v-meaning">--</span>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Wikipedia top page</span>
+                    <span class="m-lbl">Wikipedia UA — топ-стаття</span>
                     <span class="m-val" style="font-size:8px;" id="v-wiki-top">--</span>
                 </div>
                 <div class="m-sub" id="desc-info">// Аналіз інфополя...</div>
@@ -1618,7 +1659,7 @@
             <!-- 6. SOCIAL TENSION -->
             <div class="card" id="card-tension">
                 <div class="card-h">
-                    <span>⚡ 6. НАПРУГА СВІДОМОСТІ</span>
+                    <span>⚡ 6. НАПРУГА УКР. СУСПІЛЬСТВА</span>
                     <span class="layer-score" id="score-tension" style="font-size:14px; color:var(--accent-warn)">--</span>
                 </div>
                 <div class="m-row">
@@ -1663,29 +1704,37 @@
                 <div class="m-sub" id="desc-war">// Статус війни...</div>
             </div>
 
-            <!-- 7. GEOPHYSICAL -->
+            <!-- 7. METEO — УКРАЇНА -->
             <div class="card" id="card-geo">
                 <div class="card-h">
-                    <span>🌋 7. ГЕОФІЗИЧНИЙ ШАР</span>
+                    <span>🌦 7. МЕТЕОШАР УКРАЇНИ</span>
                     <span class="src-ind" id="src-geo">--</span>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Землетруси за добу (M≥2.5)</span>
-                    <span class="m-val" id="v-quakes">--</span>
+                    <span class="m-lbl">Температура (Київ)</span>
+                    <span class="m-val" id="v-temp">-- °C</span>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Макс. магнітуда</span>
-                    <span class="m-val" style="color:var(--accent-warn)" id="v-quake-max">--</span>
+                    <span class="m-lbl">Відчувається як</span>
+                    <span class="m-val" id="v-apparent">-- °C</span>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Активні природні події</span>
-                    <span class="m-val" id="v-eonet">--</span>
+                    <span class="m-lbl">Тиск / Вологість</span>
+                    <span class="m-val" id="v-pressure">-- hPa / --%</span>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Тип катаклізмів</span>
-                    <span class="m-val" style="font-size:7px;" id="v-eonet-types">--</span>
+                    <span class="m-lbl">Вітер (пориви)</span>
+                    <span class="m-val" id="v-wind">-- км/год (--)</span>
                 </div>
-                <div class="m-sub" id="desc-geo">// Геофізичний тло...</div>
+                <div class="m-row">
+                    <span class="m-lbl">Опади / Хмарність</span>
+                    <span class="m-val" id="v-precip">-- мм / --%</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Якість повітря (AQI)</span>
+                    <span class="m-val" id="v-aqi">-- (PM2.5: --)</span>
+                </div>
+                <div class="m-sub" id="desc-geo">// Метеодані України...</div>
             </div>
 
             <!-- 8. DEEP LAYERS -->
@@ -2046,7 +2095,15 @@
         circadian:  { awake: 50, peak: '—' },
         consciousness: { propagation: 50, depth: 30, meaning: 40, wikiTop: '—' },
         tension:    { index: 30, split: 50, geo: [], last:{index:30} },
-        geo:        { quakes: 0, quakeMax: 0, eonetCount: 0, eonetTypes: [] },
+        geo:        { // Ukraine meteo layer (Open-Meteo API)
+                      temp: 0, apparentTemp: 0, humidity: 0, pressure: 0,
+                      windSpeed: 0, windDir: 0, windGust: 0, cloudCover: 0,
+                      precipitation: 0, weatherCode: 0, weatherDesc: '—',
+                      pm25: 0, pm10: 0, aqi: 0, aqiDesc: '—',
+                      city: 'Київ', alerts: 0, alertTitles: [],
+                      // Legacy fields kept for compatibility (set to 0)
+                      quakes: 0, quakeMax: 0, eonetCount: 0, eonetTypes: []
+                    },
         deep:       { archetype: 'STABILITY', dream: '—', intuition: 0, synch: 'ОЧІКУВАННЯ' },
         // UA-specific
         alerts:     { activeCount: 0, activeRegions: [], lastChange: '—', totalRegions: 25,
@@ -2409,7 +2466,7 @@
 
     const MODAL_DATA = {
         'card-emotion': {
-            title: 'Емоційний стан людства',
+            title: 'Емоційний стан українського суспільства',
             sub: 'AFINN-сентимент · 6 RSS-стрімів · Δ-метрики',
             gen: () => {
                 const geiTrend = trendSummary('gei', 8);
@@ -2540,7 +2597,7 @@
 
         'card-attention': {
             title: 'Колективна увага',
-            sub: 'TF-IDF + біграми · 6 RSS-стрімів',
+            sub: 'TF-IDF + біграми · 20 укр. RSS-стрімів',
             gen: () => {
                 const focusTrend = trendSummary('focus', 8);
                 const focusR = rangeOf('focus', 24);
@@ -2608,7 +2665,7 @@
 
         'card-circadian': {
             title: 'Циркадна психіка',
-            sub: 'UTC-час · популяційна модель · астрономічні сезони',
+            sub: 'Europe/Kyiv · модель укр. суспільства · астрономічні сезони',
             gen: () => {
                 const h = new Date().getUTCHours();
                 const snap = `
@@ -2631,10 +2688,10 @@
 
                 const narrative = `
                     <div class="narrative">
-                        <p>Циркадна модель базується на <span class="hi">UTC-годині</span> та розподілі населення Землі (~8 млрд) за часовими зонами. Пік активності припадає на <span class="hi">12 UTC</span> — коли Європа (~750M) у робочому часі, східна Азія ввечері, схід Америки вранці.</p>
-                        <p>Поточний UTC: <span class="hi">${String(h).padStart(2,'0')}:00</span>. Активні <span class="hi">${STATE.circadian.awake.toFixed(0)}%</span> людства. Пік активності: <span class="em">${STATE.circadian.peak}</span>.</p>
-                        <p>Астрономічний сезон: <span class="hi">${STATE.circadian.season}</span> — визначається за днем року. Впливає на психо-сезонність: взимку — депресивні патерни, весною — відродження, влітку — пік енергії, восени — рефлексія.</p>
-                        <p>Емоційні хвилі: <span class="hi">${STATE.emotion.waves.toFixed(0)} Гц</span> — еквівалентна частота коливань психіки (вища вдень, нижча вночі).</p>
+                        <p>Циркадна модель базується на часовому поясі <span class="hi">Europe/Kyiv</span> (UTC+2 взимку, UTC+3 влітку). Україна — єдина часова зона для всієї території (~35 млн населення).</p>
+                        <p>Поточна фаза: <span class="hi">${STATE.circadian.peak}</span>. Активні <span class="hi">${STATE.circadian.awake.toFixed(0)}%</span> українців. У воєнний час нічна фаза несе додаткову тривожність (атаки БПЛА/ракет типово нічні).</p>
+                        <p>Астрономічний сезон: <span class="hi">${STATE.circadian.season}</span> — визначається за днем року. Впливає на психо-сезонність укр. суспільства: взимку — депресивні патерни + опалювальний стрес, весною — відродження + сільськогосподарські роботи, влітку — пік енергії + ризик пожеж, восени — рефлексія + збори врожаю.</p>
+                        <p>Емоційні хвилі: <span class="hi">${STATE.emotion.waves.toFixed(0)} Гц</span> — еквівалентна частота коливань психіки укр. суспільства (вища вдень, нижча вночі + бонус нічного стресу).</p>
                     </div>`;
 
                 const reco = `
@@ -2648,7 +2705,7 @@
                     <div class="modal-section"><h3>📊 Поточний зріз</h3>${snap}</div>
                     <div class="modal-section"><h3>📈 Прогноз активності (24 год)</h3>
                         <div class="spark-wrap">
-                            <div class="spark-meta"><span>Прогнозована активність людства</span><span>наступні 24 год від UTC ${String(h).padStart(2,'0')}:00</span></div>
+                            <div class="spark-meta"><span>Прогнозована активність укр. суспільства</span><span>наступні 24 год (Europe/Kyiv) від ${String(h).padStart(2,'0')}:00</span></div>
                             <canvas class="spark" id="spark-circadian"></canvas>
                         </div>
                     </div>
@@ -2710,7 +2767,7 @@
                         <p><span class="hi">Propagation</span> (m/s Eq) — еквівалентна швидкість поширення ідей. Розраховується з кількості активних заголовків та страху (страх прискорює поширення).</p>
                         <p><span class="hi">Depth</span> — когнітивна глибина. Чим вища, тим більше аналітичне (не реактивне) обговорення. Залежить від волатильності уваги (зворотно) та емоційного індексу.</p>
                         <p><span class="hi">Meaning</span> (S/N) — відношення сигналу до шуму. Високий = структурований дискурс, низький = инфо-шум.</p>
-                        <p><span class="hi">Wikipedia top</span> — що люди шукають прямо зараз. Індикатор інтелектуального інтересу (на відміну від новинного).</p>
+                        <p><span class="hi">Wikipedia UA топ</span> — що українці шукають прямо зараз. Індикатор інтелектуального інтересу укр. суспільства (на відміну від новинного).
                         <p>Топ-стаття Wikipedia за вчора: <span class="em">${STATE.consciousness.wikiTop}</span>.</p>
                     </div>`;
 
@@ -3662,16 +3719,24 @@ __PATHS__
             return;
         }
         box.style.display = 'block';
-        let html = '<div class="mnt-head">📰 Заголовки · гаряче (' + all.length + ')</div>';
+        // Preserve collapsed state across re-renders
+        const wasCollapsed = box.classList.contains('collapsed');
+        let html = '<div class="mnt-head"><span>📰 Заголовки · гаряче (' + all.length + ')</span><span class="mnt-toggle">▼</span></div>';
+        html += '<div class="mnt-body">';
         top.forEach(h => {
             const cls = h.war ? 'war' : (h.sent < -1 ? 'neg' : h.sent > 1 ? 'pos' : '');
             const sentMark = h.sent < -1 ? '⚠' : h.sent > 1 ? '✓' : '○';
             html += `<div class="mnt-item ${cls}">
-                <span class="mnt-oblast">${sentMark} ${h.oblast} · [${h.src}]</span><br>
+                <span class="mnt-oblast">${sentMark} ${h.oblast} · [${h.src}]</span>
                 <span class="mnt-title">${h.title.length > 95 ? h.title.slice(0,95) + '…' : h.title}</span>
             </div>`;
         });
+        html += '</div>';
         box.innerHTML = html;
+        if (wasCollapsed) box.classList.add('collapsed');
+        // Wire up the collapse toggle (one-time, but re-bind after innerHTML reset)
+        const head = box.querySelector('.mnt-head');
+        if (head) head.addEventListener('click', () => box.classList.toggle('collapsed'));
     }
 
     // Render small floating headline labels over the most-active oblasts.
@@ -3688,7 +3753,7 @@ __PATHS__
             }))
             .filter(x => x.score > 0)
             .sort((a, b) => b.score - a.score)
-            .slice(0, 5);
+            .slice(0, 4);
         if (!ranked.length) return;
 
         const mapContainer = document.getElementById('map-container');
@@ -4149,8 +4214,8 @@ __PATHS__
         STATE.emotion.hope  = clamp(hopeScore * 3   / Math.max(1, allItems.length/10), 0, 100);
 
         // 10.2 Trends (TF-IDF + bigrams)
-        STATE.attention.trends  = tfidfTrends(allDocs, 8);
-        STATE.attention.bigrams = bigramsTrends(allDocs, 5);
+        STATE.attention.trends  = tfidfTrends(allDocs, 12);
+        STATE.attention.bigrams = bigramsTrends(allDocs, 8);
 
         // 10.3 Focus / volatility
         // Focus = dominance of top trend (max tf / total tf)
@@ -4264,63 +4329,113 @@ __PATHS__
         }
     }
 
+    /* ---------- 10.6b МЕТЕО УКРАЇНИ (Open-Meteo API) ---------- */
+    // WMO weather codes → Ukrainian description
+    const WMO_CODES = {
+        0: 'Ясно', 1: 'Переважно ясно', 2: 'Мінлива хмарність', 3: 'Похмуро',
+        45: 'Туман', 48: 'Іній туман', 51: 'Морось', 53: 'Помірна морось', 55: 'Сильна морось',
+        56: 'Льодова морось', 57: 'Сильна льодова морось',
+        61: 'Невеликі дощ', 63: 'Помірний дощ', 65: 'Сильний дощ',
+        66: 'Льодовий дощ', 67: 'Сильний льодовий дощ',
+        71: 'Невеликі сніг', 73: 'Помірний сніг', 75: 'Сильний сніг', 77: 'Снігова крупа',
+        80: 'Злива', 81: 'Помірна злива', 82: 'Сильна злива',
+        85: 'Снігова злива', 86: 'Сильна снігова злива',
+        95: 'Гроза', 96: 'Гроза з градом', 99: 'Сильна гроза з градом'
+    };
+
+    const AQI_LABELS = {
+        0: 'СПОКІЙ', 20: 'ДОБРЕ', 40: 'ДОБРЕ', 60: 'ПОМІРНО', 80: 'ПОГANO', 100: 'ПОГАНО', 120: 'ДУЖЕ ПОГАНО'
+    };
+
+    function aqiDescription(aqi) {
+        if (aqi <= 20) return 'Чисте повітря';
+        if (aqi <= 40) return 'Добре';
+        if (aqi <= 60) return 'Помірно';
+        if (aqi <= 80) return 'Погано для чутливих';
+        if (aqi <= 100) return 'Погано';
+        return 'Дуже погано';
+    }
+
     async function fetchGeophysical() {
         try {
-            const [quakes, eonet] = await Promise.all([
-                fetchJSON('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'),
-                fetchJSON('https://eonet.gsfc.nasa.gov/api/v3/events?days=1&status=open&limit=100')
+            // Open-Meteo: weather for Kyiv (capital of Ukraine — reference point)
+            // Plus air quality from open-meteo air-quality API
+            const weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52' +
+                '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover';
+            const airUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=50.45&longitude=30.52' +
+                '&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,european_aqi';
+
+            const [weather, air] = await Promise.all([
+                fetchJSON(weatherUrl, 12000),
+                fetchJSON(airUrl, 12000).catch(() => null)  // air quality is optional
             ]);
-            const quakeFeatures = (quakes && quakes.features) || [];
-            const eonetEvents = (eonet && eonet.events) || [];
-            STATE.geo.quakes = quakeFeatures.length;
-            STATE.geo.quakeMax = Math.max(...quakeFeatures.map(f => (f.properties && f.properties.mag) || 0), 0);
-            STATE.geo.eonetCount = eonetEvents.length;
-            const types = {};
-            for (const ev of eonetEvents) {
-                for (const cat of (ev.categories || [])) {
-                    const t = cat.title || 'Other';
-                    types[t] = (types[t]||0) + 1;
-                }
+
+            const c = weather.current || {};
+            STATE.geo.temp = c.temperature_2m ?? 0;
+            STATE.geo.apparentTemp = c.apparent_temperature ?? 0;
+            STATE.geo.humidity = c.relative_humidity_2m ?? 0;
+            STATE.geo.pressure = c.surface_pressure ?? 0;
+            STATE.geo.windSpeed = c.wind_speed_10m ?? 0;
+            STATE.geo.windDir = c.wind_direction_10m ?? 0;
+            STATE.geo.windGust = c.wind_gusts_10m ?? 0;
+            STATE.geo.cloudCover = c.cloud_cover ?? 0;
+            STATE.geo.precipitation = c.precipitation ?? 0;
+            STATE.geo.weatherCode = c.weather_code ?? 0;
+            STATE.geo.weatherDesc = WMO_CODES[c.weather_code] || 'Невідомо';
+            STATE.geo.city = 'Київ';
+
+            if (air && air.current) {
+                STATE.geo.pm25 = air.current.pm2_5 ?? 0;
+                STATE.geo.pm10 = air.current.pm10 ?? 0;
+                STATE.geo.aqi = air.current.european_aqi ?? 0;
+                STATE.geo.aqiDesc = aqiDescription(STATE.geo.aqi);
+            } else {
+                STATE.geo.aqi = -1;  // signal "no data"
+                STATE.geo.aqiDesc = '—';
             }
-            STATE.geo.eonetTypes = Object.entries(types).sort((a,b)=>b[1]-a[1]).slice(0, 4);
 
             $('src-geo').innerText = 'LIVE';
             $('src-geo').className = 'src-ind live';
-            log(`Геофізика: ${STATE.geo.quakes} землетрусів (max M${STATE.geo.quakeMax.toFixed(1)}), ${STATE.geo.eonetCount} подій EONET`, 'GEO');
+            log(`Метео: ${STATE.geo.city} ${STATE.geo.temp}°C, ${STATE.geo.weatherDesc}, вітер ${STATE.geo.windSpeed}км/год, AQI ${STATE.geo.aqi}`, 'METEO');
         } catch(e) {
             $('src-geo').innerText = 'DEAD';
             $('src-geo').className = 'src-ind dead';
-            log('Геофізика API: ' + e.message, 'GEO');
+            log('Метео API: ' + e.message, 'METEO');
         }
     }
 
     /* ---------- 10.7 UA-SPECIFIC FETCHERS ---------- */
 
     /* ---------- 10.7a MULTI-SOURCE AIR ALERT MONITOR ---------- */
-    // 5 parallel sources: 4 proxies to alerts.com.ua + 1 Telegram parser.
-    // The Telegram channel @air_alert_ua is the OFFICIAL Ukrainian air-alert source
-    // and is significantly more reliable than the API mirror. We parse it via allorigins.
+    // PRIMARY: Telegram @air_alert_ua via cors.sh — official Ukrainian air-alert channel,
+    //          real-time updates (messages every minute when alerts active).
+    // FALLBACKS: same Telegram via allorigins (when cors.sh is rate-limited),
+    //            then alerts.com.ua API via cors.sh (timestamps only — API is stale but
+    //            still gives us the structure of 25 oblasts).
+    //
+    // NOTE: alerts.in.ua is blocked by Cloudflare for non-browser requests — can't use.
+    //       alerts.com.ua returns stale 'changed' timestamps but 'alert' field is live.
+    const TG_URL = 'https://t.me/s/air_alert_ua';
+    const ALERTS_API_URL = 'https://alerts.com.ua/api/states';
     const ALERT_SOURCES = [
+        // PRIMARY — Telegram via cors.sh (Access-Control-Allow-Origin: *, very reliable)
         {
-            name: 'alerts.com.ua@allorigins',
-            url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://alerts.com.ua/api/states'),
-            timeout: 13000,
-            parse: (r) => {
-                const data = r.contents ? JSON.parse(r.contents) : r;
-                const states = data.states || [];
-                if (!states.length) throw new Error('empty states');
-                return _normalizeAlertStates(states);
-            }
-        },
-        {
-            name: 'Telegram@air_alert_ua',
-            url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://t.me/s/air_alert_ua'),
+            name: 'TG@air_alert_ua·cors.sh',
+            url: 'https://proxy.cors.sh/' + TG_URL,
             timeout: 13000,
             parse: (r) => _parseTelegramAlerts(r)
         },
+        // FALLBACK 1 — Telegram via allorigins /get (wraps in {contents:"..."})
         {
-            name: 'alerts.com.ua@allorigins-raw',
-            url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://alerts.com.ua/api/states'),
+            name: 'TG@air_alert_ua·allorigins',
+            url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(TG_URL),
+            timeout: 13000,
+            parse: (r) => _parseTelegramAlerts(r)
+        },
+        // FALLBACK 2 — alerts.com.ua API via cors.sh (gives per-oblast changed timestamps)
+        {
+            name: 'alerts.com.ua·cors.sh',
+            url: 'https://proxy.cors.sh/' + ALERTS_API_URL,
             timeout: 13000,
             parse: (r) => {
                 const data = typeof r === 'string' ? JSON.parse(r) : r;
@@ -4329,9 +4444,22 @@ __PATHS__
                 return _normalizeAlertStates(states);
             }
         },
+        // FALLBACK 3 — alerts.com.ua via allorigins /raw
         {
-            name: 'alerts.com.ua@codetabs',
-            url: 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent('https://alerts.com.ua/api/states'),
+            name: 'alerts.com.ua·allorigins',
+            url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(ALERTS_API_URL),
+            timeout: 13000,
+            parse: (r) => {
+                const data = typeof r === 'string' ? JSON.parse(r) : r;
+                const states = data.states || [];
+                if (!states.length) throw new Error('empty states');
+                return _normalizeAlertStates(states);
+            }
+        },
+        // FALLBACK 4 — alerts.com.ua via codetabs (rarely works, but free)
+        {
+            name: 'alerts.com.ua·codetabs',
+            url: 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(ALERTS_API_URL),
             timeout: 13000,
             parse: (r) => {
                 const data = typeof r === 'string' ? JSON.parse(r) : r;
@@ -4774,11 +4902,12 @@ __PATHS__
 
     /* ---------- 11. CIRCADIAN (Kyiv time, UTC+2/+3) ---------- */
     function calcCircadian() {
-        // Kyiv local hour (handles DST automatically via Intl)
+        // Kyiv local hour (handles DST automatically via Intl). Ukraine is single
+        // timezone (Europe/Kyiv, UTC+2/+3 DST). ~35M people in one timezone.
         const kyivStr = new Date().toLocaleString('en-US', { timeZone:'Europe/Kyiv', hour12:false });
         const h = parseInt(kyivStr.split(',')[1].trim().split(':')[0], 10);
-        // Ukraine ~40M people, mostly in Kyiv/Lviv/Kharkiv/Odesa time zone
-        // Awake curve: peak ~10-13 local, lowest ~3-4 local
+        // Ukrainian society awake curve: peak ~10-13 local, lowest ~3-4 local
+        // Different from global curve — Ukraine is monochrome timezone
         let awake;
         if (h >= 5 && h <= 22) {
             awake = 70 + Math.sin((h - 11) / 9 * Math.PI) * 22;
@@ -4787,23 +4916,30 @@ __PATHS__
         }
         STATE.circadian.awake = clamp(awake, 25, 95);
 
-        // Time-of-day phase
-        if (h >= 5 && h < 9)        STATE.circadian.peak = 'Ранкове пробудження';
-        else if (h >= 9 && h < 12)  STATE.circadian.peak = 'Робочий пік';
-        else if (h >= 12 && h < 17) STATE.circadian.peak = 'Денна активність';
-        else if (h >= 17 && h < 21) STATE.circadian.peak = 'Вечірній пік';
-        else if (h >= 21 && h < 24) STATE.circadian.peak = 'Вечірнє заспокоєння';
-        else                         STATE.circadian.peak = 'Нічна фаза';
+        // Time-of-day phase — Ukrainian-context labels (war-time awareness)
+        if (h >= 5 && h < 7)         STATE.circadian.peak = 'Передсвітанкова тривога';
+        else if (h >= 7 && h < 9)    STATE.circadian.peak = 'Ранковий старт';
+        else if (h >= 9 && h < 12)   STATE.circadian.peak = 'Робочий пік';
+        else if (h >= 12 && h < 14)  STATE.circadian.peak = 'Обідній затишок';
+        else if (h >= 14 && h < 17)  STATE.circadian.peak = 'Денна активність';
+        else if (h >= 17 && h < 21)  STATE.circadian.peak = 'Вечірній пік';
+        else if (h >= 21 && h < 23)  STATE.circadian.peak = 'Вечірнє заспокоєння';
+        else if (h >= 23 && h < 24)  STATE.circadian.peak = 'Пізній вечір';
+        else                          STATE.circadian.peak = 'Нічна тривога';
 
-        STATE.emotion.waves = clamp(Math.abs(h - 12) * 5, 8, 90);
+        // During war: nighttime brings higher anxiety (drone/missile attacks typical at night)
+        // Bump emotional waves slightly at night
+        let baseWaves = Math.abs(h - 12) * 5;
+        if (h >= 23 || h < 5) baseWaves += 8;  // nighttime anxiety bonus
+        STATE.emotion.waves = clamp(baseWaves, 8, 90);
 
-        // Psycho-seasonality (real astronomical)
+        // Psycho-seasonality (Ukrainian agricultural + climatic context)
         const dayOfYear = Math.floor((Date.now() - new Date(new Date().getUTCFullYear(),0,0)) / 86400000);
         let season;
-        if (dayOfYear < 80 || dayOfYear >= 355)      season = 'Зимове Сонцестояння';
-        else if (dayOfYear < 172)                    season = 'Весняне Рівнодення';
-        else if (dayOfYear < 266)                    season = 'Літнє Сонцестояння';
-        else                                          season = 'Осіннє Рівнодення';
+        if (dayOfYear < 80 || dayOfYear >= 355)       season = 'Зимове Сонцестояння';
+        else if (dayOfYear < 172)                     season = 'Весняне Рівнодення';
+        else if (dayOfYear < 266)                     season = 'Літнє Сонцестояння';
+        else                                           season = 'Осіннє Рівнодення';
         STATE.circadian.season = season;
     }
 
@@ -4838,8 +4974,8 @@ __PATHS__
         if (coherence > 75 && STATE.deep.intuition > 65) {
             STATE.deep.synch = 'АКТИВНО';
             if (Math.random() < 0.3) {
-                showAlert('ГЛОБАЛЬНА СИНХРОНІЧНІСТЬ', 'sync');
-                log('Подія синхронічності виявлена', 'DEEP');
+                showAlert('СИНХРОНІЧНІСТЬ УКР. СУСПІЛЬСТВА', 'sync');
+                log('Подія синхронічності в укр. ноосфері', 'DEEP');
             }
         } else if (coherence > 55) {
             STATE.deep.synch = 'НАБЛИЖЕННЯ';
@@ -4873,8 +5009,18 @@ __PATHS__
         if (STATE.crypto.fng > 75) {
             patterns.push({ type:'hope', text:`FINANCIAL GREED: F&G=${STATE.crypto.fng} (Extreme Greed).` });
         }
-        if (STATE.geo.quakeMax >= 6) {
-            patterns.push({ type:'critical', text:`SEISMIC EVENT: M${STATE.geo.quakeMax.toFixed(1)} зафіксовано.` });
+        // Weather-based patterns (Ukraine meteo)
+        if ([95, 96, 99].includes(STATE.geo.weatherCode)) {
+            patterns.push({ type:'critical', text:`🌩 STORM: ${STATE.geo.weatherDesc} у ${STATE.geo.city}.` });
+        }
+        if (STATE.geo.temp >= 35 || STATE.geo.temp <= -15) {
+            patterns.push({ type:'critical', text:`🌡 EXTREME TEMP: ${fmt(STATE.geo.temp,0)}°C у ${STATE.geo.city}.` });
+        }
+        if (STATE.geo.aqi > 80) {
+            patterns.push({ type:'critical', text:`💨 BAD AIR: AQI=${STATE.geo.aqi} (${STATE.geo.aqiDesc}).` });
+        }
+        if (STATE.geo.windGust >= 60) {
+            patterns.push({ type:'critical', text:`🌪 HIGH WIND: пориви ${fmt(STATE.geo.windGust,0)} км/год.` });
         }
         // UA-specific patterns
         if (STATE.alerts.activeCount >= 10) {
@@ -5365,7 +5511,7 @@ __PATHS__
             eDyn = `Індекс ${STATE.emotion.index.toFixed(0)}/100 — критично низький. Страх ${STATE.emotion.fear.toFixed(0)}% домінує над надією ${STATE.emotion.hope.toFixed(0)}%.`;
             eMove = `<span class="${fTrend.cls}">${fTrend.arrow} Страх: ${fTrend.label}</span> · <span class="${hTrend.cls}">${hTrend.arrow} Надія: ${hTrend.label}</span> · <span class="${eTrend.cls}">${eTrend.arrow} GEI: ${eTrend.label}</span>`;
             eCtx = `Психіка колективу під тиском. Негативні сигнали ${STATE.emotion.fear.toFixed(0)}% перевищують базовий рівень. Емоційні хвилі ${STATE.emotion.waves.toFixed(0)} Гц — висока амплітуда коливань.`;
-            eDriver = `Драйвери: домінування crisis-сигналів у ${STATE.sourcesOk} RSS-стрімах. Кореляція страху з соціальною напругою ${((STATE.emotion.fear + STATE.tension.index)/200*100).toFixed(0)}%.`;
+            eDriver = `Драйвери: аналіз ${STATE.sourcesOk} українських RSS-стрімів (Укрправда, Єп, DefenseExpr, 24Канал та ін.). Кореляція страху з соціальною напругою ${((STATE.emotion.fear + STATE.tension.index)/200*100).toFixed(0)}%.`;
             eForecast = eTrend.slope < -1 ? `Прогноз: триває погіршення. Ризик переходу в режим FEAR. Волатильність σ=${eVol.toFixed(1)}.` :
                         eTrend.slope > 1  ? `Прогноз: ознаки відновлення. Спостерігати ${2-3} цикли.` :
                         `Прогноз: стан утримується біля дна. σ=${eVol.toFixed(1)}. Діапазон ${geiRange.min.toFixed(0)}–${geiRange.max.toFixed(0)}.`;
@@ -5373,7 +5519,7 @@ __PATHS__
             eDyn = `Індекс ${STATE.emotion.index.toFixed(0)}/100 — високий. Надія ${STATE.emotion.hope.toFixed(0)}% переважає над страхом ${STATE.emotion.fear.toFixed(0)}%.`;
             eMove = `<span class="${fTrend.cls}">${fTrend.arrow} Страх: ${fTrend.label}</span> · <span class="${hTrend.cls}">${hTrend.arrow} Надія: ${hTrend.label}</span> · <span class="${eTrend.cls}">${eTrend.arrow} GEI: ${eTrend.label}</span>`;
             eCtx = `Конструктивні настрої домінують. Психіка розслаблена, емоційні хвилі ${STATE.emotion.waves.toFixed(0)} Гц — гармонійний ритм.`;
-            eDriver = `Драйвери: позитивні сигнали з ${STATE.sourcesOk} джерел. Архетип "${STATE.deep.archetype}".`;
+            eDriver = `Драйвери: позитивні сигнали з ${STATE.sourcesOk} укр. джерел. Архетип "${STATE.deep.archetype}".`;
             eForecast = eTrend.slope > 1 ? `Прогноз: підсилення позитиву. Можливий перехід у FLOW-режим.` :
                         eTrend.slope < -1 ? `Прогноз: пом'якшення. Пік пройдено, повернення до норми.` :
                         `Прогноз: стабільна позитивна зона. σ=${eVol.toFixed(1)}. Діапазон ${geiRange.min.toFixed(0)}–${geiRange.max.toFixed(0)}.`;
@@ -5381,7 +5527,7 @@ __PATHS__
             eDyn = `Індекс ${STATE.emotion.index.toFixed(0)}/100 — нейтральна зона. Страх ${STATE.emotion.fear.toFixed(0)}% / Надія ${STATE.emotion.hope.toFixed(0)}%.`;
             eMove = `<span class="${fTrend.cls}">${fTrend.arrow} Страх: ${fTrend.label}</span> · <span class="${hTrend.cls}">${hTrend.arrow} Надія: ${hTrend.label}</span> · <span class="${eTrend.cls}">${eTrend.arrow} GEI: ${eTrend.label}</span>`;
             eCtx = `Емоційний фон рівномірний без різких відхилень. Хвилі ${STATE.emotion.waves.toFixed(0)} Гц — базовий ритм.`;
-            eDriver = `Баланс страху та надії. Активних драйверів не виявлено. Джерел online: ${STATE.sourcesOk}/${STATE.sourcesTotal}.`;
+            eDriver = `Баланс страху та надії. Активних драйверів не виявлено. Укр. джерел online: ${STATE.sourcesOk}/${STATE.sourcesTotal}.`;
             eForecast = `Прогноз: утримання в нейтральній зоні. σ=${eVol.toFixed(1)}. Діапазон за 8 циклів: ${geiRange.min.toFixed(0)}–${geiRange.max.toFixed(0)}.`;
         }
 
@@ -5457,14 +5603,14 @@ __PATHS__
         // ATTENTION
         const trendBox = $('v-trends');
         trendBox.innerHTML = '';
-        const topTags = STATE.attention.trends.slice(0, 6);
+        const topTags = STATE.attention.trends.slice(0, 8);
         topTags.forEach((t, i) => {
-            const cls = i < 2 ? 'hot' : '';
+            const cls = i < 3 ? 'hot' : '';
             trendBox.innerHTML += `<span class="tag ${cls}">#${t}</span>`;
         });
         if (STATE.attention.bigrams.length) {
-            trendBox.innerHTML += '<br><span style="font-size:7px; color:#556; margin-top:3px; display:block;">Біграми:</span>';
-            STATE.attention.bigrams.slice(0, 3).forEach(b => {
+            trendBox.innerHTML += '<br><span style="font-size:7px; color:#556; margin-top:3px; display:block;">Біграми (контекст):</span>';
+            STATE.attention.bigrams.slice(0, 5).forEach(b => {
                 trendBox.innerHTML += `<span class="tag hope">${b}</span>`;
             });
         }
@@ -5490,21 +5636,21 @@ __PATHS__
             aDyn = `Фокус ${STATE.attention.focus.toFixed(0)}% — домінує "${topTrend}". Унікальних тем: ${STATE.attention.uniq}.`;
             aMove = `<span class="${aFocusTrend.cls}">${aFocusTrend.arrow} Фокус: ${aFocusTrend.label}</span> · Волатильність ${STATE.attention.volatility.toFixed(0)}%`;
             aCtx = `Концентрація уваги на одній темі. Монопольний нарратив витісняє альтернативи. Ризик інформаційного перекосу.`;
-            aDriver = `Топ-тренд: <b>${topTrend}</b>. Біграми: ${bigramsList}. Тематична домінанта: ${trendsList}.`;
-            aForecast = aFocusTrend.slope > 1 ? `Прогноз: концентрація підсилюється. Ризик "тунельної уваги".` :
+            aDriver = `Топ-тренд укр. інфополя: <b>${topTrend}</b>. Топ-біграми: ${bigramsList}. Активні теми: ${trendsList}. Джерел: ${STATE.sourcesOk}/${STATE.sourcesTotal}.`;
+            aForecast = aFocusTrend.slope > 1 ? `Прогноз: концентрація підсилюється. Ризик "тунельної уваги" в укр. інфополі.` :
                         aFocusTrend.slope < -1 ? `Прогноз: фокус розмивається. Диверсифікація тем.` :
                         `Прогноз: утримання монополії. Діапазон ${focusRange.min.toFixed(0)}–${focusRange.max.toFixed(0)}%.`;
         } else if (STATE.attention.volatility > 70) {
             aDyn = `Волатильність ${STATE.attention.volatility.toFixed(0)}% — увага фрагментована. Фокус ${STATE.attention.focus.toFixed(0)}%. Унікальних тем: ${STATE.attention.uniq}.`;
             aMove = `<span class="${aFocusTrend.cls}">${aFocusTrend.arrow} Фокус: ${aFocusTrend.label}</span> · Розсіяність ${STATE.attention.volatility.toFixed(0)}%`;
             aCtx = `Інформаційний хаос. Увага стрибає між темами без глибокої обробки. Низька когерентність.`;
-            aDriver = `Топ-тренд: ${topTrend}. Активних тем: ${STATE.attention.trends.length}. Біграми: ${bigramsList}.`;
+            aDriver = `Топ-тренд: ${topTrend}. Активних тем: ${STATE.attention.trends.length} (${STATE.sourcesOk} укр. джерел). Біграми: ${bigramsList}.`;
             aForecast = `Прогноз: продовження шуму. Ризик режиму CHAOS. Спостерігати σ=${volatilityOf('focus',8).toFixed(1)}.`;
         } else {
             aDyn = `Фокус ${STATE.attention.focus.toFixed(0)}% / Волатильність ${STATE.attention.volatility.toFixed(0)}%. Унікальних тем: ${STATE.attention.uniq}.`;
             aMove = `<span class="${aFocusTrend.cls}">${aFocusTrend.arrow} Фокус: ${aFocusTrend.label}</span> · Розсіяність ${STATE.attention.volatility.toFixed(0)}%`;
             aCtx = `Збалансований розподіл уваги. Кілька тем паралельно, помірна концентрація.`;
-            aDriver = `Топ: ${trendsList}. Біграми: ${bigramsList}.`;
+            aDriver = `Топ укр. теми: ${trendsList}. Біграми: ${bigramsList}. Унікальних слів: ${STATE.attention.uniq}.`;
             aForecast = `Прогноз: стабільний патерн. Діапазон фокусу ${focusRange.min.toFixed(0)}–${focusRange.max.toFixed(0)}%.`;
         }
 
@@ -5542,22 +5688,22 @@ __PATHS__
 
         let cirDyn, cirMove, cirCtx, cirDriver, cirForecast;
         if (STATE.circadian.awake > 65) {
-            cirDyn = `Активних ${STATE.circadian.awake.toFixed(0)}% людства. Пік: ${STATE.circadian.peak}. Хвилі ${STATE.emotion.waves.toFixed(0)} Гц.`;
+            cirDyn = `Активних ${STATE.circadian.awake.toFixed(0)}% українців. Фаза: ${STATE.circadian.peak}. Хвилі ${STATE.emotion.waves.toFixed(0)} Гц.`;
             cirMove = `Фаза дня: ${phaseProgress}% · ${phaseDirection}`;
             cirCtx = `Глобальне пробудження. Когнітивна активність максимальна. Інфополе насичене.`;
             cirDriver = `Пік: <b>${STATE.circadian.peak}</b>. Сезон: ${STATE.circadian.season}. Амплітуда хвиль ${STATE.emotion.waves.toFixed(0)} Гц.`;
             cirForecast = `Прогноз: ${nextPhase}. Активність ${h < 12 ? 'зростатиме' : 'спадатиме'}.`;
         } else if (STATE.circadian.awake < 45) {
-            cirDyn = `Активних лише ${STATE.circadian.awake.toFixed(0)}% людства. Пік: ${STATE.circadian.peak}. Хвилі ${STATE.emotion.waves.toFixed(0)} Гц.`;
+            cirDyn = `Активних лише ${STATE.circadian.awake.toFixed(0)}% українців. Фаза: ${STATE.circadian.peak}. Хвилі ${STATE.emotion.waves.toFixed(0)} Гц.`;
             cirMove = `Фаза сну: ${phaseProgress}% · ${phaseDirection}`;
-            cirCtx = `Колективний відпочинок. Підсвідомість домінує. Інтуїтивний шар активніший за раціональний.`;
-            cirDriver = `Активний регіон: <b>${STATE.circadian.peak}</b>. Сезон: ${STATE.circadian.season}. Архетип сну: ${STATE.deep.archetype}.`;
+            cirCtx = `Нічна фаза в Україні. Підсвідомість домінує. Підвищений ризик нічних атак БПЛА/ракет — фоновий стрес збережено.`;
+            cirDriver = `Фаза доби (за Києвом): <b>${STATE.circadian.peak}</b>. Сезон: ${STATE.circadian.season}. Архетип: ${STATE.deep.archetype}. Часовий пояс: Europe/Kyiv.`;
             cirForecast = `Прогноз: ${nextPhase}. Режим DEEP активний.`;
         } else {
-            cirDyn = `Активних ${STATE.circadian.awake.toFixed(0)}% людства. Пік: ${STATE.circadian.peak}. Хвилі ${STATE.emotion.waves.toFixed(0)} Гц.`;
+            cirDyn = `Активних ${STATE.circadian.awake.toFixed(0)}% українців. Фаза: ${STATE.circadian.peak}. Хвилі ${STATE.emotion.waves.toFixed(0)} Гц.`;
             cirMove = `Перехідна фаза: ${phaseProgress}% · ${phaseDirection}`;
-            cirCtx = `Зміна піку активності. Регіони прокидаються / засинають. Помірна когнітивна активність.`;
-            cirDriver = `Активний: <b>${STATE.circadian.peak}</b>. Сезон: ${STATE.circadian.season}.`;
+            cirCtx = `Зміна фази доби в Україні. Помірна когнітивна активність укр. суспільства.`;
+            cirDriver = `Фаза: <b>${STATE.circadian.peak}</b>. Сезон: ${STATE.circadian.season}.`;
             cirForecast = `Прогноз: ${nextPhase}.`;
         }
 
@@ -5594,7 +5740,7 @@ __PATHS__
             iDyn = `Щільність сенсу ${STATE.consciousness.meaning.toFixed(0)}% — критично низька. Глибина ${STATE.consciousness.depth.toFixed(0)}. Поширення ${STATE.consciousness.propagation.toFixed(1)} m/s.`;
             iMove = `<span class="${depthTrend.cls}">${depthTrend.arrow} Глибина: ${depthTrend.label}</span> · <span class="${propCls}">${propArrow} Поширення: ${propTrend}</span>`;
             iCtx = `Інформаційний шум переважає. Сигнал/шум низький. Думки розмиваються в потоці поверхневих повідомлень.`;
-            iDriver = `Wikipedia top: <b>${STATE.consciousness.wikiTop}</b>. Помітно поверхневе споживання інформації.`;
+            iDriver = `Українська Wikipedia топ: <b>${STATE.consciousness.wikiTop}</b>. Помітно поверхневе споживання укр. інфополя.`;
             iForecast = depthTrend.slope < -1 ? `Прогноз: деградація глибини. Ризик режиму CHAOS.` :
                         depthTrend.slope > 1  ? `Прогноз: відновлення сенсу.` :
                         `Прогноз: шум утримується. Діапазон глибини ${depthRange.min.toFixed(0)}–${depthRange.max.toFixed(0)}.`;
@@ -5602,7 +5748,7 @@ __PATHS__
             iDyn = `Глибина ${STATE.consciousness.depth.toFixed(0)} — висока. Сенс ${STATE.consciousness.meaning.toFixed(0)}%. Поширення ${STATE.consciousness.propagation.toFixed(1)} m/s.`;
             iMove = `<span class="${depthTrend.cls}">${depthTrend.arrow} Глибина: ${depthTrend.label}</span> · <span class="${propCls}">${propArrow} Поширення: ${propTrend}</span>`;
             iCtx = `Конструктивне обговорення. Аналітичний шар домінує над реактивним. Висока якість дискурсу.`;
-            iDriver = `Wikipedia top: <b>${STATE.consciousness.wikiTop}</b>. Інтелектуальний інтерес активний.`;
+            iDriver = `Укр. Wikipedia топ: <b>${STATE.consciousness.wikiTop}</b>. Інтелектуальний інтерес укр. суспільства активний.`;
             iForecast = depthTrend.slope > 1 ? `Прогноз: підсилення глибини. Можливий SYNC-режим.` :
                         depthTrend.slope < -1 ? `Прогноз: пом'якшення аналітики.` :
                         `Прогноз: стабільна глибина. Діапазон ${depthRange.min.toFixed(0)}–${depthRange.max.toFixed(0)}.`;
@@ -5610,7 +5756,7 @@ __PATHS__
             iDyn = `Глибина ${STATE.consciousness.depth.toFixed(0)} / Сенс ${STATE.consciousness.meaning.toFixed(0)}% / Поширення ${STATE.consciousness.propagation.toFixed(1)} m/s.`;
             iMove = `<span class="${depthTrend.cls}">${depthTrend.arrow} Глибина: ${depthTrend.label}</span> · <span class="${propCls}">${propArrow} Поширення: ${propTrend}</span>`;
             iCtx = `Інфополе структуроване. Помірна аналітика змішана з реактивністю.`;
-            iDriver = `Wikipedia top: <b>${STATE.consciousness.wikiTop}</b>.`;
+            iDriver = `Укр. Wikipedia топ: <b>${STATE.consciousness.wikiTop}</b>. Джерел: ${STATE.sourcesOk}/${STATE.sourcesTotal}.`;
             iForecast = `Прогноз: поточний патерн утримається. Діапазон ${depthRange.min.toFixed(0)}–${depthRange.max.toFixed(0)}.`;
         }
 
@@ -5649,7 +5795,7 @@ __PATHS__
             tDyn = `Напруга ${STATE.tension.index.toFixed(1)}/100 — критична. Поляризація ${splitA}:${splitB}. Гео-вогнищ: ${STATE.tension.geo.length}.`;
             tMove = `<span class="${tTrend.cls}">${tTrend.arrow} Напруга: ${tTrend.label}</span> · σ=${tVol.toFixed(1)}`;
             tCtx = `Висока конфліктність. Ризик соціальних вибухів та ескалації. Думки розколоті.`;
-            tDriver = `Гео-фокус: <b>${geoHotspot}</b>. Топ-регіони: ${topGeo}. Кореляція зі страхом ${((STATE.emotion.fear + STATE.tension.index)/200*100).toFixed(0)}%.`;
+            tDriver = `Гео-фокус (укр. регіони): <b>${geoHotspot}</b>. Топ: ${topGeo}. Кореляція страху з напругою: ${((STATE.emotion.fear + STATE.tension.index)/200*100).toFixed(0)}%.`;
             tForecast = tTrend.slope > 1 ? `Прогноз: ескалація. Режим TENSION активний.` :
                         tTrend.slope < -1 ? `Прогноз: розрядка. Спостерігати 2-3 цикли.` :
                         `Прогноз: утримання на високому рівні. Діапазон ${tRange.min.toFixed(0)}–${tRange.max.toFixed(0)}.`;
@@ -5677,11 +5823,13 @@ __PATHS__
             <span class="an-driver">${tDriver}</span>
             <span class="an-forecast">🔮 ${tForecast}</span>`;
 
-        // GEOPHYSICAL
-        $('v-quakes').innerText = STATE.geo.quakes;
-        $('v-quake-max').innerText = 'M' + fmt(STATE.geo.quakeMax,1);
-        $('v-eonet').innerText = STATE.geo.eonetCount;
-        $('v-eonet-types').innerText = STATE.geo.eonetTypes.map(([t,c])=>`${t}×${c}`).join(', ');
+        // METEO — Ukraine weather from Open-Meteo
+        $('v-temp').innerText = fmt(STATE.geo.temp,1) + ' °C';
+        $('v-apparent').innerText = fmt(STATE.geo.apparentTemp,1) + ' °C';
+        $('v-pressure').innerText = fmt(STATE.geo.pressure,0) + ' hPa / ' + fmt(STATE.geo.humidity,0) + '%';
+        $('v-wind').innerText = fmt(STATE.geo.windSpeed,1) + ' км/год (' + fmt(STATE.geo.windGust,0) + ')';
+        $('v-precip').innerText = fmt(STATE.geo.precipitation,1) + ' мм / ' + fmt(STATE.geo.cloudCover,0) + '%';
+        $('v-aqi').innerText = (STATE.geo.aqi >= 0 ? fmt(STATE.geo.aqi,0) + ' (PM2.5: ' + fmt(STATE.geo.pm25,1) + ')' : '— (немає даних)');
 
         // WAR STATUS — real data from RSS war-event extraction
         $('v-war-day').innerText = STATE.war.day + ' день';
@@ -5724,36 +5872,52 @@ __PATHS__
             <span class="an-driver">${wDriver}</span>
             <span class="an-forecast">🔮 ${wForecast}</span>`;
 
-        // GEOPHYSICAL analytical block
+        // METEO analytical block — Ukraine weather interpretation
+        // Weather-based psychological impact on Ukrainian society
         let gStat, gBadge, gBadgeCls;
-        if (STATE.geo.quakeMax >= 6 || STATE.geo.eonetCount > 50) { gStat='СТИХІЙНА АКТИВНІСТЬ'; gBadge='STORM'; gBadgeCls='crit'; }
-        else if (STATE.geo.quakeMax >= 5 || STATE.geo.eonetCount > 25) { gStat='ПІДВИЩЕНА'; gBadge='WARN'; gBadgeCls='warn'; }
-        else if (STATE.geo.quakes < 5 && STATE.geo.eonetCount < 10)    { gStat='СПОКІЙ'; gBadge='CALM'; gBadgeCls='ok'; }
-        else                                                            { gStat='БАЗОВА АКТИВНІСТЬ'; gBadge='OK'; gBadgeCls='info'; }
+        const t = STATE.geo.temp;
+        const gust = STATE.geo.windGust;
+        const aqi = STATE.geo.aqi;
+        // Severe weather: storms, extreme temps, bad air, high wind gusts
+        const isStorm = [95, 96, 99, 82, 86].includes(STATE.geo.weatherCode);
+        const isExtremeTemp = t <= -15 || t >= 35;
+        const isBadAir = aqi > 80;
+        const isHighWind = gust >= 60;
 
-        const eonetTypesStr = STATE.geo.eonetTypes.map(([t,c])=>`${t}×${c}`).join(', ') || 'немає';
-        const topEonet = STATE.geo.eonetTypes[0] ? STATE.geo.eonetTypes[0][0] : '—';
-        const quakePerHour = (STATE.geo.quakes / 24).toFixed(1);
+        if (isStorm || isExtremeTemp || isBadAir || isHighWind) {
+            gStat = 'НЕСПОКІЙНА ПОГОДА'; gBadge = 'STORM'; gBadgeCls = 'crit';
+        } else if (aqi > 60 || t <= -5 || t >= 30 || gust >= 40) {
+            gStat = 'ПІДВИЩЕНА'; gBadge = 'WARN'; gBadgeCls = 'warn';
+        } else if (t >= 15 && t <= 25 && aqi <= 40 && gust < 30) {
+            gStat = 'КОМФОРТНА'; gBadge = 'CALM'; gBadgeCls = 'ok';
+        } else {
+            gStat = 'ПОМІРНА'; gBadge = 'OK'; gBadgeCls = 'info';
+        }
+
+        const windDirText = ['Пн','Пн-Сх','Сх','Пд-Сх','Пд','Пд-Зх','Зх','Пн-Зх'][Math.round(STATE.geo.windDir / 45) % 8] || '—';
 
         let gDyn, gMove, gCtx, gDriver, gForecast;
-        if (STATE.geo.quakeMax >= 6) {
-            gDyn = `Землетрус M${STATE.geo.quakeMax.toFixed(1)} — сильний. За добу: ${STATE.geo.quakes} подій (~${quakePerHour}/год). EONET: ${STATE.geo.eonetCount}.`;
-            gMove = `Сейсміка: ${STATE.geo.quakeMax >= 6 ? 'висока' : STATE.geo.quakeMax >= 5 ? 'помірна' : 'низька'} · Природні події: ${STATE.geo.eonetCount > 30 ? 'багато' : 'помірно'}`;
-            gCtx = `Землетрус магнітудою ${STATE.geo.quakeMax.toFixed(1)} може впливати на колективну психіку. Стрес-фактор для регіону епіцентру.`;
-            gDriver = `Тип подій EONET: <b>${topEonet}</b>. Категорії: ${eonetTypesStr}.`;
-            gForecast = `Прогноз: афтершоки можливі протягом 24-48 годин. Спостерігати сейсмічну гілку.`;
-        } else if (STATE.geo.quakeMax >= 5) {
-            gDyn = `Макс. магнітуда M${STATE.geo.quakeMax.toFixed(1)} — помірна. За добу: ${STATE.geo.quakes} подій. EONET: ${STATE.geo.eonetCount}.`;
-            gMove = `Сейсміка: помірна · Природні події: ${STATE.geo.eonetCount > 25 ? 'активні' : 'помірні'}`;
-            gCtx = `Помірна сейсмічна активність. Локальний вплив на психіку без глобальних наслідків.`;
-            gDriver = `Топ-EONET: <b>${topEonet}</b>. Категорії: ${eonetTypesStr}.`;
-            gForecast = `Прогноз: поточний рівень активності збережеться.`;
+        if (gBadgeCls === 'crit') {
+            gDyn = `${STATE.geo.city}: ${fmt(t,1)}°C (відчувається ${fmt(STATE.geo.apparentTemp,1)}°C). ${STATE.geo.weatherDesc}. Вітер ${fmt(STATE.geo.windSpeed,0)} км/год, пориви ${fmt(gust,0)}.`;
+            gMove = `Тиск ${fmt(STATE.geo.pressure,0)} hPa · Вологість ${fmt(STATE.geo.humidity,0)}% · AQI ${aqi >= 0 ? aqi : '—'}`;
+            gCtx = isStorm ? 'Гроза/злива — підвищена тривожність укр. суспільства. Можливі перебої в електропостачанні.' :
+                   isExtremeTemp ? (t >= 35 ? 'Спека — стрес для здоров\'я, ризик для енергосистеми.' : 'Мороз — стрес для інфраструктури, опалення.') :
+                   isBadAir ? 'Погана якість повітря — ризик для дихання, особливо у воєнних регіонах.' :
+                   'Сильний вітер — ризик для енергосистеми (особливо після атак на НЕК).';
+            gDriver = `Джерело: Open-Meteo (Київ, 50.45°N, 30.52°E). WMO код: ${STATE.geo.weatherCode}. Повітря: ${STATE.geo.aqiDesc}.`;
+            gForecast = 'Прогноз: зберігати обережність. Моніторити погодні попередження Укргідрометцентру.';
+        } else if (gBadgeCls === 'warn') {
+            gDyn = `${STATE.geo.city}: ${fmt(t,1)}°C. ${STATE.geo.weatherDesc}. Вітер ${fmt(STATE.geo.windSpeed,0)} км/год (${windDirText}).`;
+            gMove = `Тиск ${fmt(STATE.geo.pressure,0)} hPa · Хмарність ${fmt(STATE.geo.cloudCover,0)}% · AQI ${aqi >= 0 ? aqi : '—'}`;
+            gCtx = 'Помірно некомфортна погода. Вплив на настрій помітний, але не критичний.';
+            gDriver = `Джерело: Open-Meteo. ${STATE.geo.weatherDesc}. Повітря: ${STATE.geo.aqiDesc}.`;
+            gForecast = 'Прогноз: поточна погода збережеться. Стандартний моніторинг.';
         } else {
-            gDyn = `Макс. магнітуда M${STATE.geo.quakeMax.toFixed(1)} — низька. За добу: ${STATE.geo.quakes} подій (~${quakePerHour}/год). EONET: ${STATE.geo.eonetCount}.`;
-            gMove = `Сейсміка: спокійна · Природні події: ${STATE.geo.eonetCount > 30 ? 'багато' : STATE.geo.eonetCount > 10 ? 'помірно' : 'мало'}`;
-            gCtx = `Геофізичний фон спокійний. Стихійні стрес-фактори мінімальні.`;
-            gDriver = `Топ-EONET: <b>${topEonet}</b>. Категорії: ${eonetTypesStr}.`;
-            gForecast = `Прогноз: спокій збережеться. Моніторинг триває.`;
+            gDyn = `${STATE.geo.city}: ${fmt(t,1)}°C (відчувається ${fmt(STATE.geo.apparentTemp,1)}°C). ${STATE.geo.weatherDesc}.`;
+            gMove = `Вітер ${fmt(STATE.geo.windSpeed,0)} км/год (${windDirText}) · Тиск ${fmt(STATE.geo.pressure,0)} hPa`;
+            gCtx = 'Комфортна погода для укр. суспільства. Стрес-фактор від природних умов мінімальний.';
+            gDriver = `Джерело: Open-Meteo (Київ). Повітря: ${STATE.geo.aqiDesc}. Хмарність: ${fmt(STATE.geo.cloudCover,0)}%.`;
+            gForecast = 'Прогноз: спокійна погода збережеться. Фоновий моніторинг.';
         }
 
         $('desc-geo').innerHTML = `
@@ -5772,12 +5936,12 @@ __PATHS__
 
         // DEEP analytical block
         const archetypes = {
-            'ТІНЬ':       { stat:'ПРОЕКЦІЯ ТІНІ',   badge:'SHADOW', cls:'crit',  desc:'Колективна тінь активована. Пригнічені змісти виходять на поверхню.' },
-            'ХАОС':       { stat:'ДИСРУПЦІЯ',       badge:'CHAOS',  cls:'crit',  desc:'Хаотичний стан. Архетип руйнування домінує.' },
-            'ВІДРОДЖЕННЯ':{ stat:'ТРАНСФОРМАЦІЯ',   badge:'BLOOM',  cls:'ok',    desc:'Архетип відродження. Кризис переростає в оновлення.' },
-            'ГЕРОЙ':      { stat:'ГЕРОЇЧНИЙ ВИКЛИК',badge:'HERO',   cls:'ok',    desc:'Героїчний архетип. Колектив мобілізований на виклик.' },
-            'ТРИКСТЕР':   { stat:'ПІДРІВ',          badge:'TRICK',  cls:'warn',  desc:'Трикстер активний. Ілюзії, обман, нестабільність сенсу.' },
-            'ПОРЯДОК':    { stat:'СТРУКТУРА',       badge:'ORDER',  cls:'ok',    desc:'Архетип порядку. Стабільність та ієрархія домінують.' }
+            'ТІНЬ':       { stat:'ПРОЕКЦІЯ ТІНІ',   badge:'SHADOW', cls:'crit',  desc:'Колективна тінь укр. суспільства активована. Пригнічені травми війни виходять на поверхню.' },
+            'ХАОС':       { stat:'ДИСРУПЦІЯ',       badge:'CHAOS',  cls:'crit',  desc:'Хаотичний стан укр. інфополя. Архетип руйнування домінує.' },
+            'ВІДРОДЖЕННЯ':{ stat:'ТРАНСФОРМАЦІЯ',   badge:'BLOOM',  cls:'ok',    desc:'Архетип відродження України. Кризис переростає в оновлення.' },
+            'ГЕРОЙ':      { stat:'ГЕРОЇЧНИЙ ВИКЛИК',badge:'HERO',   cls:'ok',    desc:'Героїчний архетип укр. нації. Колектив мобілізований на виклик війни.' },
+            'ТРИКСТЕР':   { stat:'ПІДРІВ',          badge:'TRICK',  cls:'warn',  desc:'Трикстер активний в укр. інфополі. Ілюзії, пропаганда, нестабільність сенсу.' },
+            'ПОРЯДОК':    { stat:'СТРУКТУРА',       badge:'ORDER',  cls:'ok',    desc:'Архетип порядку. Стабільність укр. суспільства та інституційна опора.' }
         };
         const archInfo = archetypes[STATE.deep.archetype] || { stat:'НЕВИЗНАЧЕНО', badge:'—', cls:'info', desc:'Перехідний стан.' };
 
@@ -5796,7 +5960,7 @@ __PATHS__
         const dDyn = `Архетип <b>${STATE.deep.archetype}</b>. Вектор мрій: ${STATE.deep.dream}. Інтуїція ${STATE.deep.intuition}%. Синхронізація: ${STATE.deep.synch}.`;
         const dMove = `Інтуїтивний фон: ${intuitLevel}`;
         const dCtx = `${archInfo.desc} ${syncMeaning}`;
-        const dDriver = `Вектор мрій спирається на топ-тренд "<b>${STATE.deep.dream}</b>". Архетип визначено через домінантний патерн ноосфери.`;
+        const dDriver = `Вектор мрій укр. суспільства: "<b>${STATE.deep.dream}</b>". Архетип визначено через домінантний патерн укр. ноосфери (страх ${STATE.emotion.fear.toFixed(0)}% + надія ${STATE.emotion.hope.toFixed(0)}%).`;
         const dForecast = STATE.deep.synch === 'АКТИВНО' ? `Прогноз: можливий перехід у SYNC-режим. Когерентність ${STATE.deep.intuition}%.` :
                           STATE.deep.synch === 'НАБЛИЖЕННЯ' ? `Прогноз: наближення до синхронізації. Спостерігати 2-3 цикли.` :
                           `Прогноз: розсинхронізація збережеться. Архетип ${STATE.deep.archetype} утримується.`;
@@ -5844,7 +6008,7 @@ __PATHS__
             desc = 'Глобальна синхронізація свідомості. Когерентність між шарами максимальна. Архетип: ' + STATE.deep.archetype + '.';
         } else if (mode === 'DEEP') {
             status = 'ГЛИБИННИЙ СОН · DEEP';
-            desc = 'Фаза колективного відпочинку. Людство спить (' + STATE.circadian.awake.toFixed(0) + '% активних). Підсвідомість домінує.';
+            desc = 'Фаза колективного відпочинку України. Суспільство спить (' + STATE.circadian.awake.toFixed(0) + '% активних). Підсвідомість домінує.';
         } else {
             status = 'СТАБІЛЬНІСТЬ · STABILITY';
             desc = 'Планетарна свідомість у нормі. Збалансований потік інформації. Емоційний фон рівномірний.';
@@ -5909,7 +6073,10 @@ __PATHS__
     bgAnim();
     window.addEventListener('resize', initStars);
 
-    /* ---------- 18. INIT + LOOPS ---------- */
+    /* ---------- 18. INIT + LOOPS (FAST START) ---------- */
+    // Strategy: render UI immediately with cached/placeholder values, then fire
+    // all fetches in parallel WITHOUT awaiting. Each fetcher triggers its own UI
+    // refresh on completion. This drops perceived load time from 30+s to <1s.
     async function init() {
         log("ІНІЦІАЛІЗАЦІЯ З'ЄДНАННЯ З НООСФЕРОЮ...");
         loadHistory();
@@ -5923,15 +6090,68 @@ __PATHS__
         setInterval(tickClock, 1000);
         setInterval(calcCircadian, 60000);
 
-        // Initial fetch — parallel
-        log('Запит до українських RSS-джерел (20 джерел, 5 воєнних)...', 'INIT');
-        await Promise.allSettled([fetchAllRSS(), fetchCrypto(), fetchGeophysical(), fetchWikipedia(), fetchAlerts(), fetchFinance()]);
-
+        // IMMEDIATE FIRST UI RENDER — show cached history + placeholders
+        // so the dashboard is interactive before any fetch completes.
+        if (STATE.history.length) {
+            const last = STATE.history[STATE.history.length - 1];
+            // Restore last known state from history snapshot
+            STATE.emotion.index = last.gei ?? STATE.emotion.index;
+            STATE.emotion.fear = last.fear ?? STATE.emotion.fear;
+            STATE.emotion.hope = last.hope ?? STATE.emotion.hope;
+            STATE.tension.index = last.tension ?? STATE.tension.index;
+            STATE.crypto.fng = last.fng ?? STATE.crypto.fng;
+            STATE.crypto.btcChange = last.btc ?? STATE.crypto.btcChange;
+            if (last.oblasts) STATE.oblasts = last.oblasts;
+            log(`Відновлено стан з кешу (${new Date(last.t).toLocaleString('uk-UA', { timeZone:'Europe/Kyiv' })})`, 'INIT');
+        }
+        // Compute derived state immediately from cached values
         calcWarStatus();
         generateDeepLayers();
         STATE.mode = computeMode();
-        pushHistory();
-        updateUI();
+        updateUI();   // FIRST RENDER — instant, with cached or placeholder values
+        requestAnimationFrame(animLoop);
+        log("НООСФЕРА ОНЛАЙН (UI готовий, триває завантаження даних)...", 'INIT');
+
+        // === NON-BLOCKING FETCH SEQUENCE ===
+        // Fire fast/critical sources first (alerts + crypto + finance), then heavy RSS.
+        // Each fetcher calls updateUI() when done so the UI refreshes incrementally.
+        log('Запит до українських RSS-джерел (20 джерел, 5 воєнних)...', 'INIT');
+
+        // Wave 1 — fast sources (≤3s typically): alerts, crypto, finance, wiki
+        // These provide the most actionable real-time info.
+        const wave1 = Promise.allSettled([
+            fetchAlerts().then(() => updateUI()),
+            fetchCrypto(),
+            fetchFinance().then(() => updateUI()),
+            fetchWikipedia().then(() => updateUI())
+        ]).then(() => {
+            // After wave 1, refresh UI + start wave 2
+            calcWarStatus();
+            generateDeepLayers();
+            STATE.mode = computeMode();
+            updateUI();
+            log('Хвиля 1: тривоги, фінанси, крипта, Wikipedia — готово', 'INIT');
+        });
+
+        // Wave 2 — geophysical (medium speed, ~3-5s)
+        const wave2 = fetchGeophysical().then(() => updateUI());
+
+        // Wave 3 — heavy RSS batch (slowest, 10-15s due to rss2json rate-limit)
+        // Do NOT await — let it run in background, UI already shows.
+        const wave3 = fetchAllRSS().then(() => {
+            calcWarStatus();
+            generateDeepLayers();
+            STATE.mode = computeMode();
+            pushHistory();
+            updateUI();
+            log(`Хвиля 3: RSS готово. Режим: ${STATE.mode} | Джерел online: ${STATE.sourcesOk}/${STATE.sourcesTotal}`, 'INIT');
+        });
+
+        // After wave 1+2 complete (≤5s), push history + final UI update
+        Promise.all([wave1, wave2]).then(() => {
+            pushHistory();
+            updateUI();
+        });
 
         // Periodic fetches
         setInterval(fetchAllRSS, 5 * 60 * 1000);         // every 5 min
@@ -5953,8 +6173,6 @@ __PATHS__
         // UI refresh tick (every 30s — for Δ + circadian drift)
         setInterval(updateUI, 30 * 1000);
 
-        requestAnimationFrame(animLoop);
-        log("НООСФЕРА ОНЛАЙН. ПІДКЛЮЧЕННЯ ДО КОЛЕКТИВНОЇ СВІДОМОСТІ.");
         log(`Режим: ${STATE.mode} | Джерел online: ${STATE.sourcesOk}/${STATE.sourcesTotal}`, 'INIT');
     }
 
