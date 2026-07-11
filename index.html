@@ -1704,34 +1704,84 @@
                 <div class="m-sub" id="desc-war">// Статус війни...</div>
             </div>
 
-            <!-- 7. METEO — УКРАЇНА -->
+            <!-- 6В. RUSSIAN LOSSES (ГШ ЗСУ) -->
+            <div class="card" id="card-losses">
+                <div class="card-h">
+                    <span>💀 6В. ВТРАТИ ПРОТИВНИКА</span>
+                    <span class="src-ind" id="src-losses">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Зведення від (за Києвом)</span>
+                    <span class="m-val" id="v-gsh-time" style="font-size:9px">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Бойові зіткнення (доба)</span>
+                    <span class="m-val" style="color:var(--accent-warn)" id="v-gsh-combat">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Авіаудари / КАБ</span>
+                    <span class="m-val" id="v-gsh-aviation">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Дрони-камікадзе</span>
+                    <span class="m-val" id="v-gsh-drones">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Обстріли / з РСЗВ</span>
+                    <span class="m-val" id="v-gsh-shellings">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">🛡 Збито БпЛА (за ніч)</span>
+                    <span class="m-val" style="color:var(--accent-hope)" id="v-gsh-shotdown">--</span>
+                </div>
+                <div class="m-sub" id="desc-losses">// Зведення Генштабу ЗСУ...</div>
+            </div>
+
+            <!-- 6Г. INFO-WAR (StopFake) -->
+            <div class="card" id="card-infowar">
+                <div class="card-h">
+                    <span>🎭 6Г. ІНФО-ВІЙНА (StopFake)</span>
+                    <span class="src-ind" id="src-infowar">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Останній фейк (за Києвом)</span>
+                    <span class="m-val" style="font-size:8px" id="v-sf-topdate">--</span>
+                </div>
+                <div class="m-row" style="flex-direction:column; align-items:flex-start; gap:3px; padding:4px 0;">
+                    <span class="m-lbl">Заголовок:</span>
+                    <span class="m-val" style="font-size:9px; line-height:1.35" id="v-sf-title">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Фейків за добу / всього</span>
+                    <span class="m-val" style="color:var(--accent-warn)" id="v-sf-count">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Топ-цілі пропаганди</span>
+                    <span class="m-val" style="font-size:8px" id="v-sf-targets">--</span>
+                </div>
+                <div class="m-sub" id="desc-infowar">// Моніторинг пропаганди...</div>
+            </div>
+
+            <!-- 7. METEO — УКРАЇНА (4 міста) -->
             <div class="card" id="card-geo">
                 <div class="card-h">
-                    <span>🌦 7. МЕТЕОШАР УКРАЇНИ</span>
+                    <span>🌦 7. МЕТЕОШАР УКРАЇНИ (4 міста)</span>
                     <span class="src-ind" id="src-geo">--</span>
                 </div>
-                <div class="m-row">
-                    <span class="m-lbl">Температура (Київ)</span>
-                    <span class="m-val" id="v-temp">-- °C</span>
+                <div class="m-row" style="flex-direction:column; align-items:stretch; gap:3px; padding:4px 0;">
+                    <span class="m-lbl">Погода по містах:</span>
+                    <div id="v-cities" style="display:flex; flex-direction:column; gap:3px; margin-top:4px;"></div>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Відчувається як</span>
-                    <span class="m-val" id="v-apparent">-- °C</span>
-                </div>
-                <div class="m-row">
-                    <span class="m-lbl">Тиск / Вологість</span>
+                    <span class="m-lbl">Тиск / Вологість (Київ)</span>
                     <span class="m-val" id="v-pressure">-- hPa / --%</span>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Вітер (пориви)</span>
+                    <span class="m-lbl">Вітер (пориви) Київ</span>
                     <span class="m-val" id="v-wind">-- км/год (--)</span>
                 </div>
                 <div class="m-row">
-                    <span class="m-lbl">Опади / Хмарність</span>
-                    <span class="m-val" id="v-precip">-- мм / --%</span>
-                </div>
-                <div class="m-row">
-                    <span class="m-lbl">Якість повітря (AQI)</span>
+                    <span class="m-lbl">Якість повітря (AQI К)</span>
                     <span class="m-val" id="v-aqi">-- (PM2.5: --)</span>
                 </div>
                 <div class="m-sub" id="desc-geo">// Метеодані України...</div>
@@ -2095,12 +2145,14 @@
         circadian:  { awake: 50, peak: '—' },
         consciousness: { propagation: 50, depth: 30, meaning: 40, wikiTop: '—' },
         tension:    { index: 30, split: 50, geo: [], last:{index:30} },
-        geo:        { // Ukraine meteo layer (Open-Meteo API)
+        geo:        { // Ukraine meteo layer (Open-Meteo API) — multi-city
                       temp: 0, apparentTemp: 0, humidity: 0, pressure: 0,
                       windSpeed: 0, windDir: 0, windGust: 0, cloudCover: 0,
                       precipitation: 0, weatherCode: 0, weatherDesc: '—',
                       pm25: 0, pm10: 0, aqi: 0, aqiDesc: '—',
                       city: 'Київ', alerts: 0, alertTitles: [],
+                      // Multi-city data (Kyiv, Kharkiv, Odesa, Lviv)
+                      cities: [],
                       // Legacy fields kept for compatibility (set to 0)
                       quakes: 0, quakeMax: 0, eonetCount: 0, eonetTypes: []
                     },
@@ -2111,7 +2163,12 @@
         finance:    { usd: 0, eur: 0, usdChange: 0, eurChange: 0, lastUsd: 0, lastEur: 0 },
         war:        { day: 0, intensity: 0, frontline: '—', regions: [],
                       events: [], eventCount: 0, byRegion: {}, byType: {}, sources: [],
-                      topHeadline: '—', topRegion: '—', topType: '—', discrepancy: [] },
+                      topHeadline: '—', topRegion: '—', topType: '—', discrepancy: [],
+                      // General Staff ZSU daily summary
+                      gshData: { operational: null, airDefense: null, lastUpdate: null } },
+        // Info-war: StopFake RSS monitoring
+        infoWar:   { items: [], count: 0, todayCount: 0, byType: {}, byTarget: {},
+                      topFake: '—', topFakeDate: '—', lastUpdate: null },
         oblasts:    {}, // per-oblast dynamic state: { name: { mentions, sentiment, alertActive, lastAlert, alertCount, headlines: [] } }
         noosphereIntegrity: 50,
         apiCalls: 0,
@@ -4356,32 +4413,67 @@ __PATHS__
         return 'Дуже погано';
     }
 
+    // Ukraine major cities — 4 reference points covering all regions
+    const UA_CITIES = [
+        { name: 'Київ',     lat: 50.45, lon: 30.52, region: 'Північ' },
+        { name: 'Харків',   lat: 49.99, lon: 36.23, region: 'Північ-Схід' },
+        { name: 'Одеса',    lat: 46.48, lon: 30.73, region: 'Південь' },
+        { name: 'Львів',    lat: 49.84, lon: 24.03, region: 'Захід' }
+    ];
+
     async function fetchGeophysical() {
         try {
-            // Open-Meteo: weather for Kyiv (capital of Ukraine — reference point)
-            // Plus air quality from open-meteo air-quality API
-            const weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52' +
-                '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover';
+            // Multi-city weather: Open-Meteo supports comma-separated lat/lon
+            // for batch requests — single API call returns array of 4 cities.
+            const lats = UA_CITIES.map(c => c.lat).join(',');
+            const lons = UA_CITIES.map(c => c.lon).join(',');
+            const weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + lats + '&longitude=' + lons +
+                '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover&timezone=Europe/Kyiv';
+            // Air quality only for Kyiv (reference point — keeps response small)
             const airUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=50.45&longitude=30.52' +
                 '&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,european_aqi';
 
-            const [weather, air] = await Promise.all([
+            const [weatherArr, air] = await Promise.all([
                 fetchJSON(weatherUrl, 12000),
-                fetchJSON(airUrl, 12000).catch(() => null)  // air quality is optional
+                fetchJSON(airUrl, 12000).catch(() => null)
             ]);
 
-            const c = weather.current || {};
-            STATE.geo.temp = c.temperature_2m ?? 0;
-            STATE.geo.apparentTemp = c.apparent_temperature ?? 0;
-            STATE.geo.humidity = c.relative_humidity_2m ?? 0;
-            STATE.geo.pressure = c.surface_pressure ?? 0;
-            STATE.geo.windSpeed = c.wind_speed_10m ?? 0;
-            STATE.geo.windDir = c.wind_direction_10m ?? 0;
-            STATE.geo.windGust = c.wind_gusts_10m ?? 0;
-            STATE.geo.cloudCover = c.cloud_cover ?? 0;
-            STATE.geo.precipitation = c.precipitation ?? 0;
-            STATE.geo.weatherCode = c.weather_code ?? 0;
-            STATE.geo.weatherDesc = WMO_CODES[c.weather_code] || 'Невідомо';
+            // weatherArr is an array of 4 city weather objects
+            const cities = [];
+            const arr = Array.isArray(weatherArr) ? weatherArr : [weatherArr];
+            for (let i = 0; i < UA_CITIES.length && i < arr.length; i++) {
+                const c = arr[i].current || {};
+                cities.push({
+                    name: UA_CITIES[i].name,
+                    region: UA_CITIES[i].region,
+                    temp: c.temperature_2m ?? 0,
+                    apparentTemp: c.apparent_temperature ?? 0,
+                    humidity: c.relative_humidity_2m ?? 0,
+                    pressure: c.surface_pressure ?? 0,
+                    windSpeed: c.wind_speed_10m ?? 0,
+                    windDir: c.wind_direction_10m ?? 0,
+                    windGust: c.wind_gusts_10m ?? 0,
+                    cloudCover: c.cloud_cover ?? 0,
+                    precipitation: c.precipitation ?? 0,
+                    weatherCode: c.weather_code ?? 0,
+                    weatherDesc: WMO_CODES[c.weather_code] || '—'
+                });
+            }
+            STATE.geo.cities = cities;
+
+            // Primary city (Kyiv) for backward compatibility with single-value fields
+            const kyiv = cities[0] || {};
+            STATE.geo.temp = kyiv.temp;
+            STATE.geo.apparentTemp = kyiv.apparentTemp;
+            STATE.geo.humidity = kyiv.humidity;
+            STATE.geo.pressure = kyiv.pressure;
+            STATE.geo.windSpeed = kyiv.windSpeed;
+            STATE.geo.windDir = kyiv.windDir;
+            STATE.geo.windGust = kyiv.windGust;
+            STATE.geo.cloudCover = kyiv.cloudCover;
+            STATE.geo.precipitation = kyiv.precipitation;
+            STATE.geo.weatherCode = kyiv.weatherCode;
+            STATE.geo.weatherDesc = kyiv.weatherDesc;
             STATE.geo.city = 'Київ';
 
             if (air && air.current) {
@@ -4390,13 +4482,14 @@ __PATHS__
                 STATE.geo.aqi = air.current.european_aqi ?? 0;
                 STATE.geo.aqiDesc = aqiDescription(STATE.geo.aqi);
             } else {
-                STATE.geo.aqi = -1;  // signal "no data"
+                STATE.geo.aqi = -1;
                 STATE.geo.aqiDesc = '—';
             }
 
             $('src-geo').innerText = 'LIVE';
             $('src-geo').className = 'src-ind live';
-            log(`Метео: ${STATE.geo.city} ${STATE.geo.temp}°C, ${STATE.geo.weatherDesc}, вітер ${STATE.geo.windSpeed}км/год, AQI ${STATE.geo.aqi}`, 'METEO');
+            const citiesStr = cities.map(c => `${c.name} ${c.temp.toFixed(0)}°C`).join(', ');
+            log(`Метео: ${citiesStr} | AQI К ${STATE.geo.aqi}`, 'METEO');
         } catch(e) {
             $('src-geo').innerText = 'DEAD';
             $('src-geo').className = 'src-ind dead';
@@ -4730,6 +4823,198 @@ __PATHS__
         }
     }
 
+    /* ---------- 10.7b ГЕНЕРАЛЬНИЙ ШТАБ ЗСУ (Telegram @GeneralStaffZSU) ---------- */
+    // Parses official Ukrainian General Staff daily operational summaries.
+    // Extracts: combat engagements, aviation strikes, KAB, drones, shellings, MLRS,
+    // and overnight air defense shot-down reports.
+    const GS_TG_URL = 'https://t.me/s/GeneralStaffZSU';
+
+    function _parseGeneralStaff(html) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const msgs = doc.querySelectorAll('div.tgme_widget_message_text');
+        if (!msgs.length) throw new Error('no GS messages');
+
+        let latestOperational = null;
+        let latestAirDefense = null;
+
+        msgs.forEach(el => {
+            const text = (el.innerText || el.textContent || '').trim();
+            if (!text) return;
+
+            // Operational summary: "Оперативна інформація станом на HH:MM DD.MM.YYYY"
+            if (text.startsWith('Оперативна інформація') || text.includes('бойових зіткнення') || text.includes('бойове зіткнення')) {
+                const timeMatch = text.match(/станом на (\d{1,2}:\d{2})\s+(\d{2}\.\d{2}\.\d{4})/);
+                const reportTime = timeMatch ? timeMatch[1] : null;
+                const reportDate = timeMatch ? timeMatch[2] : null;
+
+                // "зафіксовано N бойове зіткнення" or "відбулося N бойових зіткнень"
+                // NOTE: \w in JS regex doesn't match Cyrillic — use [а-яєіїґ] explicitly
+                const combat = text.match(/(\d+)\s+бойов[а-яєіїґ]+\s+зіткнен/);
+                const aviation = text.match(/(\d+)\s+авіаційн[а-яєіїґ]+\s+удар[а-яєіїґ]*/);
+                // "N керованих авіабомб" or "N керовану авіабомбу"
+                const kab = text.match(/(\d+)\s+керован[а-яєіїґ]+\s+авіа[а-яєіїґ]*/);
+                const drones = text.match(/(\d+)\s+дрон[а-яєіїґ]*-?\s*камікадзе/);
+                // "N обстрілів" or "N обстріли"
+                const shellings = text.match(/(\d+)\s+обстріл[а-яєіїґ]*/);
+                // "зокрема N - із реактивних" or "N з реактивних систем"
+                const mlrs = text.match(/зокрема\s+(\d+)\s*[-–]?\s*із\s+реактивн/) ||
+                             text.match(/(\d+)\s+із\s+застосуванням\s+реактивн/);
+
+                const op = {
+                    reportTime, reportDate,
+                    combat: combat ? parseInt(combat[1]) : null,
+                    aviation: aviation ? parseInt(aviation[1]) : null,
+                    kab: kab ? parseInt(kab[1]) : null,
+                    drones: drones ? parseInt(drones[1]) : null,
+                    shellings: shellings ? parseInt(shellings[1]) : null,
+                    mlrs: mlrs ? parseInt(mlrs[1]) : null,
+                    raw: text.slice(0, 400)
+                };
+                // Take the latest by full datetime (DD.MM.YYYY HH:MM → sortable)
+                const sortKey = op.reportDate && op.reportTime
+                    ? op.reportDate.split('.').reverse().join('.') + ' ' + op.reportTime
+                    : '';
+                op._sortKey = sortKey;
+                if (!latestOperational || (sortKey && sortKey > (latestOperational._sortKey || ''))) {
+                    latestOperational = op;
+                }
+            }
+
+            // Air defense report: "ЗБИТО/ПОДАВЛЕНО N БпЛА" + "атакував N ударними БпЛА"
+            if ((text.includes('ЗБИТО') || text.includes('збито/подавлено')) && text.includes('БпЛА')) {
+                const attacked = text.match(/атакував\s+(\d+)\s+ударн/);
+                // "збито/подавлено N ворожих БпЛА" — case-insensitive
+                const shotDown = text.match(/збито[\/\s]+подавлено\s+(\d+)/i) ||
+                                text.match(/ЗБИТО[\/\s]+ПОДАВЛЕНО\s+(\d+)/);
+                const ad = {
+                    dronesAttacked: attacked ? parseInt(attacked[1]) : null,
+                    dronesShotDown: shotDown ? parseInt(shotDown[1]) : null,
+                    raw: text.slice(0, 300)
+                };
+                if (!latestAirDefense) latestAirDefense = ad;
+            }
+        });
+
+        if (!latestOperational && !latestAirDefense) {
+            throw new Error('no GS operational data found');
+        }
+        return { operational: latestOperational, airDefense: latestAirDefense };
+    }
+
+    async function fetchGeneralStaff() {
+        // Try cors.sh first (best CORS support), then allorigins fallback
+        const sources = [
+            'https://proxy.cors.sh/' + GS_TG_URL,
+            'https://api.allorigins.win/get?url=' + encodeURIComponent(GS_TG_URL),
+            'https://api.allorigins.win/raw?url=' + encodeURIComponent(GS_TG_URL)
+        ];
+        for (const url of sources) {
+            try {
+                const r = await fetchJSON(url, 13000);
+                const html = r.contents || (typeof r === 'string' ? r : '');
+                if (!html || html.length < 5000) throw new Error('empty response');
+                const data = _parseGeneralStaff(html);
+                STATE.war.gshData = data;
+                STATE.war.gshData.lastUpdate = new Date().toISOString();
+                $('src-losses').innerText = 'LIVE';
+                $('src-losses').className = 'src-ind live';
+                const opTime = data.operational && data.operational.reportTime
+                    ? `${data.operational.reportTime} ${data.operational.reportDate || ''}`
+                    : '—';
+                log(`ГШ ЗСУ: зведення ${opTime}`, 'GS');
+                return;
+            } catch (e) { /* try next */ }
+        }
+        $('src-losses').innerText = 'DEAD';
+        $('src-losses').className = 'src-ind dead';
+        log('ГШ ЗСУ: недоступний', 'GS');
+    }
+
+    /* ---------- 10.7c STOPFAKE — ІНФО-ВІЙНА (моніторинг пропаганди) ---------- */
+    // StopFake.org is the leading Ukrainian fact-checking project that monitors
+    // Russian disinformation about Ukraine. Each RSS item title typically starts
+    // with 'Фейк', 'Маніпуляція', 'Розвінчання' — we extract type from that.
+    // rss2json blocked us with 429 → parse XML directly via cors.sh + DOMParser.
+    const STOPFAKE_URL = 'https://www.stopfake.org/uk/feed/';
+
+    function _parseStopFakeRSS(xmlText) {
+        const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+        const items = doc.querySelectorAll('item');
+        if (!items.length) throw new Error('no StopFake items');
+        const parsed = [];
+        items.forEach(el => {
+            const title = el.querySelector('title')?.textContent || '';
+            const link = el.querySelector('link')?.textContent || '';
+            const pubDate = el.querySelector('pubDate')?.textContent || '';
+            const categories = Array.from(el.querySelectorAll('category'))
+                .map(c => c.textContent.trim())
+                .filter(c => c.length > 0);
+            // Skip the 'Новини' / 'Контекст' meta-categories — keep topic tags
+            const topicCats = categories.filter(c =>
+                !['Новини', 'Контекст', 'Фактчек для Фейсбук'].includes(c)
+            );
+            // Classify type from title prefix
+            let type = 'аналіз';
+            if (title.startsWith('Фейк') || title.includes('Фейк:')) type = 'фейк';
+            else if (title.startsWith('Маніпуляція') || title.includes('Маніпуляція:')) type = 'маніпуляція';
+            else if (title.startsWith('Розвінчання')) type = 'розвінчання';
+            else if (title.startsWith('Спростування')) type = 'спростування';
+            parsed.push({ title, link, pubDate, categories: topicCats, type, ts: pubDate ? new Date(pubDate).getTime() : Date.now() });
+        });
+        return parsed;
+    }
+
+    async function fetchStopFake() {
+        const sources = [
+            'https://proxy.cors.sh/' + STOPFAKE_URL,
+            'https://api.allorigins.win/raw?url=' + encodeURIComponent(STOPFAKE_URL)
+        ];
+        for (const url of sources) {
+            try {
+                const r = await fetchJSON(url, 12000);
+                const xml = typeof r === 'string' ? r : (r.contents || '');
+                if (!xml || xml.length < 500) throw new Error('empty');
+                const items = _parseStopFakeRSS(xml);
+                STATE.infoWar.items = items;
+                STATE.infoWar.count = items.length;
+                STATE.infoWar.lastUpdate = new Date().toISOString();
+
+                // Count today's fakes
+                const now = new Date();
+                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                STATE.infoWar.todayCount = items.filter(it => it.ts >= startOfDay).length;
+
+                // Latest fake = first item (RSS is reverse-chronological)
+                if (items.length) {
+                    STATE.infoWar.topFake = items[0].title;
+                    STATE.infoWar.topFakeDate = items[0].pubDate
+                        ? new Date(items[0].pubDate).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
+                        : '—';
+                }
+
+                // Count by type
+                const byType = {};
+                for (const it of items) byType[it.type] = (byType[it.type] || 0) + 1;
+                STATE.infoWar.byType = byType;
+
+                // Count by target (categories)
+                const byTarget = {};
+                for (const it of items) {
+                    for (const c of it.categories) byTarget[c] = (byTarget[c] || 0) + 1;
+                }
+                STATE.infoWar.byTarget = byTarget;
+
+                $('src-infowar').innerText = 'LIVE';
+                $('src-infowar').className = 'src-ind live';
+                log(`StopFake: ${items.length} фейків (сьогодні: ${STATE.infoWar.todayCount})`, 'FAKE');
+                return;
+            } catch (e) { /* try next */ }
+        }
+        $('src-infowar').innerText = 'DEAD';
+        $('src-infowar').className = 'src-ind dead';
+        log('StopFake: недоступний', 'FAKE');
+    }
+
     async function fetchFinance() {
         try {
             const [usd, eur] = await Promise.all([
@@ -5023,6 +5308,13 @@ __PATHS__
             patterns.push({ type:'critical', text:`🌪 HIGH WIND: пориви ${fmt(STATE.geo.windGust,0)} км/год.` });
         }
         // UA-specific patterns
+        // Info-war patterns (StopFake)
+        if (STATE.infoWar && STATE.infoWar.todayCount >= 5) {
+            patterns.push({ type:'critical', text:`🎭 PROPAGANDA STORM: ${STATE.infoWar.todayCount} фейків за добу (StopFake).` });
+        } else if (STATE.infoWar && STATE.infoWar.todayCount >= 2) {
+            patterns.push({ type:'warn', text:`🎭 ACTIVE PROPAGANDA: ${STATE.infoWar.todayCount} фейків за добу.` });
+        }
+
         if (STATE.alerts.activeCount >= 10) {
             patterns.push({ type:'critical', text:`🚨 MASS ALERT: ${STATE.alerts.activeCount} областей під тривогою. Загальнонаціональна загроза.` });
         } else if (STATE.alerts.activeCount > 0) {
@@ -5823,12 +6115,118 @@ __PATHS__
             <span class="an-driver">${tDriver}</span>
             <span class="an-forecast">🔮 ${tForecast}</span>`;
 
-        // METEO — Ukraine weather from Open-Meteo
-        $('v-temp').innerText = fmt(STATE.geo.temp,1) + ' °C';
-        $('v-apparent').innerText = fmt(STATE.geo.apparentTemp,1) + ' °C';
+        // RUSSIAN LOSSES (ГШ ЗСУ) — Block 6В
+        const gsh = STATE.war.gshData;
+        if (gsh && (gsh.operational || gsh.airDefense)) {
+            const op = gsh.operational || {};
+            const ad = gsh.airDefense || {};
+            $('v-gsh-time').innerText = op.reportTime ? `${op.reportTime} ${op.reportDate || ''}` : '—';
+            $('v-gsh-combat').innerText = op.combat != null ? op.combat : '—';
+            $('v-gsh-aviation').innerText = (op.aviation != null || op.kab != null)
+                ? `${op.aviation != null ? op.aviation : '—'} / ${op.kab != null ? op.kab : '—'}` : '—';
+            $('v-gsh-drones').innerText = op.drones != null ? op.drones.toLocaleString('uk-UA') : '—';
+            $('v-gsh-shellings').innerText = (op.shellings != null || op.mlrs != null)
+                ? `${op.shellings != null ? op.shellings.toLocaleString('uk-UA') : '—'} / ${op.mlrs != null ? op.mlrs : '—'}` : '—';
+            $('v-gsh-shotdown').innerText = ad.dronesShotDown != null
+                ? `${ad.dronesShotDown}${ad.dronesAttacked ? ' / ' + ad.dronesAttacked + ' атака' : ''}` : '—';
+
+            // Analytical description for losses block
+            let lStat, lBadge, lBadgeCls;
+            if (op.combat >= 200 || op.drones >= 5000) { lStat = 'ВИСОКА ІНТЕНСИВНІСТЬ'; lBadge = 'HIGH'; lBadgeCls = 'crit'; }
+            else if (op.combat >= 150 || op.drones >= 3000) { lStat = 'АКТИВНА ФАЗА'; lBadge = 'ACTIVE'; lBadgeCls = 'warn'; }
+            else if (op.combat >= 100) { lStat = 'ПОМІРНА'; lBadge = 'MED'; lBadgeCls = 'info'; }
+            else { lStat = 'ПОСЛАБЛЕННЯ'; lBadge = 'CALM'; lBadgeCls = 'ok'; }
+
+            const lDyn = op.combat != null ? `За добу: ${op.combat} бойових зіткнень, ${op.aviation || 0} авіаударів, ${op.kab || 0} КАБ.` : 'Зведення ГШ ЗСУ очікується.';
+            const lMove = `Дрони: ${op.drones ? op.drones.toLocaleString('uk-UA') : '—'} · Обстріли: ${op.shellings ? op.shellings.toLocaleString('uk-UA') : '—'}${op.mlrs ? ' (РСЗВ: ' + op.mlrs + ')' : ''}`;
+            const lCtx = ad.dronesShotDown
+                ? `За ніч збито/подавлено ${ad.dronesShotDown} ворожих БпЛА${ad.dronesAttacked ? ' з ' + ad.dronesAttacked + ' атакуючих' : ''}. Ефективність ППО ${ad.dronesAttacked ? Math.round(ad.dronesShotDown / ad.dronesAttacked * 100) : '—'}%.`
+                : 'Повітряна оборона триває. Дані за ніч очікуються.';
+            const lDriver = `Джерело: Telegram @GeneralStaffZSU (офіційний канал ЗСУ). Зведення 4× на день (08:00, 16:00, 22:00 + позапланові).`;
+            const lForecast = op.combat >= 200 ? 'Прогноз: висока інтенсивність зберігається. Підсилення ППО пріоритетне.' :
+                              op.combat >= 150 ? 'Прогноз: активні бої на головних напрямках.' :
+                              'Прогноз: поточний рівень збережеться.';
+            $('desc-losses').innerHTML = `
+                <span class="an-state">${lStat} <span class="badge ${lBadgeCls}">${lBadge}</span></span>
+                <span class="an-dyn">⚔️ ${lDyn}</span>
+                <span class="an-move">${lMove}</span>
+                <span class="an-ctx">${lCtx}</span>
+                <span class="an-driver">${lDriver}</span>
+                <span class="an-forecast">🔮 ${lForecast}</span>`;
+        } else {
+            $('desc-losses').innerText = '// Зведення Генштабу ЗСУ очікується...';
+        }
+
+        // INFO-WAR (StopFake) — Block 6Г
+        const iw = STATE.infoWar;
+        if (iw && iw.count > 0) {
+            $('v-sf-topdate').innerText = iw.topFakeDate;
+            $('v-sf-title').innerText = iw.topFake.length > 90 ? iw.topFake.slice(0, 90) + '…' : iw.topFake;
+            $('v-sf-count').innerText = `${iw.todayCount} / ${iw.count}`;
+
+            // Top 5 targets (categories)
+            const topTargets = Object.entries(iw.byTarget)
+                .sort((a,b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([t,c]) => `${t}×${c}`)
+                .join(', ');
+            $('v-sf-targets').innerText = topTargets || '—';
+
+            // Type breakdown
+            const typeStr = Object.entries(iw.byType)
+                .sort((a,b) => b[1] - a[1])
+                .map(([t,c]) => `${t}:${c}`)
+                .join(' · ');
+
+            // Analytical block
+            let iStat, iBadge, iBadgeCls;
+            if (iw.todayCount >= 5)        { iStat='ІНТЕНСИВНА ПРОПАГАНДА'; iBadge='HIGH'; iBadgeCls='crit'; }
+            else if (iw.todayCount >= 2)   { iStat='АКТИВНА';              iBadge='ACTIVE';iBadgeCls='warn'; }
+            else if (iw.todayCount >= 1)   { iStat='ОДИНОЧНІ ВИПАДКИ';    iBadge='LOW';   iBadgeCls='info'; }
+            else                            { iStat='ЗАТИШШЯ';              iBadge='CALM';  iBadgeCls='ok'; }
+
+            const iDyn = `За добу: ${iw.todayCount} фейків/маніпуляцій. Всього в стрічці: ${iw.count}.`;
+            const iMove = `Типи: ${typeStr || '—'}`;
+            const iCtx = iw.todayCount >= 5
+                ? 'Інтенсивний інформаційний штурм. Пропаганда РФ активна — українське суспільство під тиском дезінформації.'
+                : iw.todayCount >= 2
+                ? 'Помітна активність пропаганди. Фейки цілеспрямовані, пов\'язані з поточними подіями.'
+                : 'Помірна активність. Одиничні фейки та маніпуляції.';
+            const iDriver = `Джерело: StopFake.org (український фактчекінг, з 2014 року). Топ-цілі: ${topTargets || '—'}.`;
+            const iForecast = iw.todayCount >= 5
+                ? 'Прогноз: хвиля пропаганди триватиме. Критично перевіряти джерела.'
+                : 'Прогноз: поточний рівень збережеться. Регулярний моніторинг StopFake.';
+            $('desc-infowar').innerHTML = `
+                <span class="an-state">${iStat} <span class="badge ${iBadgeCls}">${iBadge}</span></span>
+                <span class="an-dyn">🎭 ${iDyn}</span>
+                <span class="an-move">${iMove}</span>
+                <span class="an-ctx">${iCtx}</span>
+                <span class="an-driver">${iDriver}</span>
+                <span class="an-forecast">🔮 ${iForecast}</span>`;
+        } else {
+            $('desc-infowar').innerText = '// StopFake очікується...';
+        }
+
+        // METEO — Ukraine weather (4 cities)
+        const citiesBox = $('v-cities');
+        if (citiesBox && STATE.geo.cities && STATE.geo.cities.length) {
+            citiesBox.innerHTML = STATE.geo.cities.map(c => {
+                // Color code by temperature
+                const tempColor = c.temp >= 30 ? 'var(--accent-warn)' :
+                                  c.temp <= -10 ? '#9cf' :
+                                  c.temp <= 0 ? '#9cf' : '#fff';
+                // Wind warning for gusts > 50
+                const windWarn = c.windGust >= 50 ? ' ⚠' : '';
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:3px 6px; background:rgba(0,0,0,0.3); border-radius:2px; font-size:9px;">
+                    <span style="color:var(--accent-gold); font-weight:bold;">${c.name}</span>
+                    <span style="color:${tempColor}; font-weight:bold;">${fmt(c.temp,0)}°C</span>
+                    <span style="color:#88a; font-size:8px;">${c.weatherDesc}</span>
+                    <span style="color:#aac;">${fmt(c.windSpeed,0)}км/год${windWarn}</span>
+                </div>`;
+            }).join('');
+        }
         $('v-pressure').innerText = fmt(STATE.geo.pressure,0) + ' hPa / ' + fmt(STATE.geo.humidity,0) + '%';
         $('v-wind').innerText = fmt(STATE.geo.windSpeed,1) + ' км/год (' + fmt(STATE.geo.windGust,0) + ')';
-        $('v-precip').innerText = fmt(STATE.geo.precipitation,1) + ' мм / ' + fmt(STATE.geo.cloudCover,0) + '%';
         $('v-aqi').innerText = (STATE.geo.aqi >= 0 ? fmt(STATE.geo.aqi,0) + ' (PM2.5: ' + fmt(STATE.geo.pm25,1) + ')' : '— (немає даних)');
 
         // WAR STATUS — real data from RSS war-event extraction
@@ -6117,13 +6515,15 @@ __PATHS__
         // Each fetcher calls updateUI() when done so the UI refreshes incrementally.
         log('Запит до українських RSS-джерел (20 джерел, 5 воєнних)...', 'INIT');
 
-        // Wave 1 — fast sources (≤3s typically): alerts, crypto, finance, wiki
+        // Wave 1 — fast sources (≤3s typically): alerts, crypto, finance, wiki, GS ZSU, StopFake
         // These provide the most actionable real-time info.
         const wave1 = Promise.allSettled([
             fetchAlerts().then(() => updateUI()),
             fetchCrypto(),
             fetchFinance().then(() => updateUI()),
-            fetchWikipedia().then(() => updateUI())
+            fetchWikipedia().then(() => updateUI()),
+            fetchGeneralStaff().then(() => updateUI()),
+            fetchStopFake().then(() => updateUI())
         ]).then(() => {
             // After wave 1, refresh UI + start wave 2
             calcWarStatus();
@@ -6159,6 +6559,8 @@ __PATHS__
         setInterval(fetchGeophysical, 15 * 60 * 1000);   // every 15 min
         setInterval(fetchWikipedia, 60 * 60 * 1000);     // every hour
         setInterval(fetchAlerts, 60 * 1000);             // every 1 min (real-time!)
+        setInterval(fetchGeneralStaff, 30 * 60 * 1000);  // every 30 min (GS updates 4x/day)
+        setInterval(fetchStopFake, 30 * 60 * 1000);     // every 30 min (StopFake: ~5-10/day)
         setInterval(fetchFinance, 60 * 60 * 1000);       // every hour (NBU updates daily)
 
         // Recompute deep/mode + push history every 5 min (aligned with RSS)
