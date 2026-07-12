@@ -88,13 +88,12 @@
         .header-stat .val { color: #fff; font-size: 13px; font-weight: bold; }
 
         .col-left, .col-right {
-            display: flex; flex-direction: column; gap: 10px;
-            overflow-y: auto; padding-right: 5px;
+            display: flex; flex-direction: column; gap: 8px;
+            overflow-y: auto; padding-right: 2px;
+            scrollbar-width: none; /* Firefox: hide scrollbar */
         }
         .col-left::-webkit-scrollbar,
-        .col-right::-webkit-scrollbar { width: 4px; }
-        .col-left::-webkit-scrollbar-thumb,
-        .col-right::-webkit-scrollbar-thumb { background: rgba(160,0,255,0.3); }
+        .col-right::-webkit-scrollbar { display: none; } /* Chrome/Safari: hide scrollbar */
 
         .col-center {
             position: relative;
@@ -109,7 +108,7 @@
             background: var(--glass-panel);
             border: 1px solid var(--border-subtle);
             backdrop-filter: blur(12px);
-            padding: 10px;
+            padding: 7px 8px;
             border-radius: 4px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             transition: border-color .4s;
@@ -119,11 +118,11 @@
         .card.hope-active { border-color: var(--accent-hope); }
 
         .card-h {
-            font-size: 9px;
+            font-size: 8.5px;
             color: var(--accent-sec);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             border-left: 2px solid var(--accent-pri);
             padding-left: 8px;
             display: flex;
@@ -140,10 +139,10 @@
 
         .m-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 3px 0;
+            padding: 2px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             font-size: 9px;
-            min-height: 18px;
+            min-height: 16px;
         }
 
         .m-lbl { color: #88a; }
@@ -161,12 +160,12 @@
         .m-delta.flat { color: #556; }
 
         .m-sub {
-            font-size: 8px;
+            font-size: 7.5px;
             color: #99a;
-            margin-top: 6px;
+            margin-top: 4px;
             border-top: 1px solid #334;
-            padding-top: 6px;
-            line-height: 1.55;
+            padding-top: 4px;
+            line-height: 1.4;
         }
         .m-sub .an-line {
             display: block;
@@ -302,6 +301,30 @@
             stroke-width: 0.6;
             stroke-dasharray: 3,2;
         }
+        /* v5.1: occupied + active alert (e.g. Donetsk/Luhansk when alert detected) */
+        .oblast.alert-occupied {
+            fill: rgba(160, 0, 35, 0.9);
+            stroke: rgba(255, 0, 68, 1);
+            stroke-width: 1.5;
+            stroke-dasharray: 3,2;
+            animation: alertPulseOccupied 1.2s ease-in-out infinite;
+        }
+        @keyframes alertPulseOccupied {
+            0%,100% { fill: rgba(160, 0, 35, 0.9); stroke: rgba(255, 0, 68, 1); }
+            50%     { fill: rgba(220, 30, 60, 1); stroke: rgba(255, 100, 120, 1); filter: brightness(1.5); }
+        }
+        /* v5.1: occupied + neighbor has alert (warning state) */
+        .oblast.alert-near-occupied {
+            fill: rgba(120, 0, 28, 0.85);
+            stroke: rgba(255, 120, 0, 0.95);
+            stroke-width: 1.2;
+            stroke-dasharray: 3,2;
+            animation: alertNearPulse 2s ease-in-out infinite;
+        }
+        @keyframes alertNearPulse {
+            0%,100% { fill: rgba(120, 0, 28, 0.85); }
+            50%     { fill: rgba(180, 50, 30, 0.95); filter: brightness(1.2); }
+        }
         .oblast.hotspot {
             fill: rgba(255, 0, 200, 0.5);
             stroke: rgba(255, 100, 255, 0.9);
@@ -367,14 +390,13 @@
         .map-tooltip .tt-head .tt-row { color: #ccd; font-weight: normal; display: block; white-space: normal; max-width: 260px; line-height: 1.35; margin-top: 2px; }
         .map-tooltip .tt-head .tt-row .tt-src { color: var(--accent-gold); font-size: 7px; }
 
-        /* Floating news ticker — bottom-left to avoid covering eastern oblasts.
-           Eastern oblasts (Донецька, Луганська, Харківська) are on the RIGHT side
-           of the Ukraine map, so the ticker MUST be on the LEFT or BOTTOM.
+        /* Floating news ticker — positioned below the animation mode indicator (top-right).
+           Moved from bottom-left to top-right under РЕЖИМ АНІМАЦІЇ.
            Includes a collapse toggle so the user can hide it entirely. */
         #map-news-ticker {
             position: absolute;
-            bottom: 60px; left: 8px;
-            width: 200px;
+            top: 68px; right: 20px;
+            width: 220px;
             max-height: 50%;
             background: rgba(2, 2, 5, 0.85);
             border: 1px solid var(--border-subtle);
@@ -1368,6 +1390,20 @@
             .center-hud { max-width: 80%; }
             .pattern-box { max-width: 40%; }
         }
+    
+        /* Socio report inline styles */
+        #v-socio-report .ar-section { margin-bottom:3px; padding-bottom:2px; border-bottom:1px solid var(--border-subtle); }
+        #v-socio-report .ar-section:last-child { border-bottom:none; margin-bottom:0; }
+        #v-socio-report .ar-title { color:var(--accent-sec); font-weight:bold; font-size:8px; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:1px; }
+        #v-socio-report .ar-text { color:#aab; font-size:7.5px; line-height:1.3; }
+        #v-socio-report .ar-text b { color:#eef; }
+        #v-socio-report .ar-text .hi { color:var(--accent-sec); font-weight:600; }
+        #v-socio-report .ar-text .warn { color:var(--accent-warn); font-weight:600; }
+        #v-socio-report .ar-text .ok { color:var(--accent-hope); font-weight:600; }
+        #v-socio-report .ar-text .gold { color:var(--accent-gold); font-weight:600; }
+        #v-socio-report .ar-bullet { display:flex; gap:2px; margin:0; }
+        #v-socio-report .ar-bullet::before { content:'\25B8'; color:var(--accent-sec); flex-shrink:0; }
+
     </style>
 </head>
 
@@ -1593,10 +1629,6 @@
 </svg>
 </div>
             <div class="map-tooltip" id="map-tooltip"></div>
-            <div id="map-news-ticker" style="display:none;">
-                <div class="mnt-head">📰 Заголовки · гаряче</div>
-                <div class="mnt-empty">Завантаження...</div>
-            </div>
             <div id="oblast-labels-overlay" style="position:absolute; inset:0; pointer-events:none; z-index:21;"></div>
             <div class="map-legend">
                 <div class="lg-item"><div class="lg-swatch safe"></div>Спокій</div>
@@ -1604,6 +1636,8 @@
                 <div class="lg-item"><div class="lg-swatch frontline"></div>Прифронтова</div>
                 <div class="lg-item"><div class="lg-swatch occupied"></div>Окупована</div>
                 <div class="lg-item"><div class="lg-swatch hotspot"></div>Інфо-вогнище</div>
+                <div class="lg-item" style="opacity:0.7"><div class="lg-swatch" style="background:rgba(160,0,35,0.9);border:1px dashed rgba(255,0,68,1)"></div>⚠ Окуп.+тривога</div>
+                <div class="lg-item" style="opacity:0.7"><div class="lg-swatch" style="background:rgba(120,0,28,0.85);border:1px dashed rgba(255,120,0,0.95)"></div>⚠ Тривога поруч</div>
             </div>
 
             <div class="center-hud">
@@ -1618,6 +1652,10 @@
             <div class="mode-indicator">
                 <div class="lbl">РЕЖИМ АНІМАЦІЇ</div>
                 <div class="mode" id="mode-name">STABILITY</div>
+            </div>
+            <div id="map-news-ticker" style="display:none;">
+                <div class="mnt-head">📰 Заголовки · гаряче</div>
+                <div class="mnt-empty">Завантаження...</div>
             </div>
 
             <div class="pattern-box">
@@ -1760,6 +1798,48 @@
                     <span class="m-val" style="font-size:8px" id="v-sf-targets">--</span>
                 </div>
                 <div class="m-sub" id="desc-infowar">// Моніторинг пропаганди...</div>
+            </div>
+
+            <!-- 6Д. СОЦІАЛЬНИЙ ТОН (Sociology OSINT) -->
+            <div class="card" id="card-socio">
+                <div class="card-h">
+                    <span>🧠 6Д. СОЦІАЛЬНИЙ ТОН (OSINT)</span>
+                    <span class="src-ind" id="src-socio">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Емоційний тон (compound)</span>
+                    <span class="m-val" id="v-socio-mood" style="font-size:12px; font-weight:bold">--</span>
+                </div>
+                <div style="display:flex; gap:8px; padding:2px 0 4px; font-size:8px;">
+                    <span style="color:#ff6b6b">neg: <b id="v-socio-neg">--</b></span>
+                    <span style="color:#88a">neu: <b id="v-socio-neu">--</b></span>
+                    <span style="color:#51cf66">pos: <b id="v-socio-pos">--</b></span>
+                    <span style="color:var(--accent-sec)" id="v-socio-mooddiag">--</span>
+                </div>
+                <div style="border-top:1px solid var(--border-subtle); padding-top:4px; margin-top:2px;">
+                    <div class="m-row"><span class="m-lbl">⏳ Виснаження</span><span class="m-val" id="v-socio-exh">--%</span></div>
+                    <div class="m-row"><span class="m-lbl">⚡ Реактивність</span><span class="m-val" id="v-socio-react">--%</span></div>
+                    <div class="m-row"><span class="m-lbl">🔇 Соц. тиша</span><span class="m-val" id="v-socio-silence">--%</span></div>
+                    <div class="m-row"><span class="m-lbl">🧬 Деформація мови</span><span class="m-val" id="v-socio-deform">--%</span></div>
+                    <div class="m-row"><span class="m-lbl">💥 Ризик зламу</span><span class="m-val" id="v-socio-fracture" style="color:var(--accent-warn)">--%</span></div>
+                </div>
+                <div style="border-top:1px solid var(--border-subtle); padding-top:3px; margin-top:3px;">
+                    <div class="m-lbl" style="margin-bottom:2px;">🌊 Соціальний фон:</div>
+                    <div id="v-socio-topics" style="font-size:8px; line-height:1.5; color:#aab;">// очікування даних...</div>
+                </div>
+                <div class="m-sub" id="desc-socio">// Socio OSINT: Lemmy · Mastodon · HN...</div>
+            </div>
+
+            <!-- 6Д-б. АНАЛІТИЧНИЙ ЗВІТ (Sociology OSINT) -->
+            <div class="card" id="card-socio-report">
+                <div class="card-h">
+                    <span>📋 6Д-б. АНАЛІТИЧНИЙ ЗВІТ (OSINT)</span>
+                    <span class="src-ind" id="src-socio-report" style="font-size:7px">--</span>
+                </div>
+                <div id="v-socio-report" style="font-size:7.5px; line-height:1.35; color:#aab;">
+                    // очікування даних для аналітичного звіту...
+                </div>
+                <div class="m-sub" id="desc-socio-report">// Автогенерований звіт на основі OSINT-аналізу</div>
             </div>
 
             <!-- 7. METEO — УКРАЇНА (4 міста) -->
@@ -2111,7 +2191,7 @@
     // included because they return 403/404/empty — they would waste request budget.
     // tag:'war' marks feeds that predominantly cover the front line.
     const RSS_SOURCES = [
-        // Original working feeds (8)
+        // === Core feeds (verified working) ===
         { name:'УП',          url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/'), tag:'general' },
         { name:'УП-Новини',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/news/'), tag:'general' },
         { name:'УП-Життя',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://life.pravda.com.ua/rss/'), tag:'general' },
@@ -2120,21 +2200,28 @@
         { name:'Уніан',       url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.unian.ua/rss'), tag:'general' },
         { name:'ТСН',         url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://tsn.ua/rss'), tag:'general' },
         { name:'Думська',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://dumskaya.net/rss/'), tag:'general' },
-        // NEW — Ukrainska Pravda sub-sections (war-relevant)
+        // === War-focused ===
         { name:'УП-Статті',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/articles/'), tag:'war' },
         { name:'УП-Колонки',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/columns/'), tag:'war' },
         { name:'УП-Фото',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/photos/'), tag:'war' },
         { name:'Єп-Новини',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.epravda.com.ua/rss/news/'), tag:'war' },
-        // NEW — war-specific
         { name:'DefenseExpr', url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://defence-ua.com/rss/feed.xml'), tag:'war' },
-        // NEW — additional general coverage
+        { name:'Mil.gov.ua',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.mil.gov.ua/rss'), tag:'war' },
+        { name:'УП-Війна',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/tags/war/'), tag:'war' },
+        // === General coverage ===
         { name:'Liga',        url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.liga.net/ua/all/rss.xml'), tag:'general' },
         { name:'Babel',       url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://babel.ua/rss.xml'), tag:'general' },
         { name:'Свобода',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.radiosvoboda.org/rss/'), tag:'general' },
         { name:'Гордон',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://gordonua.com/ukr/api/media/out/rss/lastnews.xml'), tag:'general' },
         { name:'24Канал',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://24tv.ua/rss/all.xml'), tag:'general' },
-        { name:'Новинарня',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://novynarnia.com/feed'), tag:'general' },
-        { name:'Факти-ICTV',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://fakty.com.ua/feed'), tag:'general' }
+        { name:'Факти-ICTV',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://fakty.com.ua/feed'), tag:'general' },
+        { name:'Суспільне',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://suspilne.media/rss'), tag:'general' },
+        { name:'Укрінформ',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.ukrinform.ua/rss'), tag:'general' },
+        { name:'Minfin',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://minfin.com.ua/rss/news/'), tag:'general' },
+        { name:'AIN.UA',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://ain.ua/feed'), tag:'general' },
+        { name:'NV.UA',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://nv.ua/rss/all.xml'), tag:'general' },
+        { name:'Хвилі',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://hvylya.net/rss/'), tag:'general' },
+        { name:'ГолосUA',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://golos.com.ua/rss/all.xml'), tag:'general' }
     ];
 
     /* ---------- 5. STATE ---------- */
@@ -3715,9 +3802,27 @@ __PATHS__
     }
 
     function getRegionStatus(name) {
-        if (OCCUPIED_OBLASTS.includes(name)) return { label: 'Окупована', cls: 'occupied' };
-        if (STATE.alerts.activeRegions.some(r => MAP_REGION_TO_OBLAST[r] === name)) return { label: '🚨 Тривога', cls: 'alert' };
-        if (FRONTLINE_OBLASTS.includes(name)) return { label: 'Прифронтова', cls: 'frontline' };
+        const isOccupied = OCCUPIED_OBLASTS.includes(name);
+        const isAlert = STATE.alerts.activeRegions.some(r => MAP_REGION_TO_OBLAST[r] === name);
+        const isFrontline = FRONTLINE_OBLASTS.includes(name);
+        // v5.1: occupied regions with active nearby alerts get special highlight
+        // Donetsk & Luhansk: if ANY frontline neighbor has alert, highlight them too
+        if (isOccupied) {
+            if (isAlert) return { label: '🚨 Тривога (окупована)', cls: 'alert-occupied' };
+            // Check if neighboring frontline oblasts have active alerts
+            const alertNeighborNames = {
+                'Донецька': ['Запорізька', 'Херсонська', 'Дніпропетровська'],
+                'Луганська': ['Харківська', 'Донецька'],
+                'Крим': ['Херсонська'],
+                'Севастополь': ['Херсонська']
+            };
+            const neighbors = alertNeighborNames[name] || [];
+            const neighborAlert = neighbors.some(n => STATE.alerts.activeRegions.some(r => MAP_REGION_TO_OBLAST[r] === n));
+            if (neighborAlert) return { label: '⚠ Тривога поруч (окупована)', cls: 'alert-near-occupied' };
+            return { label: 'Окупована', cls: 'occupied' };
+        }
+        if (isAlert) return { label: '🚨 Тривога', cls: 'alert' };
+        if (isFrontline) return { label: 'Прифронтова', cls: 'frontline' };
         // Check if mentioned in news (hotspot)
         const mentions = getRegionMentions(name);
         if (mentions > 0) return { label: 'Інфо-вогнище (' + mentions + ')', cls: 'hotspot' };
@@ -3742,7 +3847,7 @@ __PATHS__
         oblasts.forEach(el => {
             const name = el.getAttribute('data-name');
             // Clear all status classes
-            el.classList.remove('safe', 'alert', 'frontline', 'occupied', 'hotspot');
+            el.classList.remove('safe', 'alert', 'frontline', 'occupied', 'hotspot', 'alert-occupied', 'alert-near-occupied');
             const status = getRegionStatus(name);
             el.classList.add(status.cls);
         });
@@ -3965,15 +4070,32 @@ __PATHS__
                 <div class="demo-cell"><div class="dc-label">Головні міста</div><div class="dc-val" style="font-size:9px; padding-top:3px">${data.cities.join(', ')}</div></div>
             </div>`;
 
-        // Status snapshot
+        // Status snapshot (v5.2: alert time/count removed — see card-alerts for live alert stats)
+        const isOccupied = OCCUPIED_OBLASTS.includes(name);
+        const neighborAlertObNames = {
+            'Донецька': ['Запорізька', 'Херсонська', 'Дніпропетровська'],
+            'Луганська': ['Харківська', 'Донецька'],
+            'Крим': ['Херсонська'],
+            'Севастополь': ['Херсонська']
+        };
+        const _neighbors = neighborAlertObNames[name] || [];
+        const activeNeighbors = _neighbors.filter(n => STATE.alerts.activeRegions.some(r => MAP_REGION_TO_OBLAST[r] === n));
+        let warEventsCell = '';
+        if (isOccupied) {
+            const neighborAlertText = activeNeighbors.length > 0
+                ? `🚨 ${activeNeighbors.join(', ')}`
+                : '✅ сусіди спокійні';
+            const warEvents = STATE.war.byRegion[name] || 0;
+            warEventsCell = `<div class="snap-cell"><div class="lbl">Сусідні тривоги</div><div class="val" style="font-size:9px; padding-top:6px; color:${activeNeighbors.length ? 'var(--accent-warn)' : 'var(--accent-hope)'}">${neighborAlertText}</div><span class="delta flat">сусідні обл.</span></div>
+                <div class="snap-cell"><div class="lbl">Воєнні події</div><div class="val">${warEvents}</div><span class="delta flat">з новин (24г)</span></div>`;
+        }
         const snapGrid = `
             <div class="snap-grid">
                 <div class="snap-cell"><div class="lbl">Статус</div><div class="val" style="font-size:11px; padding-top:8px">${status.label}</div><span class="delta flat">${status.cls}</span></div>
                 <div class="snap-cell"><div class="lbl">Згадки (24г)</div><div class="val">${ob.mentions}</div><span class="delta flat">новин</span></div>
                 <div class="snap-cell"><div class="lbl">Сентимент</div><div class="val" style="color:${ob.sentiment<0?'var(--accent-warn)':ob.sentiment>0?'var(--accent-hope)':'#fff'}">${ob.sentiment.toFixed(2)}</div><span class="delta flat">AFINN</span></div>
-                <div class="snap-cell"><div class="lbl">Тривога зараз</div><div class="val" style="color:${ob.alertActive?'var(--accent-warn)':'var(--accent-hope)'}">${ob.alertActive?'🚨 ТАК':'✅ ні'}</div><span class="delta flat">alerts.ua</span></div>
-                <div class="snap-cell"><div class="lbl">Остання тривога</div><div class="val" style="font-size:10px; padding-top:8px">${timeAgo(ob.lastAlert)}</div><span class="delta flat">${ob.alertCount || 0} разів</span></div>
-                <div class="snap-cell"><div class="lbl">Алерти за 24г</div><div class="val">${oblastAlertCount(name, 24)}</div><span class="delta flat">активацій</span></div>
+                <div class="snap-cell"><div class="lbl">Тривога зараз</div><div class="val" style="color:${ob.alertActive?'var(--accent-warn)':'var(--accent-hope)'}">${ob.alertActive?'🚨 ТАК':'✅ ні'}</div><span class="delta flat">${isOccupied ? 'не покривається' : 'alerts.ua'}</span></div>
+                ${warEventsCell}
             </div>`;
 
         // Sparklines
@@ -4044,7 +4166,7 @@ __PATHS__
                 <p><b>${name}</b> — ${data.info}</p>
                 <p>Населення <span class="hi">${data.population} млн</span>, площа <span class="hi">${(data.area/1000).toFixed(1)} тис. км²</span>, щільність <span class="hi">${density} осіб/км²</span>. Регіон: <span class="em">${data.region}</span>.</p>
                 <p>За останній цикл: <span class="hi">${ob.mentions}</span> згадок у новинах з ${STATE.sourcesOk} джерел, зокрема <span class="hi" style="color:var(--accent-warn)">${STATE.war.byRegion[name] || 0}</span> військових подій. Сентимент: <span class="hi">${ob.sentiment.toFixed(2)}</span> ${ob.sentiment < -1 ? '(домінує негатив)' : ob.sentiment > 1 ? '(домінує позитив)' : '(нейтрально)'}.</p>
-                <p>${ob.alertActive ? '<b style="color:var(--accent-warn)">Зараз активна тривога.</b> ' : 'Тривога неактивна. '}Остання активація: <span class="hi">${timeAgo(ob.lastAlert)}</span>. Всього активацій за сесію: <span class="hi">${ob.alertCount || 0}</span>.</p>
+                <p>${ob.alertActive ? '<b style="color:var(--accent-warn)">Зараз активна тривога.</b> ' : isOccupied ? '<span style="color:var(--accent-warn)">Окупована територія — офіційна система тривог не покриває цей регіон.</span> ' : 'Тривога неактивна. '}${isOccupied ? 'Стан сусідніх областей: <span class="hi">' + activeNeighbors.length + ' з ' + _neighbors.length + ' мають тривогу</span>. ' : ''}${isOccupied ? 'Воєнних подій з новин: <span class="hi">' + (STATE.war.byRegion[name] || 0) + '</span>.' : ''}</p>
                 <p>Кореляція згадок області з національним страхом: <span class="hi">${corrPct}%</span>. ${Math.abs(corrFear) > 0.5 ? 'Зв\u2019язок помітний.' : 'Зв\u2019язок слабкий.'}</p>
                 <p>Ризик-індекс: <span class="hi" style="color:${riskColor}">${risk}/100 (${riskLevel})</span>. ${risk >= 70 ? 'Критичний рівень — область у зоні максимального стресу.' : risk >= 45 ? 'Високий рівень — потрібна увага.' : risk >= 25 ? 'Середній рівень — моніторинг.' : 'Низький рівень — відносно спокійно.'}</p>
             </div>`;
@@ -4205,34 +4327,608 @@ __PATHS__
         return Object.entries(found).sort((a,b)=>b[1]-a[1]);
     }
 
+    /* ---------- 9b. SOCIOLOGY OSINT MODULE (v5.2) ---------- */
+    // 27-topic social monitoring from Lemmy, Mastodon, HN + RSS sentiment
+    const SOCIO_TOPICS = [
+        // SOCIAL (10)
+        { name:'Соціальна напруга', cat:'social', keys:['напруга','конфлікт','протест','зіткнення','незгода'] },
+        { name:'Страх / тривога', cat:'social', keys:['страх','тривога','паніка','жах','біль'] },
+        { name:'Протести', cat:'social', keys:['протест','мітинг','виступ','акція','блокування','бунт'] },
+        { name:'Недовіра до влади', cat:'social', keys:['недовіра','корупція','суд','слідчий','обшук','влада'] },
+        { name:'Радикалізація', cat:'social', keys:['радикал','екстремізм','фанатизм','насильство','терор'] },
+        { name:'Апатія / байдужість', cat:'social', keys:['апатія','байдужість','байдуж','небайдуж','байдуже','немає сил'] },
+        { name:'Сімейна напруга', cat:'social', keys:['сім\'я','родина','діти','розлучення','насильство в сім\'ї'] },
+        { name:'Освітня нестабільність', cat:'social', keys:['освіта','школа','університет','навчання','ЗНО','вчитель'] },
+        { name:'Здоров\'я / пандемія', cat:'social', keys:['здоров\'я','медицина','лікарня','лікар','хвороба','пандемія'] },
+        { name:'Демографічна тривога', cat:'social', keys:['демограф','населення','міграція','еміграція','народжуваність','смертність'] },
+        // ECONOMIC (7)
+        { name:'Інфляція', cat:'economic', keys:['інфляція','ціни','подорожчання','гроші','долар','курс'] },
+        { name:'Бідність', cat:'economic', keys:['бідність','бідні','убогість','соцпакет','пільги','субсидії'] },
+        { name:'Ринок праці', cat:'economic', keys:['робота','зарплат','безробітт','працевлаштуван','найм','звільнення'] },
+        { name:'Фінансова нестабільність', cat:'economic', keys:['криза','банк','кредит','борг','дефолт','банкрут'] },
+        { name:'Енергетична криза', cat:'economic', keys:['світло','енерго','електро','блекаут','відключення','ГЕС','АЕС'] },
+        { name:'Ринок нерухомості', cat:'economic', keys:['квартир','нерухомості','ціна житл','будівництв','ЖК'] },
+        { name:'Фінансова паніка', cat:'economic', keys:['паніка','гривн','обвал','банкомат','обмежен','cash'] },
+        // CULTURAL (5)
+        { name:'Апатія (культурна)', cat:'cultural', keys:['культура','мистецтв','кіно','театр','музик','витворч'] },
+        { name:'Поляризація', cat:'cultural', keys:['поляризація','поділ','супереч','мова','російськ','українськ'] },
+        { name:'Міграція', cat:'cultural', keys:['міграція','біженці','ВПО','переселенц','евакуаці','за кордон'] },
+        { name:'Цифрова залежність', cat:'cultural', keys:['інтернет','соцмережі','Telegram','TikTok','цифров','онлайн'] },
+        { name:'Культурні конфлікти', cat:'cultural', keys:['конфлікт','ідентичність','традиці','релігі','церкв','мовн'] },
+        // SECURITY (5)
+        { name:'Терористична активність', cat:'security', keys:['терор','диверсія','підрив','атака','безпек','ДРГ'] },
+        { name:'Кіберзагроза', cat:'security', keys:['кібер','хакер','DDoS','атака','витік','дані','фішинг'] },
+        { name:'Протидія / заворушення', cat:'security', keys:['заворушення','масові','натовп','порядок','МВС','поліція'] },
+        { name:'Безпека', cat:'security', keys:['безпека','захист','оборона','ППО','ракет','безпілотн','Шахед'] }
+    ];
+
+    // Socio data sources
+    const SOCIO_SOURCES = {
+        lemmy: [
+            'https://lemmy.world/api/v3/post/list?community_name=ukraine&sort=New&limit=50',
+            'https://lemmy.world/api/v3/post/list?community_name=ukrainianconflict&sort=New&limit=50',
+            'https://lemmy.world/api/v3/post/list?community_name=world&sort=New&limit=30',
+            'https://lemmy.world/api/v3/post/list?community_name=news&sort=New&limit=30',
+            'https://lemmy.world/api/v3/post/list?community_name=geopolitics&sort=New&limit=30'
+        ],
+        mastodon: [
+            'https://mastodon.social/api/v1/timelines/tag/ukraine?limit=40',
+            'https://mastodon.social/api/v1/timelines/tag/ukrainian?limit=30',
+            'https://mastodon.social/api/v1/timelines/tag/war?limit=30'
+        ],
+        hn: 'https://hn.algolia.com/api/v1/search?query=ukraine&tags=story&hitsPerPage=30'
+    };
+
+    // State for socio module
+    STATE.socio = {
+        posts: [],
+        sourcesOk: 0,
+        sourcesTotal: 0,
+        mood: { compound: 0, neg: 0, neu: 0, pos: 0 },
+        topics: {},      // topic name → { index, mood, posts, velocity }
+        exhaustion: 0,
+        reactivity: 0,
+        silence: 0,
+        deformation: 0,
+        stress: 0,
+        fracture: 0,
+        lastUpdate: null
+    };
+
+    // AFINN-EN compact lexicon for English posts (Lemmy/Mastodon/HN)
+    const AFINN_EN = {
+        'war':-3,'kill':-3,'death':-3,'dead':-2,'die':-2,'attack':-2,'bomb':-3,'explosion':-3,
+        'destroy':-3,'destroyed':-3,'terror':-3,'terrorist':-3,'fear':-2,'danger':-2,'dangerous':-2,
+        'threat':-2,'violence':-3,'violent':-3,'crisis':-2,'disaster':-3,'catastrophe':-3,
+        'suffer':-2,'suffering':-2,'pain':-2,'hurt':-2,'damage':-2,'damaged':-2,
+        'corrupt':-3,'corruption':-3,'poverty':-2,'poor':-1,'homeless':-2,'refugee':-2,
+        'protest':-1,'anger':-2,'angry':-2,'hate':-3,'hatred':-3,'panic':-3,
+        'inflation':-2,'unemployment':-2,'debt':-1,'crash':-2,'collapse':-2,
+        'invasion':-3,'occupy':-2,'occupied':-2,'missile':-3,'drone':-1,'strike':-2,
+        'casualt':-3,'civilian':-2,'wound':-2,'injure':-2,'victim':-2,
+        'hope':2,'peace':2,'peaceful':2,'victory':2,'win':1,'freedom':2,'liberty':2,
+        'support':1,'help':1,'aid':1,'rebuild':2,'recover':1,'recovery':1,'progress':1,
+        'success':2,'achieve':1,'hero':2,'brave':2,'courage':2,'resilien':2,
+        'love':3,'happy':3,'joy':3,'good':1,'great':2,'better':1,'best':2,
+        'agree':1,'positive':1,'stability':1,'stable':1,'safe':1,'safety':1
+    };
+
+    function socioSentimentEN(text) {
+        const words = text.toLowerCase().split(/[^a-zа-яєіїґ'-]+/).filter(w => w.length > 2);
+        let sum = 0, hits = 0, neg = 0, neu = 0, pos = 0;
+        for (const w of words) {
+            if (AFINN_EN[w] !== undefined) { sum += AFINN_EN[w]; hits++; if (AFINN_EN[w] < 0) neg++; else if (AFINN_EN[w] > 0) pos++; }
+            else neu++;
+        }
+        const compound = hits > 0 ? sum / Math.sqrt(sum * sum + 1.5) : 0;
+        const total = neg + neu + pos || 1;
+        return { compound, neg: neg / total, neu: neu / total, pos: pos / total, score: sum, hits };
+    }
+
+    function socioSentimentUA(text) {
+        // Reuse existing AFINN UA sentiment function
+        const s = sentiment(text);
+        const total = Math.abs(s.score) + 5 || 1;
+        const compound = s.hits > 0 ? s.score / Math.sqrt(s.score * s.score + 1.5) : 0;
+        return { compound, neg: Math.max(0, -s.score / total), neu: 0.6, pos: Math.max(0, s.score / total), score: s.score, hits: s.hits };
+    }
+
+    function socioSentiment(text) {
+        // Detect language: if mostly Cyrillic → UA lexicon, else EN
+        const cyr = (text.match(/[а-яєіїґ]/gi) || []).length;
+        const lat = (text.match(/[a-z]/gi) || []).length;
+        return cyr > lat ? socioSentimentUA(text) : socioSentimentEN(text);
+    }
+
+    function classifyTopics(posts) {
+        const results = {};
+        for (const topic of SOCIO_TOPICS) {
+            let matchCount = 0, sentSum = 0, sentHits = 0;
+            const matched = [];
+            for (const p of posts) {
+                const lc = (p.title + ' ' + (p.body || '')).toLowerCase();
+                let found = false;
+                for (const k of topic.keys) {
+                    if (lc.includes(k.toLowerCase())) { found = true; break; }
+                }
+                if (found) {
+                    matchCount++;
+                    const s = socioSentiment(p.title + ' ' + (p.body || ''));
+                    sentSum += s.compound;
+                    sentHits++;
+                    if (matched.length < 5) matched.push(p.title.slice(0, 60));
+                }
+            }
+            const index = posts.length > 0 ? Math.round((matchCount / posts.length) * 100 * 3) : 0;
+            results[topic.name] = {
+                index: clamp(index, 0, 100),
+                mood: sentHits > 0 ? (sentSum / sentHits).toFixed(2) : '0.00',
+                matchCount,
+                samples: matched
+            };
+        }
+        return results;
+    }
+
+    function socioDiagnose(topicResults) {
+        // Mood — average compound across all posts
+        const allPosts = STATE.socio.posts;
+        if (!allPosts.length) return;
+        let cSum = 0, nSum = 0, pSum = 0, uSum = 0;
+        for (const p of allPosts) {
+            const s = p._sent || { compound: 0, neg: 0, neu: 0, pos: 0 };
+            cSum += s.compound; nSum += s.neg; pSum += s.pos; uSum += s.neu;
+        }
+        const n = allPosts.length;
+        STATE.socio.mood.compound = (cSum / n).toFixed(3);
+        STATE.socio.mood.neg = (nSum / n).toFixed(2);
+        STATE.socio.mood.neu = (uSum / n).toFixed(2);
+        STATE.socio.mood.pos = (pSum / n).toFixed(2);
+
+        const mood = STATE.socio.mood;
+        const neuF = parseFloat(mood.neu);
+        const posF = parseFloat(mood.pos);
+
+        // Exhaustion
+        STATE.socio.exhaustion = clamp(Math.round((neuF * 0.7 + (1 - posF) * 0.3) * 100), 0, 100);
+
+        // Reactivity
+        STATE.socio.reactivity = clamp(Math.round((1 - neuF) * 100), 0, 100);
+
+        // Silence
+        STATE.socio.silence = clamp(Math.round((neuF * 0.6 + STATE.socio.exhaustion / 100 * 0.4) * 100), 0, 100);
+
+        // Deformation
+        STATE.socio.deformation = clamp(Math.round((neuF + parseFloat(mood.neg)) * 50), 0, 100);
+
+        // Stress — average of 6 key topics
+        const stressKeys = ['Соціальна напруга', 'Страх / тривога', 'Недовіра до влади', 'Радикалізація', 'Фінансова нестабільність', 'Енергетична криза'];
+        let stressSum = 0;
+        for (const k of stressKeys) {
+            stressSum += (topicResults[k] || { index: 0 }).index;
+        }
+        STATE.socio.stress = clamp(Math.round(stressSum / stressKeys.length), 0, 100);
+
+        // Fracture
+        STATE.socio.fracture = clamp(Math.round(
+            STATE.socio.exhaustion * 0.4 + STATE.socio.silence * 0.3 + STATE.socio.stress * 0.3
+        ), 0, 100);
+
+        STATE.socio.topics = topicResults;
+    }
+
+
+    function renderSocioReport() {
+        const box = $('v-socio-report');
+        if (!box || !STATE.socio.posts.length) return;
+
+        const s = STATE.socio;
+        const topics = s.topics || {};
+        const mood = s.mood;
+
+        const sortedTopics = Object.entries(topics).sort((a,b) => b[1].index - a[1].index);
+        const topHot = sortedTopics.slice(0, 5);
+
+        // Category averages
+        const catSums = { social: 0, economic: 0, cultural: 0, security: 0 };
+        const catCounts = { social: 0, economic: 0, cultural: 0, security: 0 };
+        for (const [topic, val] of sortedTopics) {
+            const tp = SOCIO_TOPICS.find(t => t.name === topic);
+            const cat = tp ? tp.cat : 'social';
+            catSums[cat] += val.index;
+            catCounts[cat]++;
+        }
+        const catAvgs = {};
+        for (const c in catSums) catAvgs[c] = catCounts[c] ? Math.round(catSums[c] / catCounts[c]) : 0;
+        const catNames = { social: 'Соціальна сфера', economic: 'Економіка', cultural: 'Культура', security: 'Безпека' };
+        const dominantCat = Object.entries(catAvgs).sort((a,b) => b[1] - a[1])[0];
+
+        // Source breakdown
+        const srcBreak = { lemmy: 0, mastodon: 0, hn: 0, rss: 0 };
+        for (const p of STATE.socio.posts) { srcBreak[p.source] = (srcBreak[p.source] || 0) + 1; }
+
+        // Language split: UA = RSS (Ukrainian feeds), EN = lemmy + mastodon + hn
+        const uaPosts = STATE.socio.posts.filter(p => p.source === 'rss');
+        const enPosts = STATE.socio.posts.filter(p => p.source !== 'rss');
+        let uaMood = 0, enMood = 0;
+        if (uaPosts.length) uaMood = uaPosts.reduce((sum, p) => sum + (p._sent || 0), 0) / uaPosts.length;
+        if (enPosts.length) enMood = enPosts.reduce((sum, p) => sum + (p._sent || 0), 0) / enPosts.length;
+
+        // Velocity — topics with highest absolute velocity
+        const velocities = sortedTopics
+            .filter(([, t]) => Math.abs(t.velocity || 0) > 1)
+            .map(([name, t]) => ({ key: name, val: t.velocity || 0 }))
+            .sort((a, b) => Math.abs(b.val) - Math.abs(a.val))
+            .slice(0, 5);
+
+        // Diagnosis helpers
+        const moodDiag = (v) => v < -0.3 ? '\u{1F534} депресивний фон' : v < -0.1 ? '\u{1F7E0} пригнічений' : v <= 0.1 ? '\u26AA нейтральність' : v <= 0.3 ? '\u{1F7E2} стриманий оптимізм' : '\u{1F7E2} аномальний оптимізм';
+        const fractureDiag = (v) => v >= 70 ? '\u{1F534} ризик соціального зламу' : v >= 40 ? '\u{1F7E0} нестійка рівновага' : '\u{1F7E2} контрольована напруга';
+        const exhaustionDiag = (v) => v >= 80 ? '\u{1F534} масове емоційне згладжування' : v >= 60 ? '\u{1F534} сильне виснаження' : v >= 40 ? '\u{1F7E0} відключення емоцій' : v >= 20 ? 'легка втома' : 'стабільність';
+        const reactivityDiag = (v) => v > 70 ? '\u{1F7E2} реакція збережена' : v > 40 ? 'приглушена реакція' : '\u{1F534} соціальна інертність';
+        const silenceDiag = (v) => v >= 70 ? '\u{1F534} передзламна тиша' : v >= 40 ? '\u{1F7E0} притуплення' : '\u{1F7E2} живий соціум';
+        const deformationDiag = (v) => v >= 60 ? '\u{1F534} глибока деформація' : v >= 30 ? '\u{1F7E0} шаблонізація' : '\u{1F7E2} мова жива';
+        const stressDiag = (v) => v >= 70 ? '\u{1F534} критична напруга' : v >= 40 ? '\u{1F7E0} напружено' : '\u{1F7E2} стабільно';
+
+        let r = '';
+        const moodC = parseFloat(mood.compound);
+        const moodColor = moodC < -0.2 ? 'warn' : moodC > 0.1 ? 'ok' : 'gold';
+        const stateColor = s.fracture >= 70 ? 'warn' : s.fracture >= 40 ? 'gold' : 'ok';
+
+        // === 1. ЗАГАЛЬНИЙ СТАН ===
+        r += '<div class="ar-section"><div class="ar-title">\u{1F1FA}\u{1F1E6} Загальний стан суспільства</div><div class="ar-text">';
+        r += 'За останні 24 години проаналізовано <b>' + STATE.socio.posts.length + '</b> публікацій з <b>' + s.sourcesOk + '/' + s.sourcesTotal + '</b> джерел. ';
+        r += 'Емоційний тон суспільства: <span class="' + moodColor + '">' + mood.compound + '</span> (' + moodDiag(moodC) + '). ';
+        r += '\u{1F3D7}\u{FE0F} Індекс ризику соціального зламу: <span class="' + stateColor + '">' + s.fracture + '%</span> — ' + fractureDiag(s.fracture) + '. ';
+        r += 'Домінантна категорія напруги: <span class="hi">' + catNames[dominantCat[0]] + '</span> (середній індекс ' + dominantCat[1] + '%).';
+        r += '</div></div>';
+
+        // === 2. СТРАТЕГІЧНІ ІНДЕКСИ ===
+        r += '<div class="ar-section"><div class="ar-title">\u{1F4CA} Стратегічні індекси</div><div class="ar-text">';
+        const indices = [
+            { name: 'Виснаження', val: s.exhaustion, diag: exhaustionDiag(s.exhaustion) },
+            { name: 'Реактивність', val: s.reactivity, diag: reactivityDiag(s.reactivity) },
+            { name: 'Соціальна тиша', val: s.silence, diag: silenceDiag(s.silence) },
+            { name: 'Деформація мови', val: s.deformation, diag: deformationDiag(s.deformation) },
+            { name: 'Соціальна напруга', val: s.stress, diag: stressDiag(s.stress) },
+            { name: 'Ризик зламу', val: s.fracture, diag: fractureDiag(s.fracture) }
+        ];
+        for (const idx of indices) {
+            const cls = idx.val >= 70 ? 'warn' : idx.val >= 40 ? 'gold' : 'ok';
+            r += '<div class="ar-bullet"><span><b>' + idx.name + '</b>: <span class="' + cls + '">' + idx.val + '%</span> — ' + idx.diag + '</span></div>';
+        }
+        r += '</div></div>';
+
+        // === 3. ТОП-5 ГАРЯЧИХ ТЕМ ===
+        if (topHot.length > 0) {
+            r += '<div class="ar-section"><div class="ar-title">\u{1F525} Топ-5 найнапруженіших тем</div><div class="ar-text">';
+            for (const [topic, t] of topHot) {
+                const m = parseFloat(t.mood || 0);
+                const moodStr = m < -0.3 ? '<span class="warn">негативний</span>' : m > 0.1 ? '<span class="ok">позитивний</span>' : '<span class="gold">нейтральний</span>';
+                const tp = SOCIO_TOPICS.find(x => x.name === topic);
+                const cat = tp ? catNames[tp.cat] : '\u2014';
+                const cls = t.index >= 60 ? 'warn' : 'gold';
+                r += '<div class="ar-bullet"><span><b>' + topic + '</b>: <span class="' + cls + '">' + t.index + '%</span> | тон: ' + moodStr + ' (' + t.mood + ') | ' + cat + '</span></div>';
+            }
+            r += '</div></div>';
+        }
+
+        // === 4. ІНТЕРПРЕТАЦІЯ ===
+        r += '<div class="ar-section"><div class="ar-title">\u{1F9E0} Інтерпретація ситуації</div><div class="ar-text">';
+        if (s.fracture >= 70) {
+            r += 'Суспільство перебуває у <span class="warn">критичному стані</span>. Ризик соціального зламу ' + s.fracture + '% свідчить про накопичення структурної напруги. ';
+        } else if (s.fracture >= 40) {
+            r += 'Суспільство у <span class="gold">напруженому стані</span>, але контрольованому. Ризик зламу помірний (' + s.fracture + '%). ';
+        } else {
+            r += 'Суспільство <span class="ok">стабільне</span>. Ризик зламу низький (' + s.fracture + '%). ';
+        }
+        if (s.exhaustion >= 70) {
+            r += 'Масове емоційне виснаження (' + s.exhaustion + '%) вказує на <span class="warn">втрату емоційної реактивності</span> \u2014 суспільство \u{AB}вимкнуло\u{BB} емоції як захисний механізм. ';
+        } else if (s.exhaustion >= 40) {
+            r += 'Помітне емоційне виснаження (' + s.exhaustion + '%) \u2014 суспільство втомлене, але зберігає здатність реагувати. ';
+        }
+        if (s.silence >= 70) {
+            r += '<span class="warn">Передзламна тиша</span> (' + s.silence + '%) \u2014 низька соціальна активність може бути ознакою апатії або пригнічення. ';
+        }
+        if (s.reactivity < 40) {
+            r += 'Реактивність ' + s.reactivity + '% \u2014 <span class="warn">соціальна інертність</span>, суспільство слабко реагує на події. ';
+        } else if (s.reactivity > 70) {
+            r += 'Реактивність ' + s.reactivity + '% \u2014 <span class="ok">енергійна реакція</span> на події. ';
+        }
+        const topTopic = topHot[0];
+        if (topTopic && topTopic[1].index >= 60) {
+            r += '<br><br>Головний драйвер напруги: <span class="hi">' + topTopic[0] + '</span> (' + topTopic[1].index + '%). ';
+        }
+        r += '</div></div>';
+
+        // === 5. МОВНИЙ РОЗЩЕП (UA vs EN) ===
+        if (uaPosts.length > 0 || enPosts.length > 0) {
+            r += '<div class="ar-section"><div class="ar-title">\u{1F310} Український vs світовий погляд</div><div class="ar-text">';
+            r += 'Українські джерела (' + uaPosts.length + ' постів): тон <span class="' + (uaMood < -0.2 ? 'warn' : 'ok') + '">' + uaMood.toFixed(2) + '</span>.<br>';
+            r += 'Англомовні джерела (' + enPosts.length + ' постів): тон <span class="' + (enMood < -0.2 ? 'warn' : 'ok') + '">' + enMood.toFixed(2) + '</span>.<br>';
+            const diff = enMood - uaMood;
+            if (Math.abs(diff) > 0.15) {
+                if (diff < 0) {
+                    r += '<span class="warn">Світові джерела більш негативні</span> (' + Math.abs(diff).toFixed(2) + ') \u2014 міжнародна перспектива гірша за внутрішню.';
+                } else {
+                    r += '<span class="ok">Українські джерела більш негативні</span> (' + Math.abs(diff).toFixed(2) + ') \u2014 внутрішнє сприйняття складніше за зовнішнє.';
+                }
+            } else {
+                r += 'Перспективи <span class="gold">узгоджені</span> \u2014 різниця тонів мінімальна (' + Math.abs(diff).toFixed(2) + ').';
+            }
+            r += '</div></div>';
+        }
+
+        // === 7. ДИНАМІКА ЗМІН ===
+        if (velocities.length > 0) {
+            r += '<div class="ar-section"><div class="ar-title">\u26A1 Динаміка змін</div><div class="ar-text">';
+            for (const v of velocities) {
+                if (Math.abs(v.val) < 1) continue;
+                const dir = v.val > 0 ? '<span class="warn">зростає</span>' : '<span class="ok">спадає</span>';
+                r += '<div class="ar-bullet"><span><b>' + v.key + '</b> ' + dir + ' (' + Math.abs(v.val).toFixed(1) + '%/год)</span></div>';
+            }
+            r += '</div></div>';
+        }
+
+        // === 9. ВИСНОВОК ===
+        r += '<div class="ar-section"><div class="ar-title">\u{1F4A1} Висновок</div><div class="ar-text">';
+        if (s.fracture >= 70 && s.exhaustion >= 70) {
+            r += 'Суспільство перебуває у <span class="warn">стані подвійної кризи</span> \u2014 виснаження + ризик зламу. ';
+            r += 'Рекомендується посилений моніторинг, оскільки такі показники історично передують соціальним зламам. ';
+        } else if (s.fracture >= 40) {
+            r += 'Суспільство функціонує у <span class="gold">режимі підвищеної напруги</span>. ';
+            r += 'Стійкість зберігається, але потрібен моніторинг прискорення негативних трендів. ';
+        } else {
+            r += 'Суспільство <span class="ok">стабільне</span>, соціальні механізми адаптації працюють. ';
+        }
+        if (topTopic && topTopic[1].index >= 70) {
+            r += '<br><br><b>Пріоритет уваги:</b> тема \u{AB}' + topTopic[0] + '\u{BB} досягла критичного рівня (' + topTopic[1].index + '%) \u2014 потрібне глибоке вивчення причин та контексту.';
+        }
+        const srcParts = [];
+        if (srcBreak.lemmy) srcParts.push('L:' + srcBreak.lemmy);
+        if (srcBreak.mastodon) srcParts.push('M:' + srcBreak.mastodon);
+        if (srcBreak.hn) srcParts.push('HN:' + srcBreak.hn);
+        if (srcBreak.rss) srcParts.push('R:' + srcBreak.rss);
+        r += '<br><br><span style="color:#747D8C; font-size:9px">Звіт згенеровано автоматично на основі ' + STATE.socio.posts.length + ' публікацій з ' + s.sourcesOk + ' джерел. Оновлення: ' + new Date().toLocaleTimeString('uk-UA', { hour12: false }) + '.</span>';
+        r += '</div></div>';
+
+        box.innerHTML = r;
+        $('src-socio-report').className = 'src-ind live';
+        $('src-socio-report').innerText = 'REPORT';
+        $('desc-socio-report').innerText = 'fracture ' + s.fracture + '% \u{00B7} ' + s.sourcesOk + '/' + s.sourcesTotal + ' джерел \u{00B7} ' + STATE.socio.posts.length + ' постів';
+    }
+
+    function updateSocioUI() {
+        const s = STATE.socio;
+        if (!s.posts.length) return;
+
+        const moodC = parseFloat(s.mood.compound);
+        const moodColor = moodC < -0.1 ? 'var(--accent-warn)' : moodC > 0.1 ? 'var(--accent-hope)' : '#fff';
+        $('v-socio-mood').innerText = s.mood.compound;
+        $('v-socio-mood').style.color = moodColor;
+        $('v-socio-neg').innerText = s.mood.neg;
+        $('v-socio-neu').innerText = s.mood.neu;
+        $('v-socio-pos').innerText = s.mood.pos;
+
+        // Mood diagnosis
+        const v = moodC;
+        const diagText = v < -0.3 ? '🔴 депресивний' : v < -0.1 ? '🟠 пригнічений' : v <= 0.1 ? '⚪ нейтральність' : v <= 0.3 ? '🟢 стриманий оптимізм' : '🟢 аномальний оптимізм';
+        $('v-socio-mooddiag').innerText = diagText;
+
+        // Indices with color coding
+        const idxColor = (val) => val >= 70 ? 'var(--accent-warn)' : val >= 40 ? '#f80' : 'var(--accent-hope)';
+        $('v-socio-exh').innerText = s.exhaustion + '%';
+        $('v-socio-exh').style.color = idxColor(s.exhaustion);
+        $('v-socio-react').innerText = s.reactivity + '%';
+        $('v-socio-react').style.color = idxColor(100 - s.reactivity); // inverted: high = good
+        $('v-socio-silence').innerText = s.silence + '%';
+        $('v-socio-silence').style.color = idxColor(s.silence);
+        $('v-socio-deform').innerText = s.deformation + '%';
+        $('v-socio-deform').style.color = idxColor(s.deformation);
+        $('v-socio-fracture').innerText = s.fracture + '%';
+        $('v-socio-fracture').style.color = idxColor(s.fracture);
+
+        // Compact social background summary (Top-5 is in the report card now)
+        const ranked = Object.entries(s.topics)
+            .filter(([, v]) => v.index > 0)
+            .sort((a, b) => b[1].index - a[1].index)
+            .slice(0, 3);
+        if (ranked.length) {
+            $('v-socio-topics').innerHTML = ranked.map(([name, t]) => {
+                const emoji = t.index >= 60 ? '🔴' : t.index >= 30 ? '🟠' : '🟢';
+                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:1px 0;">
+                    <span>${emoji} ${name}</span>
+                    <span style="color:${idxColor(t.index)};font-weight:bold">${t.index}%</span>
+                </div>`;
+            }).join('') + `<div style="color:#556;margin-top:1px">Повний звіт нижче →</div>`;
+        } else {
+            $('v-socio-topics').innerHTML = '<span style="color:#556">немає даних</span>';
+        }
+
+        // Description
+        const fractureDiag = s.fracture >= 70 ? '🔴 ризик зламу' : s.fracture >= 40 ? '🟠 нестійка рівновага' : '🟢 контрольована';
+        $('desc-socio').innerText = `fracture ${s.fracture}% (${fractureDiag}) · ${s.sourcesOk}/${s.sourcesTotal} джерел · ${s.posts.length} постів`;
+        renderSocioReport();
+    }
+
+    async function fetchSocioData() {
+        const posts = [];
+        let sourcesOk = 0;
+        const totalSources = SOCIO_SOURCES.lemmy.length + SOCIO_SOURCES.mastodon.length + 2; // +2 for HN + RSS reuse
+
+        // 1. Fetch Lemmy
+        try {
+            const results = await Promise.allSettled(
+                SOCIO_SOURCES.lemmy.map(url =>
+                    fetchJSON(url, 12000).then(d => {
+                        const items = d.posts || [];
+                        items.forEach(p => {
+                            const body = (p.post || {}).body || '';
+                            posts.push({ title: (p.post || {}).name || '', body, source: 'lemmy' });
+                        });
+                        return items.length;
+                    })
+                )
+            );
+            results.forEach(r => { if (r.status === 'fulfilled' && r.value > 0) sourcesOk++; });
+            log(`Lemmy: ${posts.filter(p=>p.source==='lemmy').length} постів`, 'SOCIO');
+        } catch(e) { log('Lemmy: ' + e.message, 'SOCIO'); }
+
+        // 2. Fetch Mastodon
+        try {
+            const results = await Promise.allSettled(
+                SOCIO_SOURCES.mastodon.map(url =>
+                    fetchJSON(url, 12000).then(items => {
+                        if (!Array.isArray(items)) return 0;
+                        items.forEach(t => {
+                            posts.push({ title: (t.content || '').replace(/<[^>]*>/g, '').slice(0, 300), body: '', source: 'mastodon' });
+                        });
+                        return items.length;
+                    })
+                )
+            );
+            results.forEach(r => { if (r.status === 'fulfilled' && r.value > 0) sourcesOk++; });
+            log(`Mastodon: ${posts.filter(p=>p.source==='mastodon').length} постів`, 'SOCIO');
+        } catch(e) { log('Mastodon: ' + e.message, 'SOCIO'); }
+
+        // 3. Fetch HN
+        try {
+            const hnData = await fetchJSON(SOCIO_SOURCES.hn, 12000);
+            const hits = hnData.hits || [];
+            hits.forEach(h => {
+                posts.push({ title: h.title || '', body: (h.story_text || '').slice(0, 300), source: 'hn' });
+            });
+            if (hits.length > 0) sourcesOk++;
+            log(`HN: ${hits.length} постів`, 'SOCIO');
+        } catch(e) { log('HN: ' + e.message, 'SOCIO'); }
+
+        // 4. Reuse existing RSS allItems from STATE (already fetched by fetchAllRSS)
+        // Access via the most recent RSS fetch cycle data stored in a global
+        if (typeof _lastRSSItems !== 'undefined' && _lastRSSItems.length) {
+            _lastRSSItems.forEach(it => {
+                posts.push({ title: it.title, body: '', source: 'rss' });
+            });
+            sourcesOk++;
+            log(`RSS-reuse: ${_lastRSSItems.length} заголовків`, 'SOCIO');
+        }
+
+        if (!posts.length) {
+            $('src-socio').className = 'src-ind dead';
+            $('src-socio').innerText = 'DEAD';
+            log('Socio: немає даних з жодного джерела', 'SOCIO');
+            return;
+        }
+
+        // Pre-compute sentiment per post
+        posts.forEach(p => { p._sent = socioSentiment(p.title + ' ' + p.body); });
+
+        STATE.socio.posts = posts;
+        STATE.socio.sourcesOk = sourcesOk;
+        STATE.socio.sourcesTotal = totalSources;
+        STATE.socio.lastUpdate = new Date().toISOString();
+
+        // Classify into 27 topics
+        const topicResults = classifyTopics(posts);
+        socioDiagnose(topicResults);
+
+        // Update UI
+        $('src-socio').className = 'src-ind live';
+        $('src-socio').innerText = sourcesOk + ' live';
+        updateSocioUI();
+
+        log(`Socio OK: ${posts.length} постів з ${sourcesOk}/${totalSources} джерел · mood=${STATE.socio.mood.compound} · fracture=${STATE.socio.fracture}%`, 'SOCIO');
+    }
+
+    // Global to share RSS items with socio module
+    var _lastRSSItems = [];
+
     /* ---------- 10. DATA FETCHERS ---------- */
 
+    // Fast RSS fetch via allorigins.win CORS proxy — no rate limit, all sources in parallel (~5s)
+    async function fetchRSSFast(rss2jsonUrl) {
+        const rssUrl = new URL(rss2jsonUrl).searchParams.get('rss_url');
+        if (!rssUrl) return null;
+        STATE.apiCalls++;
+        try {
+            // Try allorigins.win first (no rate limit, direct XML)
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 8000);
+            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rssUrl);
+            const resp = await fetch(proxyUrl, { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const xml = await resp.text();
+            $('api-calls').innerText = STATE.apiCalls;
+            // Parse RSS/Atom XML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(xml, 'text/xml');
+            // RSS 2.0 format
+            let entries = doc.querySelectorAll('item');
+            let isAtom = false;
+            if (!entries.length) {
+                // Atom format
+                entries = doc.querySelectorAll('entry');
+                isAtom = true;
+            }
+            if (!entries.length) return null;
+            const items = Array.from(entries).slice(0, 25).map(e => {
+                if (isAtom) {
+                    return {
+                        title: (e.querySelector('title') || {}).textContent || '',
+                        pubDate: (e.querySelector('published') || e.querySelector('updated') || {}).textContent || '',
+                        link: (e.querySelector('link') || {}).getAttribute('href') || (e.querySelector('link') || {}).textContent || '',
+                        description: (e.querySelector('summary') || e.querySelector('content') || {}).textContent || ''
+                    };
+                }
+                return {
+                    title: (e.querySelector('title') || {}).textContent || '',
+                    pubDate: (e.querySelector('pubDate') || {}).textContent || '',
+                    link: (e.querySelector('link') || {}).textContent || '',
+                    description: (e.querySelector('description') || {}).textContent || ''
+                };
+            });
+            return { status: 'ok', items };
+        } catch(e) {
+            $('api-calls').innerText = STATE.apiCalls;
+            // Fallback: try rss2json (may 429, but worth a shot)
+            try {
+                const v = await fetchJSON(rss2jsonUrl, 8000);
+                if (v && v.items && v.items.length) return v;
+            } catch(e2) { /* both failed */ }
+            return null;
+        }
+    }
+
     async function fetchAllRSS() {
-        // Concurrency-limited: process feeds in small batches with longer pauses
-        // to avoid rss2json.com 429 rate-limit (free tier allows ~5 req/10s).
+        // PARALLEL: all 28 sources via allorigins.win proxy (no rate limit) → ~5s total
+        // Fallback to rss2json for any that fail
         const okSources = [];
         const allItems = [];
         const allDocs = [];
-        const BATCH = 3;
-        const PAUSE_MS = 1500;
-        const results = new Array(RSS_SOURCES.length);
 
-        for (let start = 0; start < RSS_SOURCES.length; start += BATCH) {
-            const batch = RSS_SOURCES.slice(start, start + BATCH);
-            await Promise.allSettled(
-                batch.map((s, idx) => fetchJSON(s.url, 15000).then(v => { results[start + idx] = v; return v; }))
-            );
-            // Polite pause between batches
-            if (start + BATCH < RSS_SOURCES.length) await new Promise(r => setTimeout(r, PAUSE_MS));
-        }
+        // IMMEDIATELY show total so user sees "0/28" instead of "0/0"
+        STATE.sourcesTotal = RSS_SOURCES.length;
+        $('sources-online').innerText = `0/${STATE.sourcesTotal}`;
+
+        const t0 = performance.now();
+        log(`RSS: паралельне завантаження ${RSS_SOURCES.length} джерел через allorigins...`, 'RSS');
+
+        // Fetch ALL sources in parallel
+        const results = await Promise.allSettled(
+            RSS_SOURCES.map(s => fetchRSSFast(s.url))
+        );
+
+        const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
 
         results.forEach((r, i) => {
             const srcName = RSS_SOURCES[i].name;
-            if (r && r.items && r.items.length) {
+            const srcTag = RSS_SOURCES[i].tag || 'general';
+            const data = r.status === 'fulfilled' ? r.value : null;
+            if (data && data.items && data.items.length) {
                 okSources.push(srcName);
-                r.items.slice(0, 25).forEach(it => {
+                data.items.slice(0, 25).forEach(it => {
                     const text = (it.title || '') + ' ' + (it.description || '');
-                    allItems.push({ src: srcName, title: it.title || '', text });
+                    allItems.push({ src: srcName, tag: srcTag, title: it.title || '', text });
                     allDocs.push(text);
                 });
             } else {
@@ -4352,6 +5048,29 @@ __PATHS__
         STATE.tension.split = clamp(45 + conflictCount * 1.2, 40, 92);
 
         log(`RSS OK: ${okSources.join(', ')} | ${allItems.length} заголовків | sentiment=${avgSent.toFixed(2)}`, 'RSS');
+
+        // Export for socio module
+        _lastRSSItems = allItems.slice();
+
+        // 10.6b EXPANDED ANALYTICS (v5.1) — per-source-category breakdown
+        // Track source coverage and war-source amplification factor
+        const warItems = allItems.filter(it => it.tag === 'war');
+        const genItems = allItems.filter(it => it.tag === 'general');
+        const warSentAvg = warItems.length ? (warItems.reduce((s,it) => s + sentiment(it.text).score, 0) / warItems.length) : 0;
+        const genSentAvg = genItems.length ? (genItems.reduce((s,it) => s + sentiment(it.text).score, 0) / genItems.length) : 0;
+        log(`Аналітика джерел: war=${warItems.length} (sent:${warSentAvg.toFixed(2)}) | general=${genItems.length} (sent:${genSentAvg.toFixed(2)}) | ratio=${(warItems.length/Math.max(1,allItems.length)*100).toFixed(1)}%`, 'RSS-ANALYTICS');
+
+        // War-source amplification: if war feeds show higher fear, boost tension
+        if (warItems.length > 10 && warSentAvg < genSentAvg - 0.5) {
+            STATE.tension.index = clamp(STATE.tension.index * 1.15, 5, 100);
+            log('Підсилення напруги: war-джерела показують вищий рівень страху', 'RSS-ANALYTICS');
+        }
+
+        // Source diversity index (unique sources that actually returned data / total)
+        const sourceDiversity = okSources.length / RSS_SOURCES.length;
+        if (sourceDiversity < 0.5) {
+            log(`Низька різноманітність джерел: ${Math.round(sourceDiversity*100)}% доступні`, 'RSS-ANALYTICS');
+        }
 
         // Alerts
         if (STATE.emotion.fear > 65) showAlert(`ВИСОКА ЩІЛЬНІСТЬ СТРАХУ (${STATE.emotion.fear.toFixed(0)}%)`, 'critical');
@@ -4560,6 +5279,19 @@ __PATHS__
                 if (!states.length) throw new Error('empty states');
                 return _normalizeAlertStates(states);
             }
+        },
+        // FALLBACK 5 (v5.1) — alerts.in.ua alternative API for broader coverage
+        {
+            name: 'alerts.in.ua·cors.sh',
+            url: 'https://proxy.cors.sh/https://alerts.in.ua/api/alerts',
+            timeout: 13000,
+            parse: (r) => {
+                const data = typeof r === 'string' ? JSON.parse(r) : r;
+                const active = (data.alerts || [])
+                    .filter(a => a.location_type === 'oblast' && a.active)
+                    .map(a => a.oblast.replace(' область','').replace(' автономна','').replace('м. ',''));
+                return { active, total: 25, lastChange: new Date().toISOString(), raw: [] };
+            }
         }
     ];
 
@@ -4578,10 +5310,17 @@ __PATHS__
     const RAYON_TO_OBLAST = {
         // Kyiv
         'Київ':'Київ','Київська':'Київська',
-        // Donbas
+        // Donbas — v5.1: expanded rayon coverage for Donetsk & Luhansk
         'Донецька':'Донецька','Луганська':'Луганська','Покровська':'Донецька','Покровськ':'Донецька',
         'Краматорський':'Донецька','Кальміуський':'Донецька','Горлівський':'Донецька','Маріупольський':'Донецька',
         'Волноваський':'Донецька','Кальміуський район':'Донецька',
+        'Бахмутський':'Донецька','Бахмут':'Донецька','Слов\'янський':'Донецька','Слов\'янськ':'Донецька',
+        'Добропільський':'Донецька','Макіївський':'Донецька','Макіївка':'Донецька',
+        'Єнакієвський':'Донецька','Шахтарський':'Донецька','Шахтарськ':'Донецька',
+        'Ясинуватський':'Донецька','Амвросіївський':'Донецька','Торецький':'Донецька',
+        'Сєвєродонецький':'Луганська','Сєвєродонецьк':'Луганська','Лисичанський':'Луганська','Лисичанськ':'Луганська',
+        'Рубіжанський':'Луганська','Рубіжне':'Луганська','Сватівський':'Луганська','Старобільський':'Луганська',
+        'Щастинський':'Луганська','Лутугинський':'Луганська','Алчевський':'Луганська',
         // Kharkiv
         'Харківська':'Харківська','Харків':'Харківська','Ізюмський':'Харківська','Чугуївський':'Харківська',
         'Богодухівський':'Харківська','Лозівський':'Харківська','Красноградський':'Харківська','Куп\'янський':'Харківська',
@@ -6513,7 +7252,7 @@ __PATHS__
         // === NON-BLOCKING FETCH SEQUENCE ===
         // Fire fast/critical sources first (alerts + crypto + finance), then heavy RSS.
         // Each fetcher calls updateUI() when done so the UI refreshes incrementally.
-        log('Запит до українських RSS-джерел (20 джерел, 5 воєнних)...', 'INIT');
+        log('Запит до українських RSS-джерел (28 джерел, 7 воєнних)...', 'INIT');
 
         // Wave 1 — fast sources (≤3s typically): alerts, crypto, finance, wiki, GS ZSU, StopFake
         // These provide the most actionable real-time info.
@@ -6536,8 +7275,8 @@ __PATHS__
         // Wave 2 — geophysical (medium speed, ~3-5s)
         const wave2 = fetchGeophysical().then(() => updateUI());
 
-        // Wave 3 — heavy RSS batch (slowest, 10-15s due to rss2json rate-limit)
-        // Do NOT await — let it run in background, UI already shows.
+        // Wave 3 — RSS batch via allorigins proxy (all 28 sources in parallel → ~5s)
+        // Do NOT await — let it run in background, UI shows "0/28" immediately then counts up.
         const wave3 = fetchAllRSS().then(() => {
             calcWarStatus();
             generateDeepLayers();
@@ -6545,7 +7284,12 @@ __PATHS__
             pushHistory();
             updateUI();
             log(`Хвиля 3: RSS готово. Режим: ${STATE.mode} | Джерел online: ${STATE.sourcesOk}/${STATE.sourcesTotal}`, 'INIT');
+            // v5.2: After RSS done, re-run socio with fresh RSS data
+            fetchSocioData().then(() => updateUI());
         });
+
+        // v5.2: Fire socio IMMEDIATELY in parallel (Lemmy/Mastodon/HN + cached RSS)
+        fetchSocioData().then(() => updateUI());
 
         // After wave 1+2 complete (≤5s), push history + final UI update
         Promise.all([wave1, wave2]).then(() => {
@@ -6555,6 +7299,7 @@ __PATHS__
 
         // Periodic fetches
         setInterval(fetchAllRSS, 5 * 60 * 1000);         // every 5 min
+        setInterval(() => { fetchSocioData(); }, 5 * 60 * 1000);  // every 5 min (after RSS)
         setInterval(fetchCrypto, 5 * 60 * 1000);         // every 5 min
         setInterval(fetchGeophysical, 15 * 60 * 1000);   // every 15 min
         setInterval(fetchWikipedia, 60 * 60 * 1000);     // every hour
