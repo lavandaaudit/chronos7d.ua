@@ -1536,6 +1536,22 @@
                     <span class="m-lbl">Волатильність ринку</span>
                     <span class="m-val" id="v-vol">--</span>
                 </div>
+                <div class="m-row">
+                    <span class="m-lbl">₿ BTC</span>
+                    <span class="m-val" id="v-btc-price" style="color:var(--accent-gold)">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Ξ ETH</span>
+                    <span class="m-val" id="v-eth-price" style="color:var(--accent-sec)">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">🛢 Brent</span>
+                    <span class="m-val" id="v-brent-price" style="color:#e8a">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">🛢 WTI</span>
+                    <span class="m-val" id="v-wti-price" style="color:#ea8">--</span>
+                </div>
                 <div class="m-sub" id="desc-crypto">// Фінансовий маркер страху/жадібності...</div>
             </div>
 
@@ -2094,6 +2110,21 @@
     українська україни український української українську україну українському українське українські
     правди правда
     новини
+    http https href www com org net ua
+    повідомляє повідомив повідомила розповідає розповів
+    відповідно згідно тимчасово схоже стало відомо
+    варто відзначити насамперед певно певна
+    значення ситуація ситуації умови умов
+    питання питань рішення рішень результат результатів
+    факт фактор процес процесу рівень рівня
+    випадку випадок тільки могли можу можна можливість
+    перший перша перше останній остання останнє
+    кожен кожна кожне інший інша інше інших
+    різний різна різне такий така таке такі
+    свій своя своє свої великий велика велике
+    новий нова нове нових головний головна головне
+    серед під час під час
+    повідомлен повідомля reported telegram facebook
     `.split(/\s+/).filter(Boolean));
 
     /* ---------- 3. Geo-lexicon (Ukraine oblasts + cities) ---------- */
@@ -2227,7 +2258,7 @@
     /* ---------- 5. STATE ---------- */
     const STATE = {
         emotion:    { index: 50, fear: 20, hope: 20, waves: 10, last:{index:50, fear:20, hope:20} },
-        crypto:     { fng: 50, fngClass:'Neutral', btcChange: 0, volatility: 30, last:{fng:50, btcChange:0} },
+        crypto:     { fng: 50, fngClass:'Neutral', btcChange: 0, volatility: 30, btcPrice: 0, ethPrice: 0, brentPrice: null, wtiPrice: null, last:{fng:50, btcChange:0} },
         attention:  { volatility: 30, focus: 40, trends: [], bigrams: [], uniq: 0, last:{volatility:30, focus:40} },
         circadian:  { awake: 50, peak: '—' },
         consciousness: { propagation: 50, depth: 30, meaning: 40, wikiTop: '—' },
@@ -2334,6 +2365,9 @@
             hope: STATE.emotion.hope,
             tension: STATE.tension.index,
             fng: STATE.crypto.fng,
+            btc: STATE.crypto.btcChange,
+            btcPrice: STATE.crypto.btcPrice,
+            ethPrice: STATE.crypto.ethPrice,
             focus: STATE.attention.focus,
             depth: STATE.consciousness.depth
         });
@@ -2692,6 +2726,10 @@
                         <div class="snap-cell"><div class="lbl">Клас</div><div class="val" style="font-size:11px; padding-top:6px">${STATE.crypto.fngClass}</div><span class="delta flat">—</span></div>
                         <div class="snap-cell"><div class="lbl">BTC Δ 24h</div><div class="val" style="color:${btcCls}">${btcArrow}${Math.abs(STATE.crypto.btcChange).toFixed(2)}%</div><span class="delta flat">—</span></div>
                         <div class="snap-cell"><div class="lbl">Волатильність</div><div class="val">${fmt(STATE.crypto.volatility,1)}</div><span class="delta flat">—</span></div>
+                        ${STATE.crypto.btcPrice ? `<div class="snap-cell"><div class="lbl">₿ BTC</div><div class="val" style="color:var(--accent-gold)">$${fmt(STATE.crypto.btcPrice,0)}</div><span class="delta flat">—</span></div>` : ''}
+                        ${STATE.crypto.ethPrice ? `<div class="snap-cell"><div class="lbl">Ξ ETH</div><div class="val" style="color:var(--accent-sec)">$${fmt(STATE.crypto.ethPrice,0)}</div><span class="delta flat">—</span></div>` : ''}
+                        ${STATE.crypto.brentPrice ? `<div class="snap-cell"><div class="lbl">🛢 Brent</div><div class="val" style="color:#e8a">$${STATE.crypto.brentPrice.toFixed(2)}</div><span class="delta flat">—</span></div>` : ''}
+                        ${STATE.crypto.wtiPrice ? `<div class="snap-cell"><div class="lbl">🛢 WTI</div><div class="val" style="color:#ea8">$${STATE.crypto.wtiPrice.toFixed(2)}</div><span class="delta flat">—</span></div>` : ''}
                     </div>`;
 
                 const spark = sparkWrap('fng', 'Fear & Greed Index', '#fc0');
@@ -4269,8 +4307,12 @@ __PATHS__
     }
 
     function tokenize(text) {
-        return (text.toLowerCase().match(/[a-zа-яєіїґ'][a-zа-яєіїґ'-]*/g) || [])
-            .filter(w => w.length > 3 && !STOPWORDS.has(w) && !/^\d+$/.test(w));
+        // Pre-clean: strip URLs, HTML tags, HTML entities
+        const clean = text.replace(/https?:\/\/[^\s<>"']+/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/&#[\d]+;/g, ' ');
+        return (clean.toLowerCase().match(/[a-zа-яєіїґ'][a-zа-яєіїґ'-]*/g) || [])
+            .filter(w => w.length > 3 && !STOPWORDS.has(w) && !/^\d+$/.test(w)
+                && !/^(?:http|https|href|www|com|org|net|html|php|asp|jsp|cgi|css|js|img|src|alt|title|class|div|span|style|script|link|meta|head|body|nbsp|bull|middot|mdash|ndash|laquo|raquo|times|ensp|emsp|thinsp|zwnj|lrm|rlm)$/i.test(w)
+            );
     }
 
     function tfidfTrends(allDocs, topN=8) {
@@ -4299,8 +4341,11 @@ __PATHS__
     function bigramsTrends(allDocs, topN=5) {
         const bg = {};
         for (const doc of allDocs) {
-            const toks = (doc.toLowerCase().match(/[a-zа-яєіїґ'][a-zа-яєіїґ'-]*/g) || [])
-                .filter(w => w.length > 3 && !STOPWORDS.has(w));
+            const clean = doc.replace(/https?:\/\/[^\s<>"']+/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/&#[\d]+;/g, ' ');
+            const toks = (clean.toLowerCase().match(/[a-zа-яєіїґ'][a-zа-яєіїґ'-]*/g) || [])
+                .filter(w => w.length > 3 && !STOPWORDS.has(w)
+                    && !/^(?:http|https|href|www|com|org|net|html|php|css|js|img|src|alt|title|class|div|span|style|script|link|meta|head|body)$/i.test(w)
+                );
             for (let i=0; i<toks.length-1; i++) {
                 const k = toks[i] + ' ' + toks[i+1];
                 bg[k] = (bg[k]||0) + 1;
@@ -5091,17 +5136,100 @@ __PATHS__
             STATE.crypto.fng = parseInt(cur.value, 10);
             STATE.crypto.fngClass = cur.value_classification;
             STATE.crypto.btcChange = parseFloat(btc.priceChangePercent);
+            STATE.crypto.btcPrice = parseFloat(btc.lastPrice);
+            STATE.crypto.ethPrice = parseFloat(eth.lastPrice);
             const ethChange = parseFloat(eth.priceChangePercent);
             // volatility = abs diff between BTC and ETH change, scaled
             STATE.crypto.volatility = clamp(Math.abs(STATE.crypto.btcChange) + Math.abs(ethChange) + Math.abs(STATE.crypto.btcChange - ethChange) * 2, 0, 100);
 
             $('src-crypto').innerText = 'LIVE';
             $('src-crypto').className = 'src-ind live';
-            log(`Crypto F&G=${STATE.crypto.fng} (${STATE.crypto.fngClass}), BTC ${STATE.crypto.btcChange.toFixed(2)}%`, 'CRYPTO');
+            log(`Crypto F&G=${STATE.crypto.fng} (${STATE.crypto.fngClass}), BTC $${STATE.crypto.btcPrice.toFixed(0)} ${STATE.crypto.btcChange.toFixed(2)}%`, 'CRYPTO');
         } catch(e) {
             $('src-crypto').innerText = 'DEAD';
             $('src-crypto').className = 'src-ind dead';
             log('Crypto API недоступний: ' + e.message, 'CRYPTO');
+        }
+        // Oil prices — best-effort via CORS proxy, with localStorage cache
+        _loadOilCache();
+        fetchOilPrices();
+    }
+
+    function _loadOilCache() {
+        try {
+            const c = JSON.parse(localStorage.getItem('_oil_cache') || '{}');
+            if (c.ts && Date.now() - c.ts < 30 * 60 * 1000) { // cache 30 min
+                if (c.brent) STATE.crypto.brentPrice = c.brent;
+                if (c.wti) STATE.crypto.wtiPrice = c.wti;
+            }
+        } catch(_){}
+    }
+
+    async function fetchOilPrices() {
+        const yahooBrent = 'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=1d&interval=1d';
+        const yahooWTI   = 'https://query1.finance.yahoo.com/v8/finance/chart/CL=F?range=1d&interval=1d';
+
+        // Source 1: cors.sh (raw response, proven in this codebase)
+        const s1 = async () => {
+            const [b, w] = await Promise.all([
+                fetchJSON('https://proxy.cors.sh/' + yahooBrent, 6000),
+                fetchJSON('https://proxy.cors.sh/' + yahooWTI, 6000)
+            ]);
+            return {
+                brent: b?.chart?.result?.[0]?.meta?.regularMarketPrice,
+                wti:   w?.chart?.result?.[0]?.meta?.regularMarketPrice
+            };
+        };
+
+        // Source 2: allorigins /get (wrapped in {contents:"..."})
+        const s2 = async () => {
+            const [bR, wR] = await Promise.all([
+                fetchJSON('https://api.allorigins.win/get?url=' + encodeURIComponent(yahooBrent), 6000),
+                fetchJSON('https://api.allorigins.win/get?url=' + encodeURIComponent(yahooWTI), 6000)
+            ]);
+            const bd = bR?.contents ? JSON.parse(bR.contents) : null;
+            const wd = wR?.contents ? JSON.parse(wR.contents) : null;
+            return {
+                brent: bd?.chart?.result?.[0]?.meta?.regularMarketPrice,
+                wti:   wd?.chart?.result?.[0]?.meta?.regularMarketPrice
+            };
+        };
+
+        // Source 3: allorigins /raw
+        const s3 = async () => {
+            const [b, w] = await Promise.all([
+                fetchJSON('https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooBrent), 6000),
+                fetchJSON('https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooWTI), 6000)
+            ]);
+            return {
+                brent: b?.chart?.result?.[0]?.meta?.regularMarketPrice,
+                wti:   w?.chart?.result?.[0]?.meta?.regularMarketPrice
+            };
+        };
+
+        // Fire ALL sources in parallel — first valid data wins into cache
+        const results = await Promise.allSettled([s1(), s2(), s3()]);
+        let gotBrent = STATE.crypto.brentPrice, gotWti = STATE.crypto.wtiPrice;
+
+        for (const r of results) {
+            if (r.status === 'fulfilled' && r.value) {
+                if (!gotBrent && r.value.brent) gotBrent = r.value.brent;
+                if (!gotWti && r.value.wti) gotWti = r.value.wti;
+            }
+        }
+
+        if (gotBrent) STATE.crypto.brentPrice = gotBrent;
+        if (gotWti)   STATE.crypto.wtiPrice = gotWti;
+
+        // Persist cache
+        if (gotBrent || gotWti) {
+            try { localStorage.setItem('_oil_cache', JSON.stringify({ brent: gotBrent, wti: gotWti, ts: Date.now() })); } catch(_){}
+            log(`Oil: Brent=$${gotBrent?.toFixed(2)||'--'} WTI=$${gotWti?.toFixed(2)||'--'}`, 'OIL');
+            // Immediate UI update for prices
+            if (gotBrent) $('v-brent-price').innerText = '$' + gotBrent.toFixed(2);
+            if (gotWti)   $('v-wti-price').innerText = '$' + gotWti.toFixed(2);
+        } else {
+            log('Oil API: всі джерела недоступні', 'OIL');
         }
     }
 
@@ -5396,9 +5524,16 @@ __PATHS__
             const normText = cleanText.replace(/•/g, '\n').replace(/\s+район/g, ' район');
             // Direct oblast match
             for (const obName of Object.keys(OBLAST_DATA)) {
-                const root = obName.replace(/ська$/,'').replace(/цька$/,'').replace(/на$/,'');
-                const re = new RegExp('(?<![а-яєіїґ])' + obName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])', 'i');
-                if (re.test(normText)) regions.add(obName);
+                const esc = obName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+                const re = new RegExp('(?<![а-яєіїґ])' + esc + '(?![а-яєіїґ])', 'i');
+                if (re.test(normText)) { regions.add(obName); continue; }
+                // Also match locative/instrumental cases: "Черкаській", "Черкаською"
+                const root = obName.replace(/ська$/,'ськ').replace(/цька$/,'цьк');
+                const variants = [root + 'ій', root + 'ою', root + 'ою'];
+                for (const v of variants) {
+                    const vre = new RegExp('(?<![а-яєіїґ])' + v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])', 'i');
+                    if (vre.test(normText)) { regions.add(obName); break; }
+                }
             }
             // Rayon match — look for "<X> район" or "<X>ський"
             const rayonMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ\'\-]+)ський\s*район/g) || [];
@@ -5413,10 +5548,12 @@ __PATHS__
                 const re = new RegExp('(?<![а-яєіїґ])' + cityName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])');
                 if (re.test(normText)) regions.add(oblast);
             }
-            // Also detect "область" + preceding word
-            const oblMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ\'\-]+)\s+області/g) || [];
+            // Also detect "область" + preceding word (nominative & locative)
+            const oblMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ\'\-]+)\s+област[іью]/g) || [];
             for (const om of oblMatches) {
-                const obName = om.replace(/\s+області/, 'ська');
+                let obName = om.replace(/\s+област[іью]/, '');
+                // Convert locative/instrumental to nominative: Черкаській→Черкаська, Донецькій→Донецька
+                obName = obName.replace(/ській$/, 'ська').replace(/ською$/, 'ська').replace(/цькій$/, 'цька').replace(/цькою$/, 'цька');
                 if (OBLAST_DATA[obName]) regions.add(obName);
             }
             if (regions.size > 0) {
@@ -6578,6 +6715,11 @@ __PATHS__
         $('v-fng-class').innerText = STATE.crypto.fngClass;
         $('v-btc').innerHTML = (STATE.crypto.btcChange>=0?'+':'') + fmt(STATE.crypto.btcChange,2) + '%' + deltaFmt('fng',0);
         $('v-vol').innerText = fmt(STATE.crypto.volatility,1);
+        // Prices
+        if (STATE.crypto.btcPrice > 0) $('v-btc-price').innerText = '$' + fmt(STATE.crypto.btcPrice, 0);
+        if (STATE.crypto.ethPrice > 0) $('v-eth-price').innerText = '$' + fmt(STATE.crypto.ethPrice, 0);
+        if (STATE.crypto.brentPrice) $('v-brent-price').innerText = '$' + STATE.crypto.brentPrice.toFixed(2);
+        if (STATE.crypto.wtiPrice) $('v-wti-price').innerText = '$' + STATE.crypto.wtiPrice.toFixed(2);
         const fngColor = STATE.crypto.fng < 30 ? 'var(--accent-warn)' : STATE.crypto.fng > 70 ? 'var(--accent-hope)' : 'var(--accent-pri)';
         $('bar-fng').style.background = fngColor;
 
@@ -7238,6 +7380,8 @@ __PATHS__
             STATE.tension.index = last.tension ?? STATE.tension.index;
             STATE.crypto.fng = last.fng ?? STATE.crypto.fng;
             STATE.crypto.btcChange = last.btc ?? STATE.crypto.btcChange;
+            STATE.crypto.btcPrice = last.btcPrice ?? 0;
+            STATE.crypto.ethPrice = last.ethPrice ?? 0;
             if (last.oblasts) STATE.oblasts = last.oblasts;
             log(`Відновлено стан з кешу (${new Date(last.t).toLocaleString('uk-UA', { timeZone:'Europe/Kyiv' })})`, 'INIT');
         }
