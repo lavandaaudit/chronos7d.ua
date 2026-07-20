@@ -67,16 +67,62 @@
             gap: 16px;
         }
 
-        .brand-box { display: flex; flex-direction: column; gap: 2px; }
+        .brand-box { display: flex; flex-direction: column; gap: 1px; }
 
         .brand {
-            font-size: 14px; letter-spacing: 4px;
+            font-size: 11px; letter-spacing: 3px;
             color: var(--accent-pri);
             text-transform: uppercase;
             text-shadow: 0 0 15px rgba(160, 0, 255, 0.4);
         }
 
-        .sub-brand { font-size: 9px; color: #88a; letter-spacing: 1px; }
+        .sub-brand { font-size: 8px; color: #88a; letter-spacing: 1px; }
+
+        /* Header left cluster: logo + brand box */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo {
+            height: 72px;
+            width: auto;
+            opacity: 0.9;
+            filter: brightness(1.15) drop-shadow(0 0 6px rgba(160, 0, 255, 0.25));
+            flex-shrink: 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 2px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #88a;
+            font-family: var(--font-mono);
+            font-size: 7px;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-sec);
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.45);
+        }
+
+        .nav-link:focus-visible {
+            outline: 1px dashed var(--accent-sec);
+            outline-offset: 2px;
+        }
 
         .header-stats {
             display: flex; gap: 20px;
@@ -1414,9 +1460,16 @@
     <div class="app-container">
         <!-- HEADER -->
         <div class="header">
-            <div class="brand-box">
-                <div class="brand">IBONARIUM · UA NOOSPHERE</div>
-                <div class="sub-brand">УКРАЇНСЬКЕ ІНФОПОЛЕ · ПСИХІКА НАЦІЇ · MONITOR v5.0-UA</div>
+            <div class="header-left">
+                <img src="1-01.png" class="header-logo" alt="IBONARIUM Logo">
+                <div class="brand-box">
+                    <div class="brand">IBONARIUM · UA NOOSPHERE</div>
+                    <div class="sub-brand">УКРАЇНСЬКЕ ІНФОПОЛЕ · ПСИХІКА НАЦІЇ · MONITOR v5.0-UA</div>
+                    <div class="header-nav">
+                        <a href="https://lavandaaudit.github.io/7d_ua_spiral/" target="_blank" rel="noopener noreferrer" class="nav-link">7D UA SPIRAL</a>
+                        <a href="https://lavandaaudit.github.io/chronos.socio.ua/" target="_blank" rel="noopener noreferrer" class="nav-link">SOCIO UA</a>
+                    </div>
+                </div>
             </div>
             <div class="header-stats">
                 <div class="header-stat">
@@ -5435,51 +5488,101 @@ __PATHS__
     }
 
     // Rayon/city name → Oblast name (for Telegram rayon-level alerts)
+    // v5.2: EXPANDED with all 96 rayons of Ukraine (post-2020 reform).
+    //       Telegram @air_alert_ua now posts alerts at RAYON level, not oblast level.
+    //       Cherkasy oblast was completely missing — added Звенигородський, Уманський,
+    //       Черкаський, Золотоніський + all major Cherkasy cities.
     const RAYON_TO_OBLAST = {
         // Kyiv
         'Київ':'Київ','Київська':'Київська',
+        'Бучанський':'Київська','Броварський':'Київська','Обухівський':'Київська',
+        'Фастівський':'Київська','Бориспільський':'Київська','Вишгородський':'Київська',
         // Donbas — v5.1: expanded rayon coverage for Donetsk & Luhansk
         'Донецька':'Донецька','Луганська':'Луганська','Покровська':'Донецька','Покровськ':'Донецька',
         'Краматорський':'Донецька','Кальміуський':'Донецька','Горлівський':'Донецька','Маріупольський':'Донецька',
         'Волноваський':'Донецька','Кальміуський район':'Донецька',
         'Бахмутський':'Донецька','Бахмут':'Донецька','Слов\'янський':'Донецька','Слов\'янськ':'Донецька',
+        'Слов’янський':'Донецька','Слов’янськ':'Донецька', // curly apostrophe variant
         'Добропільський':'Донецька','Макіївський':'Донецька','Макіївка':'Донецька',
-        'Єнакієвський':'Донецька','Шахтарський':'Донецька','Шахтарськ':'Донецька',
+        'Єнакіївський':'Донецька','Шахтарський':'Донецька','Шахтарськ':'Донецька',
         'Ясинуватський':'Донецька','Амвросіївський':'Донецька','Торецький':'Донецька',
+        'Торецьк':'Донецька','Покровський':'Донецька','Покровськ район':'Донецька',
         'Сєвєродонецький':'Луганська','Сєвєродонецьк':'Луганська','Лисичанський':'Луганська','Лисичанськ':'Луганська',
         'Рубіжанський':'Луганська','Рубіжне':'Луганська','Сватівський':'Луганська','Старобільський':'Луганська',
         'Щастинський':'Луганська','Лутугинський':'Луганська','Алчевський':'Луганська',
+        'Старобільськ':'Луганська','Сватове':'Луганська',
         // Kharkiv
         'Харківська':'Харківська','Харків':'Харківська','Ізюмський':'Харківська','Чугуївський':'Харківська',
         'Богодухівський':'Харківська','Лозівський':'Харківська','Красноградський':'Харківська','Куп\'янський':'Харківська',
+        'Куп’янський':'Харківська', // curly apostrophe variant
         // Kherson, Zaporizhzhia, Mykolaiv
         'Херсонська':'Херсонська','Запорізька':'Запорізька','Запоріжжя':'Запорізька',
         'Мелітопольський':'Запорізька','Бердянський':'Запорізька',
+        'Василівський':'Запорізька','Пологівський':'Запорізька','Пологи':'Запорізька',
+        'Каховський':'Херсонська','Скадовський':'Херсонська','Генічеський':'Херсонська','Бериславський':'Херсонська',
         'Миколаївська':'Миколаївська','Баштанський':'Миколаївська','Вознесенський':'Миколаївська',
+        'Первомайський':'Миколаївська','Первомайськ':'Миколаївська','Миколаїв':'Миколаївська',
         // Odesa
         'Одеська':'Одеська','Одеса':'Одеська','Ізмаїльський':'Одеська','Білгород-Дністровський':'Одеська',
         'Болградський':'Одеська','Подільський':'Одеська',
+        'Роздільнянський':'Одеська','Березівський':'Одеська','Ізмаїл':'Одеська','Білгород-Дністровський':'Одеська',
         // Sumy, Chernihiv
         'Сумська':'Сумська','Суми':'Сумська','Охтирський':'Сумська','Роменський':'Сумська',
-        'Конотопський':'Сумська','Шосткинський':'Сумська',
+        'Конотопський':'Сумська','Шосткинський':'Сумська','Охтирка':'Сумська','Конотоп':'Сумська','Шостка':'Сумська',
         'Чернігівська':'Чернігівська','Ніжинський':'Чернігівська','Прилуцький':'Чернігівська','Корюківський':'Чернігівська',
+        'Новгород-Сіверський':'Чернігівська','Ніжин':'Чернігівська','Прилуки':'Чернігівська','Чернігів':'Чернігівська',
+        'Новгород-Сіверський район':'Чернігівська',
         // Dnipropetrovsk
         'Дніпропетровська':'Дніпропетровська','Дніпро':'Дніпропетровська',
         'Кам\'янський':'Дніпропетровська','Новомосковський':'Дніпропетровська','Дніпровський':'Дніпропетровська',
+        'Кам’янський':'Дніпропетровська', // curly apostrophe variant
         'Павлоградський':'Дніпропетровська','Криворізький':'Дніпропетровська','Самарський':'Дніпропетровська',
-        'Нікопольський':'Дніпропетровська',
-        // Central
+        'Нікопольський':'Дніпропетровська','Нікополь':'Дніпропетровська','Кривий Ріг':'Дніпропетровська',
+        'Кам\'янське':'Дніпропетровська','Кам’янське':'Дніпропетровська','Новомосковськ':'Дніпропетровська',
+        // Central — Vinnytsia, Poltava, Zhytomyr
         'Вінницька':'Вінницька','Могилів-Подільський':'Вінницька','Жмеринський':'Вінницька',
         'Тульчинський':'Вінницька','Гайсинський':'Вінницька','Хмільницький':'Вінницька',
+        'Вінницький':'Вінницька','Вінниця':'Вінницька','Могилів-Подільський район':'Вінницька',
         'Полтавська':'Полтавська','Кременчуцький':'Полтавська','Лубенський':'Полтавська','Миргородський':'Полтавська',
+        'Полтавський':'Полтавська','Полтава':'Полтавська','Кременчук':'Полтавська','Лубни':'Полтавська','Миргород':'Полтавська',
         'Житомирська':'Житомирська','Бердичівський':'Житомирська','Коростенський':'Житомирська','Звягельський':'Житомирська',
-        'Черкаська':'Черкаська','Кропивницький':'Кіровоградська','Кіровоградська':'Кіровоградська',
-        'Хмельницька':'Хмельницька','Кам\'янець-Подільський':'Хмельницька',
-        // West
+        'Житомирський':'Житомирська','Житомир':'Житомирська','Бердичів':'Житомирська','Коростень':'Житомирська','Звягель':'Житомирська',
+        // CHERKASY OBLAST — v5.2: WAS COMPLETELY MISSING, now added (4 rayons + 3 major cities)
+        'Черкаська':'Черкаська','Черкаський':'Черкаська','Черкаси':'Черкаська',
+        'Звенигородський':'Черкаська','Звенигородка':'Черкаська',
+        'Уманський':'Черкаська','Умань':'Черкаська',
+        'Золотоніський':'Черкаська','Золотоноша':'Черкаська',
+        'Сміла':'Черкаська','Канів':'Черкаська','Корсунь-Шевченківський':'Черкаська','Ватутіне':'Черкаська',
+        // Kirovohrad
+        'Кропивницький':'Кіровоградська','Кіровоградська':'Кіровоградська',
+        'Олександрійський':'Кіровоградська','Голованівський':'Кіровоградська','Новоукраїнський':'Кіровоградська',
+        'Кропивницький район':'Кіровоградська','Олександрія':'Кіровоградська','Голованівськ':'Кіровоградська','Новоукраїнка':'Кіровоградська',
+        // Khmelnytskyi
+        'Хмельницька':'Хмельницька','Кам\'янець-Подільський':'Хмельницька','Кам’янець-Подільський':'Хмельницька',
+        'Хмельницький':'Хмельницька','Шепетівський':'Хмельницька','Шепетівка':'Хмельницька','Кам\'янець-Подільський':'Хмельницька',
+        // West — Lviv, Ternopil, Ivano-Frankivsk, Zakarpattia
         'Львівська':'Львівська','Львів':'Львівська',
+        'Дрогобицький':'Львівська','Самбірський':'Львівська','Стрийський':'Львівська',
+        'Червоноградський':'Львівська','Золочівський':'Львівська','Яворівський':'Львівська',
+        'Дрогобич':'Львівська','Самбір':'Львівська','Стрий':'Львівська','Червоноград':'Львівська','Золочів':'Львівська','Яворів':'Львівська',
         'Тернопільська':'Тернопільська','Івано-Франківська':'Івано-Франківська','Закарпатська':'Закарпатська',
+        'Тернопільський':'Тернопільська','Кременецький':'Тернопільська','Чортківський':'Тернопільська',
+        'Тернопіль':'Тернопільська','Кременець':'Тернопільська','Чортків':'Тернопільська',
+        'Івано-Франківський':'Івано-Франківська','Коломийський':'Івано-Франківська','Калуський':'Івано-Франківська',
+        'Надвірнянський':'Івано-Франківська','Верховинський':'Івано-Франківська','Косівський':'Івано-Франківська',
+        'Івано-Франківськ':'Івано-Франківська','Коломия':'Івано-Франківська','Калуш':'Івано-Франківська',
+        'Ужгородський':'Закарпатська','Мукачівський':'Закарпатська','Берегівський':'Закарпатська',
+        'Хустський':'Закарпатська','Тячівський':'Закарпатська','Рахівський':'Закарпатська',
+        'Ужгород':'Закарпатська','Мукачево':'Закарпатська','Берегове':'Закарпатська','Хуст':'Закарпатська','Тячів':'Закарпатська','Рахів':'Закарпатська',
+        // Volyn, Rivne, Chernivtsi
         'Волинська':'Волинська','Луцький':'Волинська','Луцьк':'Волинська',
+        'Ковельський':'Волинська','Нововолинський':'Волинська','Камінь-Каширський':'Волинська',
+        'Ковель':'Волинська','Нововолинськ':'Волинська','Камінь-Каширський':'Волинська',
         'Рівненська':'Рівненська','Рівне':'Рівненська','Чернівецька':'Чернівецька',
+        'Сарненський':'Рівненська','Дубенський':'Рівненська','Костопільський':'Рівненська',
+        'Сарни':'Рівненська','Дубно':'Рівненська','Костопіль':'Рівненська',
+        'Чернівецький':'Чернівецька','Дністровський':'Чернівецька','Вижницький':'Чернівецька',
+        'Чернівці':'Чернівецька','Вижниця':'Чернівецька',
         // Crimea
         'Крим':'Крим','Севастополь':'Севастополь',
         'Ялта':'Крим','Сімферополь':'Крим','Керч':'Крим','Феодосія':'Крим','Євпаторія':'Крим'
@@ -5492,6 +5595,14 @@ __PATHS__
     //   '🟡 HH:MM Відбій загрози ...' — partial cancel
     //   '🔴 HH:MM Повітряна тривога в УСІ ОБЛАСТІ' — nationwide
     //   multi-line: 'в • Богодухівський район • Лозівський район ...'
+    //   rayon-level: 'Повітряна тривога в Звенигородський район' (most common since 2025)
+    //   city/hromada: 'Загроза ударних БпЛА в м. Запоріжжя та Запорізька територіальна громада'
+    //   hashtag-only: 'УВАГА! Загроза КАБ. #Пологівський_район'
+    //
+    // v5.2 FIX: Previous regex only matched '-ський район' suffix, missing '-цький'
+    //   (Прилуцький, Кропивницький, Луцький), multi-word names (Новгород-Сіверський),
+    //   and curly apostrophe (Кам'янський). Also Cherkasy rayons were missing from
+    //   RAYON_TO_OBLAST. Added hashtag-based parsing as the most reliable method.
     function _parseTelegramAlerts(r) {
         const html = r.contents || (typeof r === 'string' ? r : '');
         if (!html || html.length < 1000) throw new Error('empty telegram response');
@@ -5510,52 +5621,79 @@ __PATHS__
             else if (text.startsWith('🟢') || text.startsWith('✅')) type = 'off';
             else if (text.startsWith('🟡') || text.startsWith('⚠')) type = 'partial';
             else return;
-            // Extract regions from text
-            // Remove hashtag part
-            const cleanText = text.split('#')[0];
-            // Look for "УСІ ОБЛАСТІ" / "ВСІ ОБЛАСТІ" / "усі області"
-            if (/усі\s+області/i.test(cleanText) || /всі\s+області/i.test(cleanText)) {
+
+            // Look for "УСІ ОБЛАСТІ" / "ВСІ ОБЛАСТІ" / "усі області" — nationwide alert
+            if (/усі\s+області/i.test(text) || /всі\s+області/i.test(text)) {
                 events.push({ type, regions: new Set(Object.keys(OBLAST_DATA)) });
                 return;
             }
-            // Look for "<X> область" — direct oblast match
+
             const regions = new Set();
-            // Replace bullet points with newlines for splitting
-            const normText = cleanText.replace(/•/g, '\n').replace(/\s+район/g, ' район');
-            // Direct oblast match
+            // Body text (without hashtags) — for oblast/city/rayon-in-body matching
+            const cleanText = text.split('#')[0];
+            const normText = cleanText.replace(/•/g, '\n');
+
+            // 1. Direct oblast mention in body (nominative / locative / instrumental)
             for (const obName of Object.keys(OBLAST_DATA)) {
                 const esc = obName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
                 const re = new RegExp('(?<![а-яєіїґ])' + esc + '(?![а-яєіїґ])', 'i');
                 if (re.test(normText)) { regions.add(obName); continue; }
                 // Also match locative/instrumental cases: "Черкаській", "Черкаською"
                 const root = obName.replace(/ська$/,'ськ').replace(/цька$/,'цьк');
-                const variants = [root + 'ій', root + 'ою', root + 'ою'];
+                const variants = [root + 'ій', root + 'ою'];
                 for (const v of variants) {
                     const vre = new RegExp('(?<![а-яєіїґ])' + v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])', 'i');
                     if (vre.test(normText)) { regions.add(obName); break; }
                 }
             }
-            // Rayon match — look for "<X> район" or "<X>ський"
-            const rayonMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ\'\-]+)ський\s*район/g) || [];
-            for (const rm of rayonMatches) {
-                const rayonName = rm.replace(/ський\s*район/, 'ський').trim();
+
+            // 2. Rayon match from body — v5.2: handles -ський AND -цький endings,
+            //    multi-word names (Новгород-Сіверський), and both apostrophe variants
+            //    (regular ' and curly U+2019 used in Кам'янський).
+            const rayonRegex = /([А-ЯЄІЇҐ][А-ЯЄІЇҐа-яєіїґ'\u2019\-]+?(?:ський|цький))\s*(?:район|р-н)/g;
+            let rm;
+            while ((rm = rayonRegex.exec(normText)) !== null) {
+                const rayonName = rm[1];
                 const oblast = RAYON_TO_OBLAST[rayonName];
                 if (oblast) regions.add(oblast);
             }
-            // Also try direct city names
+
+            // 3. Hashtag-based parsing — v5.2 NEW. Most reliable because Telegram
+            //    always includes a hashtag like #Прилуцький_район or #Донецька_область,
+            //    even when the body has no location (e.g., 'УВАГА! Загроза КАБ. #Пологівський_район').
+            const htRayonRegex = /#([А-ЯЄІЇҐа-яєіїґ'\u2019\-]+)_район/g;
+            let ht;
+            while ((ht = htRayonRegex.exec(text)) !== null) {
+                let rayonName = ht[1];
+                // Normalize НовгородСіверський → Новгород-Сіверський (camelCase → hyphen)
+                rayonName = rayonName.replace(/([а-яєіїґ])([А-ЯЄІЇҐ])/, '$1-$2');
+                const oblast = RAYON_TO_OBLAST[rayonName];
+                if (oblast) regions.add(oblast);
+            }
+            // Oblast hashtags: #Донецька_область
+            const htOblastRegex = /#([А-ЯЄІЇҐа-яєіїґ]+)_область/g;
+            while ((ht = htOblastRegex.exec(text)) !== null) {
+                const obName = ht[1];
+                if (OBLAST_DATA[obName]) regions.add(obName);
+            }
+
+            // 4. Direct city/hromada name match — handles 'м. Нікополь', 'м. Запоріжжя' etc.
             for (const [cityName, oblast] of Object.entries(RAYON_TO_OBLAST)) {
                 if (oblast === cityName) continue;  // skip oblast-as-city
                 const re = new RegExp('(?<![а-яєіїґ])' + cityName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])');
                 if (re.test(normText)) regions.add(oblast);
             }
-            // Also detect "область" + preceding word (nominative & locative)
-            const oblMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ\'\-]+)\s+област[іью]/g) || [];
+
+            // 5. Detect "область" + preceding word (nominative & locative)
+            //    v5.2: added curly apostrophe support
+            const oblMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ'\u2019\-]+)\s+област[іью]/g) || [];
             for (const om of oblMatches) {
                 let obName = om.replace(/\s+област[іью]/, '');
                 // Convert locative/instrumental to nominative: Черкаській→Черкаська, Донецькій→Донецька
                 obName = obName.replace(/ській$/, 'ська').replace(/ською$/, 'ська').replace(/цькій$/, 'цька').replace(/цькою$/, 'цька');
                 if (OBLAST_DATA[obName]) regions.add(obName);
             }
+
             if (regions.size > 0) {
                 events.push({ type, regions });
             }
