@@ -4944,13 +4944,21 @@ __PATHS__
 
     /* ---------- 10. DATA FETCHERS ---------- */
 
-    // Fast RSS fetch via allorigins.win CORS proxy — no rate limit, all sources in parallel (~5s)
+    // Fast RSS fetch — rss2json.com primary (fast), allorigins.win fallback (often down)
     async function fetchRSSFast(rss2jsonUrl) {
         const rssUrl = new URL(rss2jsonUrl).searchParams.get('rss_url');
         if (!rssUrl) return null;
         STATE.apiCalls++;
+
+        // 1) Primary: rss2json.com (fast, returns JSON directly)
         try {
-            // Try allorigins.win first (no rate limit, direct XML)
+            const v = await fetchJSON(rss2jsonUrl, 8000);
+            if (v && v.items && v.items.length) return v;
+        } catch(e) {}
+        $('api-calls').innerText = STATE.apiCalls;
+
+        // 2) Fallback: allorigins.win (direct XML, but often slow/down)
+        try {
             const ctrl = new AbortController();
             const tid = setTimeout(() => ctrl.abort(), 8000);
             const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rssUrl);
@@ -4959,14 +4967,11 @@ __PATHS__
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const xml = await resp.text();
             $('api-calls').innerText = STATE.apiCalls;
-            // Parse RSS/Atom XML
             const parser = new DOMParser();
             const doc = parser.parseFromString(xml, 'text/xml');
-            // RSS 2.0 format
             let entries = doc.querySelectorAll('item');
             let isAtom = false;
             if (!entries.length) {
-                // Atom format
                 entries = doc.querySelectorAll('entry');
                 isAtom = true;
             }
@@ -4988,20 +4993,13 @@ __PATHS__
                 };
             });
             return { status: 'ok', items };
-        } catch(e) {
-            $('api-calls').innerText = STATE.apiCalls;
-            // Fallback: try rss2json (may 429, but worth a shot)
-            try {
-                const v = await fetchJSON(rss2jsonUrl, 8000);
-                if (v && v.items && v.items.length) return v;
-            } catch(e2) { /* both failed */ }
-            return null;
-        }
+        } catch(e2) { /* both failed */ }
+        return null;
     }
 
     async function fetchAllRSS() {
-        // PARALLEL: all 28 sources via allorigins.win proxy (no rate limit) → ~5s total
-        // Fallback to rss2json for any that fail
+        // BATCHED: 28 sources in batches of 8 (avoids rss2json rate limit 429)
+        const BATCH_SIZE = 8;
         const okSources = [];
         const allItems = [];
         const allDocs = [];
@@ -5011,16 +5009,25 @@ __PATHS__
         $('sources-online').innerText = `0/${STATE.sourcesTotal}`;
 
         const t0 = performance.now();
-        log(`RSS: паралельне завантаження ${RSS_SOURCES.length} джерел через allorigins...`, 'RSS');
+        log(`RSS: batched ${RSS_SOURCES.length} джерел (по ${BATCH_SIZE}, rss2json → allorigins)...`, 'RSS');
 
-        // Fetch ALL sources in parallel
-        const results = await Promise.allSettled(
-            RSS_SOURCES.map(s => fetchRSSFast(s.url))
-        );
+        // Process in batches to avoid rate limiting
+        const allResults = [];
+        for (let i = 0; i < RSS_SOURCES.length; i += BATCH_SIZE) {
+            const batch = RSS_SOURCES.slice(i, i + BATCH_SIZE);
+            const batchResults = await Promise.allSettled(
+                batch.map(s => fetchRSSFast(s.url))
+            );
+            allResults.push(...batchResults);
+            // Small delay between batches to respect rate limits
+            if (i + BATCH_SIZE < RSS_SOURCES.length) {
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
 
         const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
 
-        results.forEach((r, i) => {
+        allResults.forEach((r, i) => {
             const srcName = RSS_SOURCES[i].name;
             const srcTag = RSS_SOURCES[i].tag || 'general';
             const data = r.status === 'fulfilled' ? r.value : null;
@@ -5262,8 +5269,8 @@ __PATHS__
             };
         };
 
-        // Fire ALL sources in parallel — first valid data wins into cache
-        const results = await Promise.allSettled([s1(), s2(), s3()]);
+        // Fire cors.sh source (allorigins is dead — removed)
+        const results = await Promise.allSettled([s1()]);
         let gotBrent = STATE.crypto.brentPrice, gotWti = STATE.crypto.wtiPrice;
 
         for (const r of results) {
@@ -5401,20 +5408,95 @@ __PATHS__
 
     /* ---------- 10.7 UA-SPECIFIC FETCHERS ---------- */
 
-    /* ---------- 10.7a AIR ALERT MONITOR — Telegram + cors.sh ---------- */
-    // alerts.com.ua API is STALE (data from 2023-2025, only Luhansk shows alert=true).
-    // api.alerts.in.ua is blocked by Cloudflare for non-browser requests.
-    // Only reliable source: Telegram @air_alert_ua via cors.sh proxy.
-    // Note: channel may have temporary technical issues (partial message publication).
+    /* ---------- 10.7a AIR ALERT MONITOR — alerts.in.ua via Ubilling (primary) + Telegram (backup) ---------- */
+    // alerts.in.ua is THE official air alert API used by all major apps.
+    // Direct access blocked by Cloudflare, so we use Ubilling's server-side proxy
+    // (ubilling.net.ua/aerialalerts/?source=aiu) which bypasses CF and returns
+    // clean JSON with {states: {"Область": {alertnow: bool}}}. No keys/auth.
+    // 3-sec server-side cache. Routed through cors.sh for browser CORS.
+    // Telegram @air_alert_ua kept as last-resort fallback.
+    const UBILLING_AIU_URL = 'https://ubilling.net.ua/aerialalerts/?source=aiu';
     const TG_URL = 'https://t.me/s/air_alert_ua';
     const ALERT_SOURCES = [
         {
-            name: 'TG@air_alert_ua·cors.sh',
+            name: 'alerts.in.ua',
+            url: 'https://proxy.cors.sh/' + UBILLING_AIU_URL,
+            timeout: 10000,
+            parse: (r) => _parseUbillingAlerts(r, 'alerts.in.ua')
+        },
+        {
+            name: 'TG@air_alert_ua',
             url: 'https://proxy.cors.sh/' + TG_URL,
             timeout: 15000,
             parse: (r) => _parseTelegramAlerts(r)
         }
     ];
+
+    // Map Ubilling API full names ("Київська область", "м. Київ") → OBLAST_DATA short keys
+    const UBILLING_NAME_MAP = {
+        'Вінницька область': 'Вінницька',
+        'Волинська область': 'Волинська',
+        'Дніпропетровська область': 'Дніпропетровська',
+        'Донецька область': 'Донецька',
+        'Житомирська область': 'Житомирська',
+        'Закарпатська область': 'Закарпатська',
+        'Запорізька область': 'Запорізька',
+        'Івано-Франківська область': 'Івано-Франківська',
+        'Київська область': 'Київська',
+        'Кіровоградська область': 'Кіровоградська',
+        'Луганська область': 'Луганська',
+        'Львівська область': 'Львівська',
+        'Миколаївська область': 'Миколаївська',
+        'Одеська область': 'Одеська',
+        'Полтавська область': 'Полтавська',
+        'Рівненська область': 'Рівненська',
+        'Сумська область': 'Сумська',
+        'Тернопільська область': 'Тернопільська',
+        'Харківська область': 'Харківська',
+        'Херсонська область': 'Херсонська',
+        'Хмельницька область': 'Хмельницька',
+        'Черкаська область': 'Черкаська',
+        'Чернівецька область': 'Чернівецька',
+        'Чернігівська область': 'Чернігівська',
+        'м. Київ': 'Київ',
+        'Автономна Республіка Крим': 'Крим'
+    };
+
+    // Parse Ubilling aerialalerts JSON → active oblasts in OBLAST_DATA key format
+    function _parseUbillingAlerts(r, label) {
+        let data;
+        if (typeof r === 'string') {
+            data = JSON.parse(r);
+        } else if (r && r.contents) {
+            data = JSON.parse(r.contents);
+        } else if (r && r.states) {
+            data = r;
+        } else {
+            throw new Error('invalid ubilling response');
+        }
+
+        if (!data.states || typeof data.states !== 'object') {
+            throw new Error('no states in ubilling response');
+        }
+
+        const activeSet = new Set();
+        const rawStates = [];
+        for (const [apiName, st] of Object.entries(data.states)) {
+            const obKey = UBILLING_NAME_MAP[apiName];
+            rawStates.push({ name: apiName, alert: !!st.alertnow, changed: st.changed || null });
+            if (st.alertnow && obKey && OBLAST_DATA[obKey]) {
+                activeSet.add(obKey);
+            }
+        }
+
+        return {
+            active: Array.from(activeSet),
+            total: Object.keys(OBLAST_DATA).length,
+            lastChange: data.cachedat || new Date().toISOString(),
+            raw: rawStates,
+            sourceLabel: (data.source || label) + ' via Ubilling'
+        };
+    }
 
     // Rayon/city name → Oblast name (for Telegram rayon-level alerts)
     // v5.2: EXPANDED with all 96 rayons of Ukraine (post-2020 reform).
@@ -5736,7 +5818,7 @@ __PATHS__
                 const d = new Date(r.parsed.lastChange);
                 if (!lastChange || d > new Date(lastChange)) {
                     lastChange = r.parsed.lastChange;
-                    bestSource = r.name;
+                    bestSource = r.parsed.sourceLabel || r.name;
                 }
             }
             if (r.parsed.raw && r.parsed.raw.length > rawStates.length) rawStates = r.parsed.raw;
