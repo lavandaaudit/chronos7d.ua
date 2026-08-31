@@ -5401,93 +5401,20 @@ __PATHS__
 
     /* ---------- 10.7 UA-SPECIFIC FETCHERS ---------- */
 
-    /* ---------- 10.7a MULTI-SOURCE AIR ALERT MONITOR ---------- */
-    // PRIMARY: Telegram @air_alert_ua via cors.sh — official Ukrainian air-alert channel,
-    //          real-time updates (messages every minute when alerts active).
-    // FALLBACKS: same Telegram via allorigins (when cors.sh is rate-limited),
-    //            then alerts.com.ua API via cors.sh (timestamps only — API is stale but
-    //            still gives us the structure of 25 oblasts).
-    //
-    // NOTE: alerts.in.ua is blocked by Cloudflare for non-browser requests — can't use.
-    //       alerts.com.ua returns stale 'changed' timestamps but 'alert' field is live.
+    /* ---------- 10.7a AIR ALERT MONITOR — Telegram + cors.sh ---------- */
+    // alerts.com.ua API is STALE (data from 2023-2025, only Luhansk shows alert=true).
+    // api.alerts.in.ua is blocked by Cloudflare for non-browser requests.
+    // Only reliable source: Telegram @air_alert_ua via cors.sh proxy.
+    // Note: channel may have temporary technical issues (partial message publication).
     const TG_URL = 'https://t.me/s/air_alert_ua';
-    const ALERTS_API_URL = 'https://alerts.com.ua/api/states';
     const ALERT_SOURCES = [
-        // PRIMARY — Telegram via cors.sh (Access-Control-Allow-Origin: *, very reliable)
         {
             name: 'TG@air_alert_ua·cors.sh',
             url: 'https://proxy.cors.sh/' + TG_URL,
-            timeout: 13000,
+            timeout: 15000,
             parse: (r) => _parseTelegramAlerts(r)
-        },
-        // FALLBACK 1 — Telegram via allorigins /get (wraps in {contents:"..."})
-        {
-            name: 'TG@air_alert_ua·allorigins',
-            url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(TG_URL),
-            timeout: 13000,
-            parse: (r) => _parseTelegramAlerts(r)
-        },
-        // FALLBACK 2 — alerts.com.ua API via cors.sh (gives per-oblast changed timestamps)
-        {
-            name: 'alerts.com.ua·cors.sh',
-            url: 'https://proxy.cors.sh/' + ALERTS_API_URL,
-            timeout: 13000,
-            parse: (r) => {
-                const data = typeof r === 'string' ? JSON.parse(r) : r;
-                const states = data.states || [];
-                if (!states.length) throw new Error('empty states');
-                return _normalizeAlertStates(states);
-            }
-        },
-        // FALLBACK 3 — alerts.com.ua via allorigins /raw
-        {
-            name: 'alerts.com.ua·allorigins',
-            url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(ALERTS_API_URL),
-            timeout: 13000,
-            parse: (r) => {
-                const data = typeof r === 'string' ? JSON.parse(r) : r;
-                const states = data.states || [];
-                if (!states.length) throw new Error('empty states');
-                return _normalizeAlertStates(states);
-            }
-        },
-        // FALLBACK 4 — alerts.com.ua via codetabs (rarely works, but free)
-        {
-            name: 'alerts.com.ua·codetabs',
-            url: 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(ALERTS_API_URL),
-            timeout: 13000,
-            parse: (r) => {
-                const data = typeof r === 'string' ? JSON.parse(r) : r;
-                const states = data.states || [];
-                if (!states.length) throw new Error('empty states');
-                return _normalizeAlertStates(states);
-            }
-        },
-        // FALLBACK 5 (v5.1) — alerts.in.ua alternative API for broader coverage
-        {
-            name: 'alerts.in.ua·cors.sh',
-            url: 'https://proxy.cors.sh/https://alerts.in.ua/api/alerts',
-            timeout: 13000,
-            parse: (r) => {
-                const data = typeof r === 'string' ? JSON.parse(r) : r;
-                const active = (data.alerts || [])
-                    .filter(a => a.location_type === 'oblast' && a.active)
-                    .map(a => a.oblast.replace(' область','').replace(' автономна','').replace('м. ',''));
-                return { active, total: 25, lastChange: new Date().toISOString(), raw: [] };
-            }
         }
     ];
-
-    // Internal: normalize alerts.com.ua /states response to { active:[], total, lastChange, raw:states }
-    function _normalizeAlertStates(states) {
-        const active = states.filter(s => s.alert).map(s => s.name.replace(' область','').replace(' автономна','').replace('м. ',''));
-        let lastChange = null;
-        if (states.length) {
-            const sorted = states.slice().sort((a,b) => new Date(b.changed) - new Date(a.changed));
-            lastChange = sorted[0] ? sorted[0].changed : null;
-        }
-        return { active, total: states.length, lastChange, raw: states };
-    }
 
     // Rayon/city name → Oblast name (for Telegram rayon-level alerts)
     // v5.2: EXPANDED with all 96 rayons of Ukraine (post-2020 reform).
@@ -5591,138 +5518,159 @@ __PATHS__
     };
 
     // Parse Telegram @air_alert_ua web preview → active oblast-level alerts.
-    // Message formats (after emoji prefix):
-    //   '🔴 HH:MM Повітряна тривога в <регіон>' — alert start
-    //   '🟢 HH:MM Відбій тривоги в <регіон>' — alert cancel
-    //   '🟡 HH:MM Відбій загрози ...' — partial cancel
-    //   '🔴 HH:MM Повітряна тривога в УСІ ОБЛАСТІ' — nationwide
-    //   multi-line: 'в • Богодухівський район • Лозівський район ...'
-    //   rayon-level: 'Повітряна тривога в Звенигородський район' (most common since 2025)
-    //   city/hromada: 'Загроза ударних БпЛА в м. Запоріжжя та Запорізька територіальна громада'
-    //   hashtag-only: 'УВАГА! Загроза КАБ. #Пологівський_район'
     //
-    // v5.2 FIX: Previous regex only matched '-ський район' suffix, missing '-цький'
-    //   (Прилуцький, Кропивницький, Луцький), multi-word names (Новгород-Сіверський),
-    //   and curly apostrophe (Кам'янський). Also Cherkasy rayons were missing from
-    //   RAYON_TO_OBLAST. Added hashtag-based parsing as the most reliable method.
+    // ALGORITHM: "Latest event per oblast wins" (v5.3)
+    // Instead of replaying on/off events (which loses state when 'on' events
+    // are outside the ~20-message visible window), we track the MOST RECENT
+    // event type for each oblast. If the latest is 🔴 → active, 🟢 → inactive.
+    //
+    // For oblasts NOT mentioned in any visible message, we keep their previous
+    // state from localStorage (_alertOblastState) to avoid false negatives.
+    //
+    // Message formats:
+    //   🔴 HH:MM Повітряна тривога в <регіон>          — alert on
+    //   🟢 HH:MM Відбій тривоги в <регіон>             — alert off
+    //   🟡 HH:MM Відбій загрози ...                    — partial off
+    //   🔴🔴 HH:MM Загроза ударних БпЛА в м. Запоріжжя — drone threat
+    //   Multi-line: 'в • Богодухівський район • Лозівський район ...'
+    //   Hashtag-only: 'УВАГА! Загроза КАБ. #Пологівський_район'
     function _parseTelegramAlerts(r) {
         const html = r.contents || (typeof r === 'string' ? r : '');
         if (!html || html.length < 1000) throw new Error('empty telegram response');
-        // Parse HTML
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const msgs = doc.querySelectorAll('div.tgme_widget_message_text');
         if (!msgs.length) throw new Error('no telegram messages found');
 
-        // Build list of {ts, type:'on'|'off'|'partial', regions:Set}
-        const events = [];
+        // Track LATEST event type per oblast: { oblastName: 'on'|'off' }
+        const latestEvent = {};
+        // Also track oblasts seen in this fetch (to distinguish from stale localStorage)
+        const seenOblasts = new Set();
+
         msgs.forEach(el => {
             const text = (el.innerText || el.textContent || '').trim();
             if (!text) return;
             let type = null;
-            if (text.startsWith('🔴') || text.startsWith('🚨')) type = 'on';
-            else if (text.startsWith('🟢') || text.startsWith('✅')) type = 'off';
-            else if (text.startsWith('🟡') || text.startsWith('⚠')) type = 'partial';
+            if (text.startsWith('\uD83D\uDD34') || text.startsWith('\uD83D\uDEA8')) type = 'on';
+            else if (text.startsWith('\uD83D\uDFE2') || text.startsWith('\u2705')) type = 'off';
+            else if (text.startsWith('\uD83D\uDFE1') || text.startsWith('\u26A0')) type = 'off'; // treat partial/warning as off
             else return;
 
-            // Look for "УСІ ОБЛАСТІ" / "ВСІ ОБЛАСТІ" / "усі області" — nationwide alert
-            if (/усі\s+області/i.test(text) || /всі\s+області/i.test(text)) {
-                events.push({ type, regions: new Set(Object.keys(OBLAST_DATA)) });
-                return;
-            }
+            // Skip non-alert messages (technical announcements etc.)
+            if (text.includes('технічних причин') || text.includes('недоступна') || text.includes('Temporary')) return;
 
-            const regions = new Set();
-            // Body text (without hashtags) — for oblast/city/rayon-in-body matching
-            const cleanText = text.split('#')[0];
-            const normText = cleanText.replace(/•/g, '\n');
+            const regions = _extractRegions(text);
+            if (!regions.size) return;
 
-            // 1. Direct oblast mention in body (nominative / locative / instrumental)
-            for (const obName of Object.keys(OBLAST_DATA)) {
-                const esc = obName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-                const re = new RegExp('(?<![а-яєіїґ])' + esc + '(?![а-яєіїґ])', 'i');
-                if (re.test(normText)) { regions.add(obName); continue; }
-                // Also match locative/instrumental cases: "Черкаській", "Черкаською"
-                const root = obName.replace(/ська$/,'ськ').replace(/цька$/,'цьк');
-                const variants = [root + 'ій', root + 'ою'];
-                for (const v of variants) {
-                    const vre = new RegExp('(?<![а-яєіїґ])' + v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])', 'i');
-                    if (vre.test(normText)) { regions.add(obName); break; }
-                }
-            }
-
-            // 2. Rayon match from body — v5.2: handles -ський AND -цький endings,
-            //    multi-word names (Новгород-Сіверський), and both apostrophe variants
-            //    (regular ' and curly U+2019 used in Кам'янський).
-            const rayonRegex = /([А-ЯЄІЇҐ][А-ЯЄІЇҐа-яєіїґ'\u2019\-]+?(?:ський|цький))\s*(?:район|р-н)/g;
-            let rm;
-            while ((rm = rayonRegex.exec(normText)) !== null) {
-                const rayonName = rm[1];
-                const oblast = RAYON_TO_OBLAST[rayonName];
-                if (oblast) regions.add(oblast);
-            }
-
-            // 3. Hashtag-based parsing — v5.2 NEW. Most reliable because Telegram
-            //    always includes a hashtag like #Прилуцький_район or #Донецька_область,
-            //    even when the body has no location (e.g., 'УВАГА! Загроза КАБ. #Пологівський_район').
-            const htRayonRegex = /#([А-ЯЄІЇҐа-яєіїґ'\u2019\-]+)_район/g;
-            let ht;
-            while ((ht = htRayonRegex.exec(text)) !== null) {
-                let rayonName = ht[1];
-                // Normalize НовгородСіверський → Новгород-Сіверський (camelCase → hyphen)
-                rayonName = rayonName.replace(/([а-яєіїґ])([А-ЯЄІЇҐ])/, '$1-$2');
-                const oblast = RAYON_TO_OBLAST[rayonName];
-                if (oblast) regions.add(oblast);
-            }
-            // Oblast hashtags: #Донецька_область
-            const htOblastRegex = /#([А-ЯЄІЇҐа-яєіїґ]+)_область/g;
-            while ((ht = htOblastRegex.exec(text)) !== null) {
-                const obName = ht[1];
-                if (OBLAST_DATA[obName]) regions.add(obName);
-            }
-
-            // 4. Direct city/hromada name match — handles 'м. Нікополь', 'м. Запоріжжя' etc.
-            for (const [cityName, oblast] of Object.entries(RAYON_TO_OBLAST)) {
-                if (oblast === cityName) continue;  // skip oblast-as-city
-                const re = new RegExp('(?<![а-яєіїґ])' + cityName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])');
-                if (re.test(normText)) regions.add(oblast);
-            }
-
-            // 5. Detect "область" + preceding word (nominative & locative)
-            //    v5.2: added curly apostrophe support
-            const oblMatches = normText.match(/([А-ЯЄІЇҐ][а-яєіїґ'\u2019\-]+)\s+област[іью]/g) || [];
-            for (const om of oblMatches) {
-                let obName = om.replace(/\s+област[іью]/, '');
-                // Convert locative/instrumental to nominative: Черкаській→Черкаська, Донецькій→Донецька
-                obName = obName.replace(/ській$/, 'ська').replace(/ською$/, 'ська').replace(/цькій$/, 'цька').replace(/цькою$/, 'цька');
-                if (OBLAST_DATA[obName]) regions.add(obName);
-            }
-
-            if (regions.size > 0) {
-                events.push({ type, regions });
+            // Update latest event for each oblast found
+            for (const ob of regions) {
+                latestEvent[ob] = type;
+                seenOblasts.add(ob);
             }
         });
 
-        if (!events.length) throw new Error('no alert events parsed from telegram');
+        if (!seenOblasts.size) throw new Error('no alert regions parsed from telegram');
 
-        // Compute active set: process events chronologically (oldest first)
-        // 'on' adds, 'off' removes, 'partial' removes only the listed regions
+        // Build active set: oblasts whose latest event is 'on'
         const activeSet = new Set();
-        for (const ev of events) {
-            if (ev.type === 'on') {
-                ev.regions.forEach(r => activeSet.add(r));
-            } else if (ev.type === 'off') {
-                ev.regions.forEach(r => activeSet.delete(r));
-            } else if (ev.type === 'partial') {
-                ev.regions.forEach(r => activeSet.delete(r));
-            }
+        for (const [ob, evtType] of Object.entries(latestEvent)) {
+            if (evtType === 'on') activeSet.add(ob);
         }
+
+        // For oblasts NOT seen in this fetch, check localStorage persistence
+        // This prevents false negatives when alerts started before the visible window
+        try {
+            const stored = JSON.parse(localStorage.getItem('_alertOblastState') || '{}');
+            const now = Date.now();
+            for (const [ob, data] of Object.entries(stored)) {
+                if (seenOblasts.has(ob)) continue; // already determined from TG
+                // Keep previous state only if it's less than 15 minutes old
+                if (data.ts && (now - data.ts) < 15 * 60 * 1000 && data.state === 'on') {
+                    activeSet.add(ob);
+                }
+            }
+        } catch(e) {}
+
+        // Save current oblast states to localStorage
+        const toStore = {};
+        for (const ob of seenOblasts) {
+            toStore[ob] = { state: latestEvent[ob], ts: Date.now() };
+        }
+        try { localStorage.setItem('_alertOblastState', JSON.stringify(toStore)); } catch(e) {}
 
         const active = Array.from(activeSet);
         return {
             active,
             total: Object.keys(OBLAST_DATA).length,
-            lastChange: new Date().toISOString(),  // telegram doesn't expose per-region timestamp easily
+            lastChange: new Date().toISOString(),
             raw: []
         };
+    }
+
+    // Extract oblast names from a single Telegram alert message.
+    // Uses multiple strategies: hashtags, rayon names, city names, oblast names.
+    function _extractRegions(text) {
+        const regions = new Set();
+        const cleanText = text.split('#')[0].replace(/•/g, '\n');
+
+        // 1. Hashtag-based parsing (most reliable — Telegram always includes hashtags)
+        const htRayonRegex = /#([А-ЯЄІЇҐа-яєіїґ'\u2019\-]+)_район/g;
+        let ht;
+        while ((ht = htRayonRegex.exec(text)) !== null) {
+            let rayonName = ht[1].replace(/([а-яєіїґ])([А-ЯЄІЇҐ])/, '$1-$2');
+            const oblast = RAYON_TO_OBLAST[rayonName];
+            if (oblast) regions.add(oblast);
+        }
+        const htOblastRegex = /#([А-ЯЄІЇҐа-яєіїґ]+)_область/g;
+        while ((ht = htOblastRegex.exec(text)) !== null) {
+            if (OBLAST_DATA[ht[1]]) regions.add(ht[1]);
+        }
+        // Hashtags for cities/communities: #м_Київ
+        const htCityRegex = /#м_([А-ЯЄІЇҐа-яєіїґ'\u2019\-]+)/g;
+        while ((ht = htCityRegex.exec(text)) !== null) {
+            const cityName = ht[1];
+            if (RAYON_TO_OBLAST[cityName]) regions.add(RAYON_TO_OBLAST[cityName]);
+        }
+        if (regions.size > 0) return regions; // hashtags are authoritative
+
+        // 2. Rayon match from body text
+        const rayonRegex = /([А-ЯЄІЇҐ][А-ЯЄІЇҐа-яєіїґ'\u2019\-]+?(?:ський|цький))\s*(?:район|р-н)/g;
+        let rm;
+        while ((rm = rayonRegex.exec(cleanText)) !== null) {
+            const oblast = RAYON_TO_OBLAST[rm[1]];
+            if (oblast) regions.add(oblast);
+        }
+
+        // 3. Direct oblast mention (nominative / locative / instrumental)
+        for (const obName of Object.keys(OBLAST_DATA)) {
+            const esc = obName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+            if (new RegExp('(?<![а-яєіїґ])' + esc + '(?![а-яєіїґ])', 'i').test(cleanText)) {
+                regions.add(obName); continue;
+            }
+            const root = obName.replace(/ська$/,'ськ').replace(/цька$/,'цьк');
+            for (const v of [root + 'ій', root + 'ою']) {
+                if (new RegExp('(?<![а-яєіїґ])' + v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])', 'i').test(cleanText)) {
+                    regions.add(obName); break;
+                }
+            }
+        }
+
+        // 4. City/hromada name match
+        for (const [cityName, oblast] of Object.entries(RAYON_TO_OBLAST)) {
+            if (oblast === cityName) continue;
+            if (new RegExp('(?<![а-яєіїґ])' + cityName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(?![а-яєіїґ])').test(cleanText)) {
+                regions.add(oblast);
+            }
+        }
+
+        // 5. "область" + preceding word
+        const oblMatches = cleanText.match(/([А-ЯЄІЇҐ][а-яєіїґ'\u2019\-]+)\s+област[іью]/g) || [];
+        for (const om of oblMatches) {
+            let obName = om.replace(/\s+област[іью]/, '');
+            obName = obName.replace(/ській$/, 'ська').replace(/ською$/, 'ська').replace(/цькій$/, 'цька').replace(/цькою$/, 'цька');
+            if (OBLAST_DATA[obName]) regions.add(obName);
+        }
+
+        return regions;
     }
 
     // Cache last-known-good alert state — persisted in localStorage across page reloads
