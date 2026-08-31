@@ -5666,7 +5666,7 @@ __PATHS__
             for (const [ob, data] of Object.entries(stored)) {
                 if (seenOblasts.has(ob)) continue; // already determined from TG
                 // Keep previous state only if it's less than 15 minutes old
-                if (data.ts && (now - data.ts) < 15 * 60 * 1000 && data.state === 'on') {
+                if (data.ts && (now - data.ts) < 3 * 60 * 1000 && data.state === 'on') {
                     activeSet.add(ob);
                 }
             }
@@ -5791,16 +5791,30 @@ __PATHS__
         STATE.alerts.sourcesOk = ok.length;
 
         if (!ok.length) {
-            // Fall back to last-known-good state if available
+            // Fall back to last-known-good state if available (max 5 min old)
             if (_lastGoodAlerts) {
-                const ageMin = _lastGoodAlerts.ts ? Math.round((Date.now() - _lastGoodAlerts.ts) / 60000) : '?';
-                STATE.alerts.activeCount = _lastGoodAlerts.activeCount;
-                STATE.alerts.activeRegions = _lastGoodAlerts.activeRegions;
-                STATE.alerts.totalRegions = _lastGoodAlerts.totalRegions;
-                STATE.alerts.lastChange = _lastGoodAlerts.lastChange + ` (кеш ${ageMin}хв)`;
-                STATE.alerts.source = _lastGoodAlerts.source + ' (STALE)';
-                log(`Тривоги: всі джерела мовчать, використовую кеш (${_lastGoodAlerts.activeCount} обл., ${ageMin}хв тому)`, 'ALERTS');
-                return;
+                const ageMin = _lastGoodAlerts.ts ? Math.round((Date.now() - _lastGoodAlerts.ts) / 60000) : 999;
+                if (ageMin <= 5) {
+                    STATE.alerts.activeCount = _lastGoodAlerts.activeCount;
+                    STATE.alerts.activeRegions = _lastGoodAlerts.activeRegions;
+                    STATE.alerts.totalRegions = _lastGoodAlerts.totalRegions;
+                    STATE.alerts.lastChange = _lastGoodAlerts.lastChange + ` (кеш ${ageMin}хв)`;
+                    STATE.alerts.source = _lastGoodAlerts.source + ' (STALE)';
+                    log(`Тривоги: всі джерела мовчать, використовую кеш (${_lastGoodAlerts.activeCount} обл., ${ageMin}хв тому)`, 'ALERTS');
+                    return;
+                } else {
+                    // Cache expired — clear alert state to avoid ghost alerts
+                    log(`Тривоги: кеш застарів (${ageMin}хв), очищую стан`, 'ALERTS');
+                    for (const name of Object.keys(OBLAST_DATA)) {
+                        if (STATE.oblasts[name]) STATE.oblasts[name].alertActive = false;
+                    }
+                    STATE.alerts.activeCount = 0;
+                    STATE.alerts.activeRegions = [];
+                    STATE.alerts.source = 'NONE (expired)';
+                    $('src-alerts').innerText = 'DEAD';
+                    $('src-alerts').className = 'src-ind dead';
+                    return;
+                }
             }
             $('src-alerts').innerText = 'DEAD';
             $('src-alerts').className = 'src-ind dead';
@@ -5808,20 +5822,47 @@ __PATHS__
             return;
         }
 
-        // Union of active regions across all responding sources — reduces false negatives
+        // Priority-merge: Ubilling (alerts.in.ua) is authoritative.
+        // If Ubilling responded, use ONLY its data — it has exact per-oblast state.
+        // Telegram is only used as fallback when Ubilling fails.
+        // This prevents Telegram's stale localStorage from overriding correct Ubilling data.
+        const ubillingResult = ok.find(r => r.name === 'alerts.in.ua');
         const activeSet = new Set();
         let total = 0, lastChange = null, bestSource = ok[0].name, rawStates = [];
-        for (const r of ok) {
-            r.parsed.active.forEach(a => activeSet.add(a));
-            total = Math.max(total, r.parsed.total);
-            if (r.parsed.lastChange) {
-                const d = new Date(r.parsed.lastChange);
-                if (!lastChange || d > new Date(lastChange)) {
-                    lastChange = r.parsed.lastChange;
-                    bestSource = r.parsed.sourceLabel || r.name;
+
+        if (ubillingResult) {
+            // Authoritative source available — use it exclusively
+            ubillingResult.parsed.active.forEach(a => activeSet.add(a));
+            total = ubillingResult.parsed.total;
+            if (ubillingResult.parsed.lastChange) lastChange = ubillingResult.parsed.lastChange;
+            if (ubillingResult.parsed.raw) rawStates = ubillingResult.parsed.raw;
+            bestSource = ubillingResult.parsed.sourceLabel || ubillingResult.name;
+            // Clear stale Telegram localStorage for oblasts that Ubilling says are clear
+            try {
+                const stored = JSON.parse(localStorage.getItem('_alertOblastState') || '{}');
+                let dirty = false;
+                for (const [ob, data] of Object.entries(stored)) {
+                    if (data.state === 'on' && !activeSet.has(ob)) {
+                        delete stored[ob];
+                        dirty = true;
+                    }
                 }
+                if (dirty) localStorage.setItem('_alertOblastState', JSON.stringify(stored));
+            } catch(e) {}
+        } else {
+            // Ubilling failed — fall back to Telegram (union of all remaining sources)
+            for (const r of ok) {
+                r.parsed.active.forEach(a => activeSet.add(a));
+                total = Math.max(total, r.parsed.total);
+                if (r.parsed.lastChange) {
+                    const d = new Date(r.parsed.lastChange);
+                    if (!lastChange || d > new Date(lastChange)) {
+                        lastChange = r.parsed.lastChange;
+                        bestSource = r.parsed.sourceLabel || r.name;
+                    }
+                }
+                if (r.parsed.raw && r.parsed.raw.length > rawStates.length) rawStates = r.parsed.raw;
             }
-            if (r.parsed.raw && r.parsed.raw.length > rawStates.length) rawStates = r.parsed.raw;
         }
         const active = Array.from(activeSet);
 
