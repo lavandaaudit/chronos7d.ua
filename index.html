@@ -2401,6 +2401,53 @@
         }
     }
 
+    /* ===================================================================
+       v5.4 FIX: UNIVERSAL CORS-PROXY LAYER (multi-proxy race)
+       ===================================================================
+       Причина падіння карток 1Б/6В/6Г: proxy.cors.sh більше НЕ ІСНУЄ
+       (DNS не резолвиться), а api.allorigins.win став нестабільним
+       (520/522/429). Рішення: гонка кількох публічних CORS-проксі —
+       перша валідна відповідь перемагає (Promise.any).            */
+    const PROXY_BUILDERS = [
+        u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+        u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
+        u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+        u => 'https://api.cors.lol/?url=' + encodeURIComponent(u),
+        u => 'https://cors.eu.org/' + u,
+        u => 'https://test.cors.workers.dev/?' + u,
+        u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u)   // wrapped {contents}
+    ];
+
+    // fetchViaProxy: races all proxies in parallel → first VALID response text.
+    // validate(text) allows the caller to check the payload looks right.
+    // Auto-unwraps allorigins /get {"contents":"..."} wrapper.
+    // v5.4.1 SPEED: дефолтний таймаут 12с → 9с (кеш покриває повільні).
+    async function fetchViaProxy(targetUrl, timeoutMs = 9000, validate = null) {
+        const attempt = async (build) => {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+            STATE.apiCalls++;
+            try {
+                const r = await fetch(build(targetUrl), { signal: ctrl.signal });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                let text = await r.text();
+                // Unwrap allorigins /get wrapper {"contents":"<payload>"}
+                if (text && text.charAt(0) === '{' && text.includes('"contents"')) {
+                    try {
+                        const w = JSON.parse(text);
+                        if (w && typeof w.contents === 'string') text = w.contents;
+                    } catch (_) { /* not a wrapper — keep raw */ }
+                }
+                if (validate && !validate(text)) throw new Error('validation failed');
+                return text;
+            } finally {
+                clearTimeout(tid);
+                $('api-calls').innerText = STATE.apiCalls;
+            }
+        };
+        return Promise.any(PROXY_BUILDERS.map(b => attempt(b)));
+    }
+
     /* ---------- 8. HISTORY (localStorage) ---------- */
     const HKEY = 'noosphere_history_v5';
     function loadHistory() {
@@ -5231,54 +5278,18 @@ __PATHS__
         const yahooBrent = 'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=1d&interval=1d';
         const yahooWTI   = 'https://query1.finance.yahoo.com/v8/finance/chart/CL=F?range=1d&interval=1d';
 
-        // Source 1: cors.sh (raw response, proven in this codebase)
-        const s1 = async () => {
-            const [b, w] = await Promise.all([
-                fetchJSON('https://proxy.cors.sh/' + yahooBrent, 6000),
-                fetchJSON('https://proxy.cors.sh/' + yahooWTI, 6000)
-            ]);
-            return {
-                brent: b?.chart?.result?.[0]?.meta?.regularMarketPrice,
-                wti:   w?.chart?.result?.[0]?.meta?.regularMarketPrice
-            };
+        // v5.4 FIX: cors.sh мертвий, s2/s3 ніколи не викликались → єдиний
+        // multi-proxy race для обох тікерів (Yahoo Finance без CORS).
+        const getQuote = async (url) => {
+            const txt = await fetchViaProxy(url, 8000, t => t.includes('"chart"') && t.includes('regularMarketPrice'));
+            const d = JSON.parse(txt);
+            return d?.chart?.result?.[0]?.meta?.regularMarketPrice;
         };
+        const [bR, wR] = await Promise.allSettled([getQuote(yahooBrent), getQuote(yahooWTI)]);
 
-        // Source 2: allorigins /get (wrapped in {contents:"..."})
-        const s2 = async () => {
-            const [bR, wR] = await Promise.all([
-                fetchJSON('https://api.allorigins.win/get?url=' + encodeURIComponent(yahooBrent), 6000),
-                fetchJSON('https://api.allorigins.win/get?url=' + encodeURIComponent(yahooWTI), 6000)
-            ]);
-            const bd = bR?.contents ? JSON.parse(bR.contents) : null;
-            const wd = wR?.contents ? JSON.parse(wR.contents) : null;
-            return {
-                brent: bd?.chart?.result?.[0]?.meta?.regularMarketPrice,
-                wti:   wd?.chart?.result?.[0]?.meta?.regularMarketPrice
-            };
-        };
-
-        // Source 3: allorigins /raw
-        const s3 = async () => {
-            const [b, w] = await Promise.all([
-                fetchJSON('https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooBrent), 6000),
-                fetchJSON('https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooWTI), 6000)
-            ]);
-            return {
-                brent: b?.chart?.result?.[0]?.meta?.regularMarketPrice,
-                wti:   w?.chart?.result?.[0]?.meta?.regularMarketPrice
-            };
-        };
-
-        // Fire cors.sh source (allorigins is dead — removed)
-        const results = await Promise.allSettled([s1()]);
         let gotBrent = STATE.crypto.brentPrice, gotWti = STATE.crypto.wtiPrice;
-
-        for (const r of results) {
-            if (r.status === 'fulfilled' && r.value) {
-                if (!gotBrent && r.value.brent) gotBrent = r.value.brent;
-                if (!gotWti && r.value.wti) gotWti = r.value.wti;
-            }
-        }
+        if (bR.status === 'fulfilled' && bR.value) gotBrent = bR.value;
+        if (wR.status === 'fulfilled' && wR.value) gotWti = wR.value;
 
         if (gotBrent) STATE.crypto.brentPrice = gotBrent;
         if (gotWti)   STATE.crypto.wtiPrice = gotWti;
@@ -5415,22 +5426,10 @@ __PATHS__
     // clean JSON with {states: {"Область": {alertnow: bool}}}. No keys/auth.
     // 3-sec server-side cache. Routed through cors.sh for browser CORS.
     // Telegram @air_alert_ua kept as last-resort fallback.
+    // v5.4 FIX: прибрано мертвий proxy.cors.sh (DNS не резолвиться).
+    // Обидва джерела тепер ідуть через fetchViaProxy (гонка 7 CORS-проксі).
     const UBILLING_AIU_URL = 'https://ubilling.net.ua/aerialalerts/?source=aiu';
     const TG_URL = 'https://t.me/s/air_alert_ua';
-    const ALERT_SOURCES = [
-        {
-            name: 'alerts.in.ua',
-            url: 'https://proxy.cors.sh/' + UBILLING_AIU_URL,
-            timeout: 10000,
-            parse: (r) => _parseUbillingAlerts(r, 'alerts.in.ua')
-        },
-        {
-            name: 'TG@air_alert_ua',
-            url: 'https://proxy.cors.sh/' + TG_URL,
-            timeout: 15000,
-            parse: (r) => _parseTelegramAlerts(r)
-        }
-    ];
 
     // Map Ubilling API full names ("Київська область", "м. Київ") → OBLAST_DATA short keys
     const UBILLING_NAME_MAP = {
@@ -5767,27 +5766,32 @@ __PATHS__
     }
 
     async function fetchAlerts() {
-        // Race all sources in parallel; collect all that succeed within timeout
-        const results = await Promise.allSettled(
-            ALERT_SOURCES.map(async (src) => {
-                const t = src.timeout || 12000;
-                // One retry on failure — allorigins is flaky
-                let lastErr;
-                for (let attempt = 0; attempt < 2; attempt++) {
-                    try {
-                        const r = await fetchJSON(src.url, t);
-                        const parsed = src.parse(r);
-                        return { name: src.name, parsed };
-                    } catch (e) { lastErr = e; }
-                }
-                throw lastErr || new Error('source failed');
-            })
-        );
-        let ok = results
-            .filter(r => r.status === 'fulfilled' && r.value && r.value.parsed && Array.isArray(r.value.parsed.active))
-            .map(r => r.value);
+        // v5.4 FIX: колись Promise.allSettled по ALERT_SOURCES через мертвий
+        // proxy.cors.sh → обидва джерела падали і картка 1Б не працювала.
+        // v5.4.1 SPEED: Ubilling і Telegram стартують ПАРАЛЕЛЬНО (а не
+        // послідовно) — Teleграм вже в дорозі, якщо Ubilling впаде.
+        STATE.alerts.sourcesTotal = 2;
+        let ubillingParsed = null, tgParsed = null;
 
-        STATE.alerts.sourcesTotal = ALERT_SOURCES.length;
+        // Обидві гонки проксі стартують одночасно
+        const ubP = (async () => {
+            const txt = await fetchViaProxy(UBILLING_AIU_URL, 9000, t => t.includes('"states"'));
+            return _parseUbillingAlerts(txt, 'alerts.in.ua');
+        })();
+        const tgP = (async () => {
+            const html = await fetchViaProxy(TG_URL, 9000, t => t.includes('tgme_widget_message'));
+            return _parseTelegramAlerts(html);
+        })().catch(() => null);   // resolve-to-null: без unhandled rejection
+
+        // 1) Ubilling (alerts.in.ua) — authoritative, exact per-oblast state
+        try { ubillingParsed = await ubP; } catch (e) { /* fall through to Telegram */ }
+
+        // 2) Telegram @air_alert_ua — only when Ubilling failed (уже летить!)
+        if (!ubillingParsed) {
+            try { tgParsed = await tgP; } catch (e) { /* both dead */ }
+        }
+
+        const ok = [ubillingParsed, tgParsed].filter(p => p && Array.isArray(p.active));
         STATE.alerts.sourcesOk = ok.length;
 
         if (!ok.length) {
@@ -5818,7 +5822,7 @@ __PATHS__
             }
             $('src-alerts').innerText = 'DEAD';
             $('src-alerts').className = 'src-ind dead';
-            log(`Усі ${ALERT_SOURCES.length} джерел тривог недоступні`, 'ALERTS');
+            log('Усі джерела тривог недоступні (проксі не відповідають)', 'ALERTS');
             return;
         }
 
@@ -5826,17 +5830,16 @@ __PATHS__
         // If Ubilling responded, use ONLY its data — it has exact per-oblast state.
         // Telegram is only used as fallback when Ubilling fails.
         // This prevents Telegram's stale localStorage from overriding correct Ubilling data.
-        const ubillingResult = ok.find(r => r.name === 'alerts.in.ua');
         const activeSet = new Set();
-        let total = 0, lastChange = null, bestSource = ok[0].name, rawStates = [];
+        let total = 0, lastChange = null, bestSource, rawStates = [];
 
-        if (ubillingResult) {
+        if (ubillingParsed) {
             // Authoritative source available — use it exclusively
-            ubillingResult.parsed.active.forEach(a => activeSet.add(a));
-            total = ubillingResult.parsed.total;
-            if (ubillingResult.parsed.lastChange) lastChange = ubillingResult.parsed.lastChange;
-            if (ubillingResult.parsed.raw) rawStates = ubillingResult.parsed.raw;
-            bestSource = ubillingResult.parsed.sourceLabel || ubillingResult.name;
+            ubillingParsed.active.forEach(a => activeSet.add(a));
+            total = ubillingParsed.total;
+            if (ubillingParsed.lastChange) lastChange = ubillingParsed.lastChange;
+            if (ubillingParsed.raw) rawStates = ubillingParsed.raw;
+            bestSource = ubillingParsed.sourceLabel || 'alerts.in.ua';
             // Clear stale Telegram localStorage for oblasts that Ubilling says are clear
             try {
                 const stored = JSON.parse(localStorage.getItem('_alertOblastState') || '{}');
@@ -5850,19 +5853,18 @@ __PATHS__
                 if (dirty) localStorage.setItem('_alertOblastState', JSON.stringify(stored));
             } catch(e) {}
         } else {
-            // Ubilling failed — fall back to Telegram (union of all remaining sources)
-            for (const r of ok) {
-                r.parsed.active.forEach(a => activeSet.add(a));
-                total = Math.max(total, r.parsed.total);
-                if (r.parsed.lastChange) {
-                    const d = new Date(r.parsed.lastChange);
-                    if (!lastChange || d > new Date(lastChange)) {
-                        lastChange = r.parsed.lastChange;
-                        bestSource = r.parsed.sourceLabel || r.name;
-                    }
+            // Ubilling failed — fall back to Telegram
+            const r = tgParsed;
+            r.active.forEach(a => activeSet.add(a));
+            total = Math.max(total, r.total);
+            if (r.lastChange) {
+                const d = new Date(r.lastChange);
+                if (!lastChange || d > new Date(lastChange)) {
+                    lastChange = r.lastChange;
+                    bestSource = 'TG @air_alert_ua';
                 }
-                if (r.parsed.raw && r.parsed.raw.length > rawStates.length) rawStates = r.parsed.raw;
             }
+            if (r.raw && r.raw.length > rawStates.length) rawStates = r.raw;
         }
         const active = Array.from(activeSet);
 
@@ -5894,7 +5896,7 @@ __PATHS__
             }
         }
 
-        log(`Тривоги: ${active.length}/${total} обл. · джерела: ${ok.length}/${ALERT_SOURCES.length} (${bestSource})`, 'ALERTS');
+        log(`Тривоги: ${active.length}/${total} обл. · джерела: ${ok.length}/2 (${bestSource})`, 'ALERTS');
         // Cache last-known-good state (persisted)
         _lastGoodAlerts = {
             activeCount: active.length,
@@ -5988,33 +5990,55 @@ __PATHS__
         return { operational: latestOperational, airDefense: latestAirDefense };
     }
 
-    async function fetchGeneralStaff() {
-        // Try cors.sh first (best CORS support), then allorigins fallback
-        const sources = [
-            'https://proxy.cors.sh/' + GS_TG_URL,
-            'https://api.allorigins.win/get?url=' + encodeURIComponent(GS_TG_URL),
-            'https://api.allorigins.win/raw?url=' + encodeURIComponent(GS_TG_URL)
-        ];
-        for (const url of sources) {
-            try {
-                const r = await fetchJSON(url, 13000);
-                const html = r.contents || (typeof r === 'string' ? r : '');
-                if (!html || html.length < 5000) throw new Error('empty response');
-                const data = _parseGeneralStaff(html);
-                STATE.war.gshData = data;
-                STATE.war.gshData.lastUpdate = new Date().toISOString();
-                $('src-losses').innerText = 'LIVE';
-                $('src-losses').className = 'src-ind live';
-                const opTime = data.operational && data.operational.reportTime
-                    ? `${data.operational.reportTime} ${data.operational.reportDate || ''}`
-                    : '—';
-                log(`ГШ ЗСУ: зведення ${opTime}`, 'GS');
-                return;
-            } catch (e) { /* try next */ }
+    // Показ останніх валідних даних ГШ з кешу (STALE-бейдж). silent=true —
+    // не чіпати src-ind, якщо кешу нема (режим першого малювання в init).
+    function _gsShowStale(silent) {
+        try {
+            const c = JSON.parse(localStorage.getItem('_gs_cache') || 'null');
+            if (c && c.data && c.ts) {
+                const ageH = Math.round((Date.now() - c.ts) / 3600000);
+                if (ageH < 24) {
+                    STATE.war.gshData = c.data;
+                    $('src-losses').innerText = 'STALE ' + ageH + 'г';
+                    $('src-losses').className = 'src-ind dead';
+                    log(`ГШ ЗСУ: показую кеш (${ageH}г)`, 'GS');
+                    return true;
+                }
+            }
+        } catch (_) {}
+        if (!silent) {
+            $('src-losses').innerText = 'DEAD';
+            $('src-losses').className = 'src-ind dead';
+            log('ГШ ЗСУ: недоступний', 'GS');
         }
-        $('src-losses').innerText = 'DEAD';
-        $('src-losses').className = 'src-ind dead';
-        log('ГШ ЗСУ: недоступний', 'GS');
+        return false;
+    }
+
+    async function fetchGeneralStaff() {
+        // v5.4 FIX: cors.sh мертвий, allorigins нестабільний → гонка 7 проксі
+        // + localStorage STALE-кеш (картка 6В більше не "падає" в порожнечу).
+        // v5.4.1 SPEED: таймаут 15с → 10с (кеш покриває повільні проксі).
+        try {
+            const html = await fetchViaProxy(GS_TG_URL, 10000,
+                t => t.length > 5000 && t.includes('tgme_widget_message'));
+            const data = _parseGeneralStaff(html);
+            STATE.war.gshData = data;
+            STATE.war.gshData.lastUpdate = new Date().toISOString();
+            $('src-losses').innerText = 'LIVE';
+            $('src-losses').className = 'src-ind live';
+            const opTime = data.operational && data.operational.reportTime
+                ? `${data.operational.reportTime} ${data.operational.reportDate || ''}`
+                : '—';
+            log(`ГШ ЗСУ: зведення ${opTime}`, 'GS');
+            // Persist last-known-good for STALE display
+            try {
+                localStorage.setItem('_gs_cache', JSON.stringify({ data, ts: Date.now() }));
+            } catch (_) {}
+            return;
+        } catch (e) { /* fall through to cache */ }
+
+        // All proxies failed — show last-known-good data with STALE badge
+        _gsShowStale(false);
     }
 
     /* ---------- 10.7c STOPFAKE — ІНФО-ВІЙНА (моніторинг пропаганди) ---------- */
@@ -6037,69 +6061,136 @@ __PATHS__
                 .map(c => c.textContent.trim())
                 .filter(c => c.length > 0);
             // Skip the 'Новини' / 'Контекст' meta-categories — keep topic tags
-            const topicCats = categories.filter(c =>
-                !['Новини', 'Контекст', 'Фактчек для Фейсбук'].includes(c)
-            );
-            // Classify type from title prefix
-            let type = 'аналіз';
-            if (title.startsWith('Фейк') || title.includes('Фейк:')) type = 'фейк';
-            else if (title.startsWith('Маніпуляція') || title.includes('Маніпуляція:')) type = 'маніпуляція';
-            else if (title.startsWith('Розвінчання')) type = 'розвінчання';
-            else if (title.startsWith('Спростування')) type = 'спростування';
+            const topicCats = categories.filter(c => c.length > 0 && !_sfMetaCats().includes(c));
+            // Classify type from title prefix (shared helper)
+            const type = _sfClassify(title);
             parsed.push({ title, link, pubDate, categories: topicCats, type, ts: pubDate ? new Date(pubDate).getTime() : Date.now() });
         });
         return parsed;
     }
 
-    async function fetchStopFake() {
-        const sources = [
-            'https://proxy.cors.sh/' + STOPFAKE_URL,
-            'https://api.allorigins.win/raw?url=' + encodeURIComponent(STOPFAKE_URL)
-        ];
-        for (const url of sources) {
-            try {
-                const r = await fetchJSON(url, 12000);
-                const xml = typeof r === 'string' ? r : (r.contents || '');
-                if (!xml || xml.length < 500) throw new Error('empty');
-                const items = _parseStopFakeRSS(xml);
-                STATE.infoWar.items = items;
-                STATE.infoWar.count = items.length;
-                STATE.infoWar.lastUpdate = new Date().toISOString();
+    // Classify item type from title prefix (shared by RSS-XML and rss2json paths)
+    function _sfClassify(title) {
+        if (title.startsWith('Фейк') || title.includes('Фейк:')) return 'фейк';
+        if (title.startsWith('Маніпуляція') || title.includes('Маніпуляція:')) return 'маніпуляція';
+        if (title.startsWith('Розвінчання')) return 'розвінчання';
+        if (title.startsWith('Спростування')) return 'спростування';
+        return 'аналіз';
+    }
 
-                // Count today's fakes
-                const now = new Date();
-                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                STATE.infoWar.todayCount = items.filter(it => it.ts >= startOfDay).length;
+    function _sfMetaCats() {
+        return ['Новини', 'Контекст', 'Фактчек для Фейсбук'];
+    }
 
-                // Latest fake = first item (RSS is reverse-chronological)
-                if (items.length) {
-                    STATE.infoWar.topFake = items[0].title;
-                    STATE.infoWar.topFakeDate = items[0].pubDate
-                        ? new Date(items[0].pubDate).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
-                        : '—';
-                }
+    // Apply parsed StopFake items → STATE.infoWar (shared by both fetch paths)
+    function _sfApplyItems(items) {
+        STATE.infoWar.items = items;
+        STATE.infoWar.count = items.length;
+        STATE.infoWar.lastUpdate = new Date().toISOString();
 
-                // Count by type
-                const byType = {};
-                for (const it of items) byType[it.type] = (byType[it.type] || 0) + 1;
-                STATE.infoWar.byType = byType;
+        // Count today's fakes
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        STATE.infoWar.todayCount = items.filter(it => it.ts >= startOfDay).length;
 
-                // Count by target (categories)
-                const byTarget = {};
-                for (const it of items) {
-                    for (const c of it.categories) byTarget[c] = (byTarget[c] || 0) + 1;
-                }
-                STATE.infoWar.byTarget = byTarget;
-
-                $('src-infowar').innerText = 'LIVE';
-                $('src-infowar').className = 'src-ind live';
-                log(`StopFake: ${items.length} фейків (сьогодні: ${STATE.infoWar.todayCount})`, 'FAKE');
-                return;
-            } catch (e) { /* try next */ }
+        // Latest fake = first item (feed is reverse-chronological)
+        if (items.length) {
+            STATE.infoWar.topFake = items[0].title;
+            STATE.infoWar.topFakeDate = items[0].pubDate
+                ? new Date(items[0].pubDate).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
+                : '—';
         }
-        $('src-infowar').innerText = 'DEAD';
-        $('src-infowar').className = 'src-ind dead';
-        log('StopFake: недоступний', 'FAKE');
+
+        // Count by type
+        const byType = {};
+        for (const it of items) byType[it.type] = (byType[it.type] || 0) + 1;
+        STATE.infoWar.byType = byType;
+
+        // Count by target (categories)
+        const byTarget = {};
+        for (const it of items) {
+            for (const c of it.categories) byTarget[c] = (byTarget[c] || 0) + 1;
+        }
+        STATE.infoWar.byTarget = byTarget;
+
+        $('src-infowar').innerText = 'LIVE';
+        $('src-infowar').className = 'src-ind live';
+        log(`StopFake: ${items.length} фейків (сьогодні: ${STATE.infoWar.todayCount})`, 'FAKE');
+
+        // Persist last-known-good for STALE display
+        try { localStorage.setItem('_sf_cache', JSON.stringify({ items, ts: Date.now() })); } catch (_) {}
+    }
+
+    function _sfShowStale(silent) {
+        try {
+            const c = JSON.parse(localStorage.getItem('_sf_cache') || 'null');
+            if (c && Array.isArray(c.items) && c.items.length && c.ts) {
+                const ageH = Math.round((Date.now() - c.ts) / 3600000);
+                if (ageH < 24) {
+                    // Reuse apply-path but without overwriting the good cache
+                    STATE.infoWar.items = c.items;
+                    STATE.infoWar.count = c.items.length;
+                    const now = new Date();
+                    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                    STATE.infoWar.todayCount = c.items.filter(it => it.ts >= startOfDay).length;
+                    STATE.infoWar.topFake = c.items[0].title;
+                    STATE.infoWar.topFakeDate = c.items[0].pubDate
+                        ? new Date(c.items[0].pubDate).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
+                        : '—';
+                    const byType = {};
+                    for (const it of c.items) byType[it.type] = (byType[it.type] || 0) + 1;
+                    STATE.infoWar.byType = byType;
+                    const byTarget = {};
+                    for (const it of c.items) {
+                        for (const cc of it.categories) byTarget[cc] = (byTarget[cc] || 0) + 1;
+                    }
+                    STATE.infoWar.byTarget = byTarget;
+                    $('src-infowar').innerText = 'STALE ' + ageH + 'г';
+                    $('src-infowar').className = 'src-ind dead';
+                    log(`StopFake: показую кеш (${ageH}г)`, 'FAKE');
+                    return true;
+                }
+            }
+        } catch (_) {}
+        if (!silent) {
+            $('src-infowar').innerText = 'DEAD';
+            $('src-infowar').className = 'src-ind dead';
+            log('StopFake: недоступний', 'FAKE');
+        }
+        return false;
+    }
+
+    async function fetchStopFake() {
+        // v5.4 FIX: cors.sh мертвий. Primary = rss2json (той самий сервіс, що
+        // працює для 28 RSS-джерел картки 3), fallback = XML через гонку проксі.
+        // --- Path 1: rss2json (JSON, стабільний) ---
+        try {
+            const d = await fetchJSON('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(STOPFAKE_URL), 12000);
+            if (d && d.status === 'ok' && Array.isArray(d.items) && d.items.length) {
+                const metaCats = _sfMetaCats();
+                const items = d.items.map(it => {
+                    const title = it.title || '';
+                    const cats = (it.categories || []).filter(c => c && !metaCats.includes(c));
+                    // rss2json pubDate: "YYYY-MM-DD HH:MM:SS" (Kyiv time, UTC+2/+3)
+                    const ts = it.pubDate ? new Date(it.pubDate.replace(' ', 'T') + '+03:00').getTime() : Date.now();
+                    return { title, link: it.link || '', pubDate: it.pubDate || '', categories: cats, type: _sfClassify(title), ts };
+                });
+                _sfApplyItems(items);
+                return;
+            }
+            throw new Error('rss2json: bad payload');
+        } catch (e) { /* fall through to XML path */ }
+
+        // --- Path 2: direct XML via multi-proxy race ---
+        try {
+            const xml = await fetchViaProxy(STOPFAKE_URL, 9000, t => t.includes('<item'));
+            const items = _parseStopFakeRSS(xml);
+            _sfApplyItems(items);
+            return;
+        } catch (e) { /* fall through to cache */ }
+
+        // --- Path 3: STALE cache ---
+        _sfShowStale(false);
     }
 
     async function fetchFinance() {
@@ -6892,7 +6983,7 @@ __PATHS__
             eCtx = `Психіка колективу під тиском. Негативні сигнали ${STATE.emotion.fear.toFixed(0)}% перевищують базовий рівень. Емоційні хвилі ${STATE.emotion.waves.toFixed(0)} Гц — висока амплітуда коливань.`;
             eDriver = `Драйвери: аналіз ${STATE.sourcesOk} українських RSS-стрімів (Укрправда, Єп, DefenseExpr, 24Канал та ін.). Кореляція страху з соціальною напругою ${((STATE.emotion.fear + STATE.tension.index)/200*100).toFixed(0)}%.`;
             eForecast = eTrend.slope < -1 ? `Прогноз: триває погіршення. Ризик переходу в режим FEAR. Волатильність σ=${eVol.toFixed(1)}.` :
-                        eTrend.slope > 1  ? `Прогноз: ознаки відновлення. Спостерігати ${2-3} цикли.` :
+                        eTrend.slope > 1  ? `Прогноз: ознаки відновлення. Спостерігати 2-3 цикли.` :
                         `Прогноз: стан утримується біля дна. σ=${eVol.toFixed(1)}. Діапазон ${geiRange.min.toFixed(0)}–${geiRange.max.toFixed(0)}.`;
         } else if (STATE.emotion.index > 65) {
             eDyn = `Індекс ${STATE.emotion.index.toFixed(0)}/100 — високий. Надія ${STATE.emotion.hope.toFixed(0)}% переважає над страхом ${STATE.emotion.fear.toFixed(0)}%.`;
@@ -7596,6 +7687,30 @@ __PATHS__
             if (last.oblasts) STATE.oblasts = last.oblasts;
             log(`Відновлено стан з кешу (${new Date(last.t).toLocaleString('uk-UA', { timeZone:'Europe/Kyiv' })})`, 'INIT');
         }
+        // v5.4.1 INSTANT PAINT: показуємо останні валідні дані з localStorage
+        // ДО першого рендеру — картки 1Б/6В/6Г заповнені за 0с, потім
+        // фонові фетчі оновлять їх до LIVE за 1-5с. Це і є прискорення.
+        try {
+            const lag = JSON.parse(localStorage.getItem('_lastGoodAlerts') || 'null');
+            if (lag && lag.ts && (Date.now() - lag.ts) < 15 * 60 * 1000 && typeof lag.activeCount === 'number') {
+                STATE.alerts.activeCount = lag.activeCount;
+                STATE.alerts.activeRegions = lag.activeRegions || [];
+                STATE.alerts.totalRegions = lag.totalRegions || 25;
+                STATE.alerts.lastChange = (lag.lastChange || '—') + ' · кеш';
+                STATE.alerts.source = lag.source || 'cache';
+                STATE.alerts.sourcesOk = 1;          // UI показує CALM/ACTIVE, а не DEAD
+                STATE.alerts.sourcesTotal = 2;
+                // Одразу відбити тривожні області на мапі
+                const an = new Set(STATE.alerts.activeRegions);
+                for (const name of Object.keys(OBLAST_DATA)) {
+                    if (!STATE.oblasts[name]) STATE.oblasts[name] = { mentions:0, sentiment:0, alertActive:false, lastAlert:null, alertCount:0, headlines:[] };
+                    STATE.oblasts[name].alertActive = an.has(name);
+                }
+                log(`Миттєвий старт: тривоги з кешу (${lag.activeCount} обл.)`, 'INIT');
+            }
+        } catch (e) {}
+        _gsShowStale(true);    // 6В: кеш ГШ (STALE Nг) одразу, LIVE прийде фоном
+        _sfShowStale(true);    // 6Г: кеш StopFake (STALE Nг) одразу
         // Compute derived state immediately from cached values
         calcWarStatus();
         generateDeepLayers();
