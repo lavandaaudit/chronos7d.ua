@@ -1979,6 +1979,33 @@
                 <div class="m-sub" id="desc-deep">// Глибинний аналіз...</div>
             </div>
 
+            <!-- 9. AI IBONARIUM — Штучний інтелект ноосфери -->
+            <div class="card" id="card-aiibonarium">
+                <div class="card-h">
+                    <span>🧠 9. AI IBONARIUM</span>
+                    <span class="layer-score" id="score-ai" style="font-size:14px; color:var(--accent-pri)">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">Когерентність шарів</span>
+                    <span class="m-val" id="v-ai-coh">--<span class="m-delta flat" id="d-ai-coh"></span></span>
+                </div>
+                <div class="mini-bar"><span id="bar-ai-coh" style="width:0%; background:var(--accent-pri)"></span></div>
+                <div class="m-row">
+                    <span class="m-lbl">Прогноз ескалації</span>
+                    <span class="m-val" style="color:var(--accent-warn)" id="v-ai-esc">--<span class="m-delta flat" id="d-ai-esc"></span></span>
+                </div>
+                <div class="mini-bar"><span id="bar-ai-esc" style="width:0%; background:var(--accent-warn)"></span></div>
+                <div class="m-row">
+                    <span class="m-lbl">Ноосферна аномалія</span>
+                    <span class="m-val" style="color:var(--accent-gold)" id="v-ai-anom">--<span class="m-delta flat" id="d-ai-anom"></span></span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">AI-діагноз</span>
+                    <span class="m-val" style="font-size:7px; color:var(--accent-sec)" id="v-ai-diag">--</span>
+                </div>
+                <div class="m-sub" id="desc-ai">// AI IBONARIUM — синтез ноосфери...</div>
+            </div>
+
             <!-- LOG -->
             <div class="card" style="flex:1; display:flex; flex-direction:column; min-height:160px;">
                 <div class="card-h"><span>📡 ПОТІК ДУМОК (LOG)</span></div>
@@ -2046,7 +2073,7 @@
         'інфляція':-2,'інфляції':-2,'дефолт':-3,'безробітт':-2,'безробіття':-2,'збіднін':-2,
         'бідність':-2,'бідність':-2,'жебрак':-2,'голод':-3,'голод':-3,'голодомор':-4,
         'хвороб':-2,'хвороба':-2,'хвороби':-2,'хворіє':-2,'захворів':-2,'захворюван':-2,'захворювання':-2,
-        'інфекц':-2,'вірус':-2,'віруси':-2,' covid':-3,'ковід':-3,'грип':-2,
+        'інфекц':-2,'вірус':-2,'віруси':-2,'covid':-3,'ковід':-3,'грип':-2,
         'катастроф':-3,'катастрофа':-3,'катастрофи':-3,'катастрофічн':-3,'катастрофічний':-3,
         'аварія':-2,'аварії':-2,'аварій':-2,'аварійний':-2,'надзвичайн':-2,'надзвичайна':-2,'надзвичайних':-2,
         'провал':-2,'провали':-2,'провалив':-2,'провалила':-2,'провалили':-2,'провалено':-2,
@@ -2180,7 +2207,7 @@
     також крім окрім понад менше більше
     якийсь якийсь якийсь будь-який
     таким чином тобто наприклад зокрема а саме
-    унRegExpний будь ласка
+    будь ласка
     українська україни український української українську україну українському українське українські
     правди правда
     новини
@@ -2281,8 +2308,8 @@
         'Харківська':    { population: 2.62,  area: 31415, cities: ['Харків','Ізюм','Купянськ'],          type: 'frontline', region: 'Схід',    info: 'Друге за величиною місто. Активні бої.' },
         'Дніпропетровська':{population: 3.18, area: 31923, cities: ['Дніпро','Кривий Ріг','Камянське'],   type: 'central',   region: 'Центр',   info: 'Індустріальна. Атомна електростанція.' },
         'Запорізька':    { population: 1.66,  area: 27183, cities: ['Запоріжжя','Мелітополь','Бердянськ'],type: 'frontline', region: 'Південь', info: 'Частково окупована. АЗС.' },
-        'Донецька':      { population: 4.10,  area: 26517, cities: ['Донецьк','Маріуполь','Краматорськ'], type: 'frontline', region: 'Схід',    info: 'Частково окупована з 2014. Активні бої.' },
-        'Луганська':     { population: 2.10,  area: 26684, cities: ['Луганськ','Сєвєродонецьк','Лисичанськ'], type:'frontline', region:'Схід',  info: 'Частково окупована з 2014. Активні бої.' },
+        'Донецька':      { population: 4.10,  area: 26517, cities: ['Донецьк','Маріуполь','Краматорськ'], type: 'occupied',  region: 'Схід',    info: 'Частково окупована з 2014. Активні бої.' },
+        'Луганська':     { population: 2.10,  area: 26684, cities: ['Луганськ','Сєвєродонецьк','Лисичанськ'], type:'occupied',  region:'Схід',  info: 'Частково окупована з 2014. Активні бої.' },
         'Миколаївська':  { population: 1.08,  area: 24598, cities: ['Миколаїв','Первомайськ','Вознесенськ'], type:'frontline', region:'Південь', info: 'Прифронтова. Обстріли.' },
         'Херсонська':    { population: 0.84,  area: 28461, cities: ['Херсон','Нова Каховка','Скадовськ'], type: 'frontline', region: 'Південь', info: 'Частково окупована. Дніпровський лиман.' },
         'Одеська':       { population: 2.37,  area: 33314, cities: ['Одеса','Ізмаїл','Чорноморськ'],      type: 'border',    region: 'Південь', info: 'Чорноморський порт. Межує з Молдовою.' },
@@ -2349,10 +2376,21 @@
                       quakes: 0, quakeMax: 0, eonetCount: 0, eonetTypes: []
                     },
         deep:       { archetype: 'STABILITY', dream: '—', intuition: 0, synch: 'ОЧІКУВАННЯ' },
+        // v5.6: AI IBONARIUM — штучний інтелект ноосфери (синтез всіх шарів + прогноз)
+        aiibonarium: {
+            coherence: 50,       // 0-100: наскільки шари синхронізовані (GEI/fear/hope/tension/war)
+            escRisk:    30,      // 0-100: ризик ескалації страху/напруги протягом 1-3 год
+            anomaly:    0,       // 0-100: відхилення поточного стану від типового патерну
+            diagnosis:  '—',    // текст: синтез-опис поточного стану
+            scenarioOpt: '—',   // текст: оптимістичний прогноз
+            scenarioBase:'—',   // текст: базовий прогноз
+            scenarioPes: '—',   // текст: песимістичний прогноз
+            trend:      'stable' // up/down/stable
+        },
         // UA-specific
         alerts:     { activeCount: 0, activeRegions: [], lastChange: '—', totalRegions: 25,
                       source: '—', sourcesOk: 0, sourcesTotal: 0, lastUpdate: null },
-        finance:    { usd: 0, eur: 0, usdChange: 0, eurChange: 0, lastUsd: 0, lastEur: 0 },
+        finance:    { usd: 0, eur: 0, usdChange: 0, eurChange: 0, lastUsd: 0, lastEur: 0, lastUpdate: 0 },
         war:        { day: 0, intensity: 0, frontline: '—', regions: [],
                       events: [], eventCount: 0, byRegion: {}, byType: {}, sources: [],
                       topHeadline: '—', topRegion: '—', topType: '—', discrepancy: [],
@@ -2363,6 +2401,10 @@
                       topFake: '—', topFakeDate: '—', lastUpdate: null },
         oblasts:    {}, // per-oblast dynamic state: { name: { mentions, sentiment, alertActive, lastAlert, alertCount, headlines: [] } }
         noosphereIntegrity: 50,
+        // v5.5: незалежні шари для кореляцій
+        polarity: 0,    // перевага негативу над позитивом у заголовках (-100..+100)
+        negCount: 0,    // кількість негативних заголовків (score < -2)
+        posCount: 0,    // кількість позитивних заголовків (score > +2)
         apiCalls: 0,
         sourcesOk: 0,
         sourcesTotal: 0,
@@ -2394,7 +2436,13 @@
         if (elLog.children.length > 30) elLog.lastChild.remove();
     }
 
+    // v5.5: dedup map для showAlert — запобігає alert storms (повітряні тривоги пушляться кожні 60с)
+    const _alertSeen = {};   // {msg+type: lastShownTimestamp}
     function showAlert(msg, type='info') {
+        const key = msg + '|' + type;
+        const now = Date.now();
+        if (_alertSeen[key] && (now - _alertSeen[key]) < 5 * 60 * 1000) return;  // 5-хв throttle
+        _alertSeen[key] = now;
         const ac = $('alert-container');
         const d = document.createElement('div');
         d.className = `alert alert-${type}`;
@@ -2469,14 +2517,15 @@
 
     /* ---------- 8. HISTORY (localStorage) ---------- */
     const HKEY = 'noosphere_history_v5';
+    const HIST_MAX = 288;   // 24h @ 5min = 288 зрізів (v5.5: було 72, що давало лише 6 годин)
     function loadHistory() {
         try {
             const raw = localStorage.getItem(HKEY);
-            if (raw) STATE.history = JSON.parse(raw).slice(-72);   // last 6 hours @ 5min
+            if (raw) STATE.history = JSON.parse(raw).slice(-HIST_MAX);
         } catch(e) { STATE.history = []; }
     }
     function saveHistory() {
-        try { localStorage.setItem(HKEY, JSON.stringify(STATE.history.slice(-72))); } catch(e) {}
+        try { localStorage.setItem(HKEY, JSON.stringify(STATE.history.slice(-HIST_MAX))); } catch(e) {}
     }
     function pushHistory() {
         STATE.history.push({
@@ -2492,7 +2541,7 @@
             focus: STATE.attention.focus,
             depth: STATE.consciousness.depth
         });
-        if (STATE.history.length > 72) STATE.history.shift();
+        if (STATE.history.length > HIST_MAX) STATE.history.shift();
         saveHistory();
     }
     function delta(field) {
@@ -2601,7 +2650,7 @@
     // Format delta for snap cell
     function snapDelta(field, decimals=0) {
         const d = delta(field);
-        if (d == null) return '<span class="delta flat">—</span>';
+        if (d == null || Number.isNaN(d)) return '<span class="delta flat">—</span>';   // v5.5: NaN guard (history entries без field)
         const cls = d > 0 ? 'up' : d < 0 ? 'down' : 'flat';
         const s = (d >= 0 ? '+' : '') + d.toFixed(decimals);
         return `<span class="delta ${cls}">${s}</span>`;
@@ -2796,7 +2845,15 @@
                     {label:'GEI ↔ Надія',          f1:'gei',   f2:'hope'},
                     {label:'GEI ↔ Напруга',        f1:'gei',   f2:'tension'},
                     {label:'GEI ↔ F&G (Crypto)',   f1:'gei',   f2:'fng'},
+                    {label:'GEI ↔ Війна',          f1:'gei',   f2:'war'},
+                    {label:'GEI ↔ Тривоги',        f1:'gei',   f2:'alerts'},
+                    {label:'GEI ↔ Поляризація',    f1:'gei',   f2:'polarity'},
+                    {label:'GEI ↔ AI Когерентність', f1:'gei', f2:'ai_coh'},
+                    {label:'GEI ↔ AI Ризик',       f1:'gei',   f2:'ai_esc'},
                     {label:'Страх ↔ Напруга',      f1:'fear',  f2:'tension'},
+                    {label:'Страх ↔ Війна',        f1:'fear',  f2:'war'},
+                    {label:'Страх ↔ Тривоги',      f1:'fear',  f2:'alerts'},
+                    {label:'Страх ↔ AI Ризик',     f1:'fear',  f2:'ai_esc'},
                     {label:'Страх ↔ F&G (Crypto)', f1:'fear',  f2:'fng'},
                     {label:'GEI ↔ Глибина',        f1:'gei',   f2:'depth'},
                     {label:'GEI ↔ Фокус',          f1:'gei',   f2:'focus'}
@@ -2864,6 +2921,8 @@
                     {label:'F&G ↔ Страх',           f1:'fng',  f2:'fear'},
                     {label:'F&G ↔ Надія',           f1:'fng',  f2:'hope'},
                     {label:'F&G ↔ Напруга',         f1:'fng',  f2:'tension'},
+                    {label:'F&G ↔ Війна',           f1:'fng',  f2:'war'},
+                    {label:'F&G ↔ Тривоги',         f1:'fng',  f2:'alerts'},
                     {label:'F&G ↔ Глибина',         f1:'fng',  f2:'depth'}
                 ]);
 
@@ -2923,6 +2982,8 @@
                     {label:'Фокус ↔ GEI',         f1:'focus', f2:'gei'},
                     {label:'Фокус ↔ Страх',       f1:'focus', f2:'fear'},
                     {label:'Фокус ↔ Напруга',     f1:'focus', f2:'tension'},
+                    {label:'Фокус ↔ Війна',       f1:'focus', f2:'war'},
+                    {label:'Фокус ↔ Тривоги',     f1:'focus', f2:'alerts'},
                     {label:'Фокус ↔ Глибина',     f1:'focus', f2:'depth'}
                 ]);
 
@@ -3119,7 +3180,12 @@
                     {label:'Напруга ↔ Страх',     f1:'tension', f2:'fear'},
                     {label:'Напруга ↔ GEI',       f1:'tension', f2:'gei'},
                     {label:'Напруга ↔ Фокус',     f1:'tension', f2:'focus'},
-                    {label:'Напруга ↔ F&G',       f1:'tension', f2:'fng'}
+                    {label:'Напруга ↔ F&G',       f1:'tension', f2:'fng'},
+                    {label:'Напруга ↔ Війна',     f1:'tension', f2:'war'},
+                    {label:'Напруга ↔ Тривоги',   f1:'tension', f2:'alerts'},
+                    {label:'Напруга ↔ Поляризація', f1:'tension', f2:'polarity'},
+                    {label:'Напруга ↔ AI Ризик',  f1:'tension', f2:'ai_esc'},
+                    {label:'Напруга ↔ AI Аномалія', f1:'tension', f2:'ai_anom'}
                 ]);
 
                 const geoChips = STATE.tension.geo.map(([r,c]) =>
@@ -3157,41 +3223,143 @@
             sparks: [{field:'tension', color:'#f04'}]
         },
 
-        'card-geo': {
-            title: 'Геофізичний шар',
-            sub: 'USGS Earthquakes · NASA EONET',
+        'card-war': {
+            title: 'Статус війни',
+            sub: 'RSS-події · Повітряні тривоги · День вторгнення',
             gen: () => {
+                const wTrend = trendSummary('war', 8);
+                const wR = rangeOf('war', 24);
+                const wEventsTrend = trendSummary('warEvents', 8);
+                const wEventsR = rangeOf('warEvents', 24);
+
                 const snap = `
                     <div class="snap-grid">
-                        <div class="snap-cell"><div class="lbl">Землетруси/добу</div><div class="val">${STATE.geo.quakes}</div><span class="delta flat">M≥2.5</span></div>
-                        <div class="snap-cell"><div class="lbl">Макс. магнітуда</div><div class="val" style="color:var(--accent-warn)">M${fmt(STATE.geo.quakeMax,1)}</div><span class="delta flat">—</span></div>
-                        <div class="snap-cell"><div class="lbl">EONET події</div><div class="val">${STATE.geo.eonetCount}</div><span class="delta flat">24 год</span></div>
-                        <div class="snap-cell"><div class="lbl">Тип подій</div><div class="val" style="font-size:9px; padding-top:8px">${STATE.geo.eonetTypes[0]?STATE.geo.eonetTypes[0][0]:'—'}</div><span class="delta flat">—</span></div>
+                        <div class="snap-cell"><div class="lbl">Інтенсивність</div><div class="val" style="color:var(--accent-warn)">${fmt(STATE.war.intensity,0)}%</div>${snapDelta('war')}</div>
+                        <div class="snap-cell"><div class="lbl">Днів війни</div><div class="val">${STATE.war.day}</div><span class="delta flat">—</span></div>
+                        <div class="snap-cell"><div class="lbl">Подій у новинах</div><div class="val">${STATE.war.eventCount}</div>${snapDelta('warEvents')}</div>
+                        <div class="snap-cell"><div class="lbl">Активні тривоги</div><div class="val" style="color:var(--accent-warn)">${STATE.alerts.activeCount}/${STATE.alerts.totalRegions}</div><span class="delta flat">—</span></div>
                     </div>`;
 
-                const eonetChips = STATE.geo.eonetTypes.map(([t,c]) =>
-                    `<span class="driver-chip ${t.toLowerCase().includes('fire')||t.toLowerCase().includes('volcano')?'hot':''}">${t} × ${c}</span>`
-                ).join('');
+                const spark = sparkWrap('war', 'Інтенсивність війни', '#f04');
+
+                const table = statTable([
+                    { label:'Інтенсивність %', cur: fmt(STATE.war.intensity,0), min: wR.min.toFixed(0), max: wR.max.toFixed(0), avg: avgOf('war',24).toFixed(0), sd: volatilityOf('war',24).toFixed(1), trend: wTrend },
+                    { label:'Подій у новинах',  cur: STATE.war.eventCount,        min: wEventsR.min.toFixed(0), max: wEventsR.max.toFixed(0), avg: avgOf('warEvents',24).toFixed(0), sd: volatilityOf('warEvents',24).toFixed(1), trend: wEventsTrend }
+                ]);
+
+                const corr = corrRows([
+                    {label:'Війна ↔ Тривоги',       f1:'war', f2:'alerts'},
+                    {label:'Війна ↔ Страх',         f1:'war', f2:'fear'},
+                    {label:'Війна ↔ Напруга',       f1:'war', f2:'tension'},
+                    {label:'Війна ↔ GEI',           f1:'war', f2:'gei'},
+                    {label:'Війна ↔ Фокус',         f1:'war', f2:'focus'},
+                    {label:'Війна ↔ F&G (Crypto)',  f1:'war', f2:'fng'},
+                    {label:'Війна ↔ Поляризація',   f1:'war', f2:'polarity'},
+                    {label:'Війна ↔ AI Ризик',     f1:'war', f2:'ai_esc'},
+                    {label:'Війна ↔ AI Когерентність', f1:'war', f2:'ai_coh'},
+                    {label:'Війна ↔ Надія',         f1:'war', f2:'hope'}
+                ]);
+
+                const anomalies = anomalyList('war', 'Інтенсивність війни');
+
+                // Top war-event regions
+                const warRegionsChips = Object.entries(STATE.war.byRegion)
+                    .sort((a,b) => b[1] - a[1])
+                    .slice(0, 8)
+                    .map(([r,c]) => `<span class="driver-chip hot">${r} × ${c}</span>`)
+                    .join('');
+
+                // Top war-event types
+                const warTypesChips = Object.entries(STATE.war.byType)
+                    .sort((a,b) => b[1] - a[1])
+                    .slice(0, 6)
+                    .map(([t,c]) => {
+                        const label = WAR_TYPES_LABELS[t] || t;
+                        return `<span class="driver-chip">${label} × ${c}</span>`;
+                    })
+                    .join('');
+
+                // Discrepancy warnings
+                const discrHtml = (STATE.war.discrepancy && STATE.war.discrepancy.length)
+                    ? `<div class="modal-section"><h3>⚠ Розбіжності (війна без тривоги)</h3><div class="driver-chips">${STATE.war.discrepancy.map(d => `<span class="driver-chip" style="background:rgba(255,204,0,0.15);border-color:var(--accent-gold)">${d.region} × ${d.count}</span>`).join('')}</div></div>`
+                    : '';
 
                 const narrative = `
                     <div class="narrative">
-                        <p><span class="hi">USGS Earthquakes</span> — реальні дані з геологічної служби США. За останні 24 год зафіксовано <span class="hi">${STATE.geo.quakes}</span> землетрусів магнітудою ≥2.5. Максимальна магнітуда: <span class="hi" style="color:var(--accent-warn)">M${STATE.geo.quakeMax.toFixed(1)}</span>.</p>
-                        <p>Шкала магнітуд: M2.5-3 — ледь відчутно; M4-4.9 — легкі пошкодження; M5-5.9 — помітні руйнування; M6+ — сильні руйнування; M7+ — катастрофа.</p>
-                        <p><span class="hi">NASA EONET</span> — відкрита база природних подій (пожежі, шторми, вулкан, повені, снігопади, посуха). За 24 год: <span class="hi">${STATE.geo.eonetCount}</span> активних подій.</p>
-                        <p>Топ-категорія: <span class="em">${STATE.geo.eonetTypes[0]?STATE.geo.eonetTypes[0][0]:'—'}</span> (${STATE.geo.eonetTypes[0]?STATE.geo.eonetTypes[0][1]:0} подій).</p>
-                        <p>Геофізичні події впливають на колективну психіку через стресс-фактор: землетруси M6+ викликають тривогу в регіоні епіцентру, великі пожежі/шторми — екологічну тривогу глобально.</p>
+                        <p><span class="hi">Статус війни</span> — комплексна метрика, що відображає реально-об'єктивну ескалацію на основі двох незалежних джерел:</p>
+                        <p>1) <span class="hi">Воєнні події у новинах</span> (вага 60%) — витягуються з RSS-стрімів через ~50 воєнних тригерів (атака, обстріл, ракета, дрон, шахед, авіаудар тощо). Зараз: <span class="hi">${STATE.war.eventCount}</span> подій з ${STATE.war.sources.length} джерел.</p>
+                        <p>2) <span class="hi">Активні повітряні тривоги</span> (вага 40%) — областей з активною тривогою. Зараз: <span class="hi">${STATE.alerts.activeCount}/${STATE.alerts.totalRegions}</span>.</p>
+                        <p>Поточна інтенсивність: <span class="hi">${STATE.war.intensity.toFixed(0)}%</span> — ${STATE.war.intensity > 70 ? 'ЕСКАЛАЦІЯ (≥70%)' : STATE.war.intensity > 40 ? 'АКТИВНА ФАЗА (40-70%)' : STATE.war.intensity > 20 ? 'СТАБІЛЬНА (20-40%)' : 'НИЗЬКА (<20%)'}.</p>
+                        <p><span class="hi">Топ-регіон:</span> ${STATE.war.frontline}. Топ-тип: <span class="em">${STATE.war.topType}</span>. Прифронтові: ${STATE.war.regions.join(', ') || '—'}.</p>
+                        <p><span class="hi">Розбіжності:</span> ${STATE.war.discrepancy && STATE.war.discrepancy.length ? `новини повідомляють про події у ${STATE.war.discrepancy.map(d=>d.region).join(', ')} без активної тривоги — можлива затримка сигналізації або прифронтова специфика.` : 'не виявлено — тривоги й новини синхронізовані.'}</p>
                     </div>`;
 
                 const reco = `
                     <div class="reco-box">
-                        <b>Рекомендація:</b> ${STATE.geo.quakeMax>=6 ? 'Сильний землетрус — очікувати афтершоки. Моніторити регіон епіцентру на соц. реакцію.' :
-                                            STATE.geo.eonetCount>40 ? 'Висока природна активність — можливий вплив на екологічну тривогу.' :
-                                            'Геофізичний фон спокійний — вплив на психіку мінімальний.'}
+                        <b>Рекомендація:</b> ${STATE.war.intensity > 70 ? 'Ескалація — моніторити гео-вогнища та тривоги. Ризик ескалації страху. Порівняти з напругою для верифікації.' :
+                                          STATE.war.intensity > 40 ? 'Активна фаза — стандартний моніторинг. Звернути увагу на розбіжності між новинами й тривогами.' :
+                                          'Стабільна фаза — але ризик раптової ескалації. Моніторити топ-регіон: ' + STATE.war.frontline + '.'}
                     </div>`;
 
                 return `
                     <div class="modal-section"><h3>📊 Поточний зріз</h3>${snap}</div>
-                    <div class="modal-section"><h3>🌋 EONET категорії</h3><div class="driver-chips">${eonetChips||'<span class="driver-chip">немає подій</span>'}</div></div>
+                    <div class="modal-section"><h3>📈 Історія інтенсивності</h3>${spark}</div>
+                    <div class="modal-section"><h3>🗺 Топ регіони (воєнні події)</h3><div class="driver-chips">${warRegionsChips || '<span class="driver-chip">немає даних</span>'}</div></div>
+                    <div class="modal-section"><h3>🏷 Типи подій</h3><div class="driver-chips">${warTypesChips || '<span class="driver-chip">немає даних</span>'}</div></div>
+                    <div class="modal-section"><h3>📋 Статистика</h3>${table}</div>
+                    <div class="modal-section"><h3>🔗 Кореляції з іншими шарами</h3>${corr}</div>
+                    <div class="modal-section"><h3>⚡ Аномалії (z>1.8σ)</h3>${anomalies}</div>
+                    ${discrHtml}
+                    <div class="modal-section"><h3>📝 Детальний розбір</h3>${narrative}</div>
+                    <div class="modal-section"><h3>💡 Рекомендація</h3>${reco}</div>
+                `;
+            },
+            sparks: [{field:'war', color:'#f04'}]
+        },
+
+        'card-geo': {
+            title: 'Метеошар України',
+            sub: 'Open-Meteo · 4 міста · Air Quality (Kyiv)',
+            gen: () => {
+                const cities = STATE.geo.cities || [];
+                const kyiv = cities[0] || {};
+                const snap = `
+                    <div class="snap-grid">
+                        <div class="snap-cell"><div class="lbl">🌡 Київ</div><div class="val">${fmt(STATE.geo.temp,0)}°C</div><span class="delta flat">відчутно ${fmt(STATE.geo.apparentTemp,0)}°</span></div>
+                        <div class="snap-cell"><div class="lbl">💧 Вологість</div><div class="val">${fmt(STATE.geo.humidity,0)}%</div><span class="delta flat">—</span></div>
+                        <div class="snap-cell"><div class="lbl">🌬 Вітер</div><div class="val">${fmt(STATE.geo.windSpeed,0)} м/с</div><span class="delta flat">пориви ${fmt(STATE.geo.windGust,0)}</span></div>
+                        <div class="snap-cell"><div class="lbl">🌫 AQI</div><div class="val" style="color:${STATE.geo.aqi>100?'var(--accent-warn)':STATE.geo.aqi>50?'var(--accent-gold)':'var(--accent-hope)'}">${STATE.geo.aqi>0?STATE.geo.aqi:'—'}</div><span class="delta flat">${STATE.geo.aqiDesc||'—'}</span></div>
+                    </div>`;
+
+                const citiesChips = cities.map(c => {
+                    const temp = c.temp?.toFixed(0) ?? '—';
+                    const code = c.weatherDesc || '—';
+                    return `<span class="driver-chip ${c.temp<0?'':c.temp>20?'hot':''}"><b>${c.name}</b> ${temp}°C · ${code}</span>`;
+                }).join('');
+
+                const narrative = `
+                    <div class="narrative">
+                        <p><span class="hi">Open-Meteo API</span> — погода по 4 ключових містах України (Київ, Харків, Одеса, Львів). Запит раз на 15 хвилин.</p>
+                        <p>Поточна погода в Києві: <span class="hi">${fmt(STATE.geo.temp,0)}°C</span> (відчувається як ${fmt(STATE.geo.apparentTemp,0)}°C), вологість <span class="hi">${fmt(STATE.geo.humidity,0)}%</span>, вітер <span class="hi">${fmt(STATE.geo.windSpeed,0)} м/с</span> з поривами до ${fmt(STATE.geo.windGust,0)} м/с, опис: <span class="em">${STATE.geo.weatherDesc || '—'}</span>.</p>
+                        <p><span class="hi">Air Quality Index (AQI)</span> — європейська шкала для Києва: 0-20 чисте повітря, 21-40 задовільно, 41-60 помірно, 61-80 погано, 81-100 дуже погано, >100 небезпечно. Зараз: <span class="hi">${STATE.geo.aqi>0?STATE.geo.aqi:'—'}</span> — ${STATE.geo.aqiDesc||'—'}.</p>
+                        <p>Метео-фактор впливає на колективну психіку: тривала спека (>30°C) або мороз (<-15°C) підвищує роздратування; зливові/снігові аномалії — тривогу; висока хмарність (>80%) корелює зі зниженням GEI.</p>
+                        <p><span class="hi">Міста:</span> ${cities.map(c => `${c.name} ${c.temp?.toFixed(0) ?? '—'}°C`).join(' · ') || '—'}</p>
+                    </div>`;
+
+                const tempExtreme = STATE.geo.temp > 30 || STATE.geo.temp < -15;
+                const highAqi = STATE.geo.aqi > 80;
+                const highWind = STATE.geo.windSpeed > 15;
+                const reco = `
+                    <div class="reco-box">
+                        <b>Рекомендація:</b> ${tempExtreme ? 'Аномальна температура — потенційний вплив на настрій. Уникати зв\u2019язки з воєнною тривогою.' :
+                                          highAqi ? 'Висока забрудненість повітря — можливе погіршення самопочуття.' :
+                                          highWind ? 'Сильний вітер — можливі перебої з електропостачанням, додатковий стрес.' :
+                                          'Погодні умови в нормі — вплив на психіку мінімальний.'}
+                    </div>`;
+
+                return `
+                    <div class="modal-section"><h3>📊 Поточний зріз (Київ)</h3>${snap}</div>
+                    <div class="modal-section"><h3>🏙 Погода по містах</h3><div class="driver-chips">${citiesChips || '<span class="driver-chip">немає даних</span>'}</div></div>
                     <div class="modal-section"><h3>📝 Детальний розбір</h3>${narrative}</div>
                     <div class="modal-section"><h3>💡 Рекомендація</h3>${reco}</div>
                 `;
@@ -3246,6 +3414,89 @@
                 `;
             },
             sparks: []
+        },
+
+        'card-aiibonarium': {
+            title: 'AI IBONARIUM — Штучний інтелект ноосфери',
+            sub: 'Synthesis · Forecast · Anomaly Detection · Scenarios',
+            gen: () => {
+                const ai = STATE.aiibonarium;
+                const cohTrend = trendSummary('ai_coh', 8);
+                const escTrend = trendSummary('ai_esc', 8);
+                const anomTrend = trendSummary('ai_anom', 8);
+                const cohR = rangeOf('ai_coh', 24);
+                const escR = rangeOf('ai_esc', 24);
+                const anomR = rangeOf('ai_anom', 24);
+
+                const snap = `
+                    <div class="snap-grid">
+                        <div class="snap-cell"><div class="lbl">🧠 Когерентність</div><div class="val" style="color:var(--accent-pri)">${ai.coherence}%</div>${snapDelta('ai_coh')}</div>
+                        <div class="snap-cell"><div class="lbl">⚠ Ризик ескалації</div><div class="val" style="color:${ai.escRisk>60?'var(--accent-warn)':'var(--accent-gold)'}">${ai.escRisk}%</div>${snapDelta('ai_esc')}</div>
+                        <div class="snap-cell"><div class="lbl">✨ Аномалія</div><div class="val" style="color:${ai.anomaly>60?'var(--accent-gold)':'var(--accent-sec)'}">${ai.anomaly}%</div>${snapDelta('ai_anom')}</div>
+                        <div class="snap-cell"><div class="lbl">📈 Тренд</div><div class="val" style="font-size:14px; padding-top:6px">${ai.trend==='up'?'↑ зростання':ai.trend==='down'?'↓ спад':'→ стабільність'}</div><span class="delta flat">—</span></div>
+                    </div>`;
+
+                const spark = sparkWrap('ai_esc', 'Прогноз ескалації (24 зрізи)', '#f04');
+
+                const table = statTable([
+                    { label:'Когерентність %',  cur: ai.coherence, min: cohR.min.toFixed(0), max: cohR.max.toFixed(0), avg: avgOf('ai_coh',24).toFixed(0), sd: volatilityOf('ai_coh',24).toFixed(1), trend: cohTrend },
+                    { label:'Ризик ескалації %', cur: ai.escRisk,   min: escR.min.toFixed(0), max: escR.max.toFixed(0), avg: avgOf('ai_esc',24).toFixed(0), sd: volatilityOf('ai_esc',24).toFixed(1), trend: escTrend },
+                    { label:'Аномалія %',       cur: ai.anomaly,   min: anomR.min.toFixed(0), max: anomR.max.toFixed(0), avg: avgOf('ai_anom',24).toFixed(0), sd: volatilityOf('ai_anom',24).toFixed(1), trend: anomTrend }
+                ]);
+
+                const corr = corrRows([
+                    {label:'AI Когерентність ↔ Страх',  f1:'ai_coh',  f2:'fear'},
+                    {label:'AI Когерентність ↔ Напруга', f1:'ai_coh',  f2:'tension'},
+                    {label:'AI Когерентність ↔ GEI',    f1:'ai_coh',  f2:'gei'},
+                    {label:'AI Когерентність ↔ Війна',  f1:'ai_coh',  f2:'war'},
+                    {label:'AI Ризик ескалації ↔ Страх',f1:'ai_esc',  f2:'fear'},
+                    {label:'AI Ризик ескалації ↔ Тривоги',f1:'ai_esc', f2:'alerts'},
+                    {label:'AI Ризик ескалації ↔ Війна', f1:'ai_esc', f2:'war'},
+                    {label:'AI Ризик ескалації ↔ Поляризація', f1:'ai_esc', f2:'polarity'},
+                    {label:'AI Аномалія ↔ Страх',       f1:'ai_anom', f2:'fear'},
+                    {label:'AI Аномалія ↔ Напруга',     f1:'ai_anom', f2:'tension'}
+                ]);
+
+                const anomalies = anomalyList('ai_esc', 'Ризик ескалації');
+
+                const narrative = `
+                    <div class="narrative">
+                        <p><span class="hi">AI IBONARIUM</span> — модуль синтезу ноосфери. Аналізує всі шари (емоції, напруга, війна, тривоги, фінанси, погода, соціо-патерни) і виводить єдину інтерпретацію поточного стану з прогнозом на 1-3 години вперед.</p>
+                        <p><span class="hi">Когерентність (${ai.coherence}%)</span> — наскільки 5 ключових шарів (GEI, страх, надія, напруга, війна) рухаються синхронно. Висока когерентність означає, що або всі разом зростають (ескалація), або всі разом знижуються (деескалація). Низька — шари розсинхронізовані (хаос, невизначеність).</p>
+                        <p><span class="hi">Прогноз ескалації (${ai.escRisk}%)</span> — ризик різкого зростання страху/напруги у наступні 1-3 години. Компоненти: z-score страху від 24-год норми (30%), зростання тривог за 3 зрізи (20%), кореляція страх↔війна за 24 год (20%), циркадна фаза (15% — нічний бонус), поляризація (15%).</p>
+                        <p><span class="hi">Аномалія (${ai.anomaly}%)</span> — відстань поточного комплексного стану (GEI, страх, напруга, війна) від центроїда всіх зрізів за 24 год, нормована через σ. >70% = стан нетиповий для цієї години, >85% = екстремальна аномалія.</p>
+                        <p><span class="hi">AI-діагноз:</span> <span class="em">${ai.diagnosis}</span></p>
+                    </div>`;
+
+                const scenariosHtml = `
+                    <div class="narrative">
+                        <p><b style="color:var(--accent-hope)">🟢 ${ai.scenarioOpt}</b></p>
+                        <p><b style="color:var(--accent-sec)">⚪ ${ai.scenarioBase}</b></p>
+                        <p><b style="color:var(--accent-warn)">🔴 ${ai.scenarioPes}</b></p>
+                    </div>`;
+
+                const reco = `
+                    <div class="reco-box">
+                        <b>AI Рекомендація:</b> ${ai.escRisk > 60 ? 'Високий ризик ескалації — підвищений моніторинг. Підготуватись до різкого зростання тривог/страху протягом 1-3 год.' :
+                                            ai.anomaly > 70 ? 'Аномалія стану — поточний патерн нетиповий. Уникати прямолінійних інтерпретацій, перевірити інші шари вручну.' :
+                                            ai.coherence > 75 && ai.trend === 'up' ? 'Синхронна ескалація всіх шарів — висока вірогідність подальшого зростання.' :
+                                            ai.coherence > 75 && ai.trend === 'down' ? 'Синхронна деескалація — позитивний сигнал, стан стабілізується.' :
+                                            'Стандартний моніторинг — AI не виявив критичних сигналів.'}
+                    </div>`;
+
+                return `
+                    <div class="modal-section"><h3>🧠 AI-діагноз</h3><div class="narrative"><p style="font-size:14px">${ai.diagnosis}</p></div></div>
+                    <div class="modal-section"><h3>📊 Поточний зріз</h3>${snap}</div>
+                    <div class="modal-section"><h3>📈 Історія ризику ескалації</h3>${spark}</div>
+                    <div class="modal-section"><h3>📋 Статистика метрик</h3>${table}</div>
+                    <div class="modal-section"><h3>🔮 Три сценарії (3 год)</h3>${scenariosHtml}</div>
+                    <div class="modal-section"><h3>🔗 Кореляції з іншими шарами</h3>${corr}</div>
+                    <div class="modal-section"><h3>⚡ Аномалії (z>1.8σ)</h3>${anomalies}</div>
+                    <div class="modal-section"><h3>📝 Детальний розбір</h3>${narrative}</div>
+                    <div class="modal-section"><h3>💡 Рекомендація</h3>${reco}</div>
+                `;
+            },
+            sparks: [{field:'ai_esc', color:'#f04'}]
         }
     };
 
@@ -3308,11 +3559,11 @@
     function computeModeAt(snap) {
         if (!snap) return 'STABILITY';
         const f = snap.fear || 0, h = snap.hope || 0, t = snap.tension || 0,
-              v = snap.volatility || 30, m = 100 - (snap.meaning || 50),
+              v = snap.volatility || 30, m = snap.meaning || 50,  // v5.5: прибрано flip '100 - meaning'
               awake = snap.awake || 60, synch = snap.synch || 'ОЧІКУВАННЯ';
         if (awake < 45)                          return 'DEEP';
         if (synch === 'АКТИВНО')                  return 'SYNC';
-        if (v > 70 && m < 30)                     return 'CHAOS';
+        if (v > 70 && m < 30)                     return 'CHAOS';   // низький meaning + висока волатильність
         if (t > 65)                                return 'TENSION';
         if (f > 60)                                return 'FEAR';
         if (h > 55 && t < 40)                      return 'HOPE';
@@ -3339,6 +3590,10 @@
             hope: STATE.emotion.hope,
             tension: STATE.tension.index,
             fng: STATE.crypto.fng,
+            // v5.5: відновлено btc/btcPrice/ethPrice (були втрачені при override — холодний старт показував --)
+            btc:        STATE.crypto.btcChange,
+            btcPrice:   STATE.crypto.btcPrice,
+            ethPrice:   STATE.crypto.ethPrice,
             focus: STATE.attention.focus,
             depth: STATE.consciousness.depth,
             meaning: STATE.consciousness.meaning,
@@ -3346,10 +3601,21 @@
             awake: STATE.circadian.awake,
             mode: STATE.mode,
             synch: STATE.deep.synch,
+            // v5.5: нові незалежні шари для кореляцій
+            war:        STATE.war.intensity,             // Статус війни (0-100)
+            warEvents:  STATE.war.eventCount,            // Кількість воєнних подій у новинах
+            alerts:     STATE.alerts.activeCount,        // Активні повітряні тривоги (областей)
+            polarity:   STATE.polarity || 0,             // Перевага негативу над позитивом (-100..+100)
+            negCount:   STATE.negCount || 0,             // К-ть негативних заголовків
+            posCount:   STATE.posCount || 0,             // К-ть позитивних заголовків
+            // v5.6: AI IBONARIUM — три ключові метрики для кореляцій з іншими шарами
+            ai_coh:     STATE.aiibonarium.coherence,     // Когерентність (0-100)
+            ai_esc:     STATE.aiibonarium.escRisk,       // Ризик ескалації (0-100)
+            ai_anom:    STATE.aiibonarium.anomaly,       // Аномалія (0-100)
             oblasts: obSnap
         };
         STATE.history.push(snap);
-        if (STATE.history.length > 288) STATE.history.shift();   // 24h @ 5min = 288
+        if (STATE.history.length > HIST_MAX) STATE.history.shift();
         saveHistory();
     };
 
@@ -3405,8 +3671,8 @@
             if (fng < 25) patterns24h['FINANCIAL PANIC']++;
             if (fng > 75) patterns24h['FINANCIAL GREED']++;
         });
-        // Seismic events from current STATE (not in history)
-        if (STATE.geo.quakeMax >= 6) patterns24h['SEISMIC EVENT'] = 1;
+        // v5.5: SEISMIC EVENT видалено — USGS/EONET не підключено, quakeMax завжди 0 (dead branch)
+        // для відновлення треба підключити fetchGeophysical до USGS API
 
         // Build timeline of significant events (spikes / mode changes / anomalies)
         const timeline = [];
@@ -4476,13 +4742,13 @@ __PATHS__
     }
 
     function extractGeo(text) {
-        const t = ' ' + text.toLowerCase() + ' ';
+        // v5.5: нормалізуємо апострофи (U+2019 → ASCII ' — українські RSS часто використовують curly apostrophe)
+        const t = ' ' + (text || '').toLowerCase().replace(/[\u2019\u2018`'’]/g, "'") + ' ';
         const found = {};
         for (const key in GEO_LEX) {
             // For Cyrillic, \b doesn't work reliably — use lookaround
             const escKey = key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
             // Build a regex that matches key as a whole word in either Latin or Cyrillic
-            // For Cyrillic we use (?<![а-яєіїґa-z]) and (?![а-яєіїґa-z])
             const re = new RegExp('(?<![а-яєіїґa-z\\-])' + escKey + '(?![а-яєіїґa-z\\-])', 'g');
             const m = t.match(re);
             if (m) {
@@ -4596,7 +4862,11 @@ __PATHS__
         const s = sentiment(text);
         const total = Math.abs(s.score) + 5 || 1;
         const compound = s.hits > 0 ? s.score / Math.sqrt(s.score * s.score + 1.5) : 0;
-        return { compound, neg: Math.max(0, -s.score / total), neu: 0.6, pos: Math.max(0, s.score / total), score: s.score, hits: s.hits };
+        // v5.5: neu розраховується динамічно (було хардкод 0.6 — зациклювало індекси)
+        const neg = Math.max(0, -s.score / total);
+        const pos = Math.max(0, s.score / total);
+        const neu = Math.max(0, 1 - neg - pos);
+        return { compound, neg, neu, pos, score: s.score, hits: s.hits };
     }
 
     function socioSentiment(text) {
@@ -4717,8 +4987,8 @@ __PATHS__
         const uaPosts = STATE.socio.posts.filter(p => p.source === 'rss');
         const enPosts = STATE.socio.posts.filter(p => p.source !== 'rss');
         let uaMood = 0, enMood = 0;
-        if (uaPosts.length) uaMood = uaPosts.reduce((sum, p) => sum + (p._sent || 0), 0) / uaPosts.length;
-        if (enPosts.length) enMood = enPosts.reduce((sum, p) => sum + (p._sent || 0), 0) / enPosts.length;
+        if (uaPosts.length) uaMood = uaPosts.reduce((sum, p) => sum + (p._sent?.compound || 0), 0) / uaPosts.length;
+        if (enPosts.length) enMood = enPosts.reduce((sum, p) => sum + (p._sent?.compound || 0), 0) / enPosts.length;
 
         // Velocity — topics with highest absolute velocity
         const velocities = sortedTopics
@@ -5120,24 +5390,34 @@ __PATHS__
             return;
         }
 
-        // 10.1 Sentiment analysis (AFINN)
+        // 10.1 Sentiment analysis (AFINN) — v5.5: чутливість +EWMA + розширений поріг
         let sentimentSum = 0, sentimentHits = 0;
         let fearScore = 0, hopeScore = 0;
+        let posCount = 0, negCount = 0;
         for (const it of allItems) {
             const s = sentiment(it.text);
             sentimentSum += s.score;
             sentimentHits += s.hits;
-            if (s.score < -3) fearScore += Math.abs(s.score);
-            if (s.score > 3)  hopeScore += s.score;
+            // v5.5: поріг |score|>2 замість >3 — ловить більше емоційних заголовків
+            if (s.score < -2) { fearScore += Math.abs(s.score); negCount++; }
+            if (s.score >  2) { hopeScore += s.score;           posCount++; }
         }
         const avgSent = sentimentHits ? sentimentSum / sentimentHits : 0;
-        // map avgSent [-2, +2] → emotion.index [10, 90]
+        // v5.5: polarity — незалежний сигнал для напруги (не містить fear!)
+        STATE.polarity = (negCount - posCount) / Math.max(1, allItems.length) * 100;  // [-100, +100]
+        STATE.negCount = negCount;
+        STATE.posCount = posCount;
+        // v5.5: EWMA — згладжування + чутливість *35 (було *20)
         STATE.emotion.last.index = STATE.emotion.index;
         STATE.emotion.last.fear  = STATE.emotion.fear;
         STATE.emotion.last.hope  = STATE.emotion.hope;
-        STATE.emotion.index = clamp(50 + avgSent * 20, 5, 95);
-        STATE.emotion.fear  = clamp(fearScore * 2.5 / Math.max(1, allItems.length/10), 0, 100);
-        STATE.emotion.hope  = clamp(hopeScore * 3   / Math.max(1, allItems.length/10), 0, 100);
+        const newGEI  = clamp(50 + avgSent * 35, 5, 95);
+        const newFear = clamp(fearScore * 2.5 / Math.max(1, allItems.length/10), 0, 100);
+        const newHope = clamp(hopeScore * 3   / Math.max(1, allItems.length/10), 0, 100);
+        // EWMA 0.5/0.5 — швидке реагування, але без різких скоків
+        STATE.emotion.index = STATE.emotion.index ? clamp(STATE.emotion.index * 0.5 + newGEI  * 0.5, 5, 95) : newGEI;
+        STATE.emotion.fear  = STATE.emotion.fear  ? clamp(STATE.emotion.fear  * 0.5 + newFear * 0.5, 0, 100) : newFear;
+        STATE.emotion.hope  = STATE.emotion.hope  ? clamp(STATE.emotion.hope  * 0.5 + newHope * 0.5, 0, 100) : newHope;
 
         // 10.2 Trends (TF-IDF + bigrams)
         STATE.attention.trends  = tfidfTrends(allDocs, 12);
@@ -5217,7 +5497,11 @@ __PATHS__
             }
         }
         STATE.tension.last.index = STATE.tension.index;
-        STATE.tension.index = clamp(conflictCount * 1.5 + STATE.emotion.fear * 0.4, 5, 100);
+        // v5.5: РОЗІРВАНО від fear — тепер tension = conflict + polarity (НЕЗАЛЕЖНІ сигнали)
+        // 1) conflictCount — воєнна лексика (незалежно від fear)
+        // 2) polarity — перевага негативу над позитивом (незалежно від fear)
+        const polarityAbs = Math.abs(STATE.polarity || 0);
+        STATE.tension.index = clamp(conflictCount * 1.2 + polarityAbs * 0.6, 5, 100);
         STATE.tension.split = clamp(45 + conflictCount * 1.2, 40, 92);
 
         log(`RSS OK: ${okSources.join(', ')} | ${allItems.length} заголовків | sentiment=${avgSent.toFixed(2)}`, 'RSS');
@@ -5248,7 +5532,10 @@ __PATHS__
         // Alerts
         if (STATE.emotion.fear > 65) showAlert(`ВИСОКА ЩІЛЬНІСТЬ СТРАХУ (${STATE.emotion.fear.toFixed(0)}%)`, 'critical');
         if (STATE.tension.index > 75) showAlert(`КРИТИЧНА СОЦІАЛЬНА НАПРУГА (${STATE.tension.index.toFixed(0)})`, 'critical');
-        if (STATE.emotion.hope > 55) showAlert(`СИЛЬНИЙ СИГНАЛ НАДІЇ (${STATE.emotion.hope.toFixed(0)}%)`, 'hope');
+        if (STATE.emotion.hope > 55) showAlert(`СИГНАЛ НАДІЇ (${STATE.emotion.hope.toFixed(0)}%)`, 'hope');
+        // v5.6: AI IBONARIUM critical alert — ризик ескалації >75%
+        if (STATE.aiibonarium.escRisk > 75) showAlert(`🧠 AI: ВИСОКИЙ РИЗИК ЕСКАЛАЦІЇ (${STATE.aiibonarium.escRisk.toFixed(0)}%)`, 'critical');
+        if (STATE.aiibonarium.anomaly > 85) showAlert(`🧠 AI: АНОМАЛІЯ НООСФЕРИ (${STATE.aiibonarium.anomaly.toFixed(0)}%)`, 'sync');
     }
 
     async function fetchCrypto() {
@@ -5340,7 +5627,7 @@ __PATHS__
     };
 
     const AQI_LABELS = {
-        0: 'СПОКІЙ', 20: 'ДОБРЕ', 40: 'ДОБРЕ', 60: 'ПОМІРНО', 80: 'ПОГANO', 100: 'ПОГАНО', 120: 'ДУЖЕ ПОГАНО'
+        0: 'СПОКІЙ', 20: 'ДОБРЕ', 40: 'ДОБРЕ', 60: 'ПОМІРНО', 80: 'ПОГАНО', 100: 'ПОГАНО', 120: 'ДУЖЕ ПОГАНО'
     };
 
     function aqiDescription(aqi) {
@@ -6266,14 +6553,23 @@ __PATHS__
                     const title = it.title || '';
                     const cats = (it.categories || []).filter(c => c && !metaCats.includes(c));
                     // rss2json pubDate: "YYYY-MM-DD HH:MM:SS" (Kyiv time, UTC+2/+3)
-                    const ts = it.pubDate ? new Date(it.pubDate.replace(' ', 'T') + '+03:00').getTime() : Date.now();
+                    // v5.5: захист від NaN — якщо парсинг невдалий, fallback to Date.now()
+                    let ts = Date.now();
+                    if (it.pubDate) {
+                        const parsed = new Date(it.pubDate.replace(' ', 'T') + '+03:00').getTime();
+                        if (!Number.isNaN(parsed) && parsed > 0) ts = parsed;
+                        else {
+                            const altParsed = new Date(it.pubDate).getTime();
+                            if (!Number.isNaN(altParsed) && altParsed > 0) ts = altParsed;
+                        }
+                    }
                     return { title, link: it.link || '', pubDate: it.pubDate || '', categories: cats, type: _sfClassify(title), ts };
                 });
                 _sfApplyItems(items);
                 return;
             }
             throw new Error('rss2json: bad payload');
-        } catch (e) { /* fall through to XML path */ }
+        } catch (e) { log('StopFake rss2json fallback: ' + e.message, 'STOPFAKE'); }
 
         // --- Path 2: direct XML via multi-proxy race ---
         try {
@@ -6281,7 +6577,7 @@ __PATHS__
             const items = _parseStopFakeRSS(xml);
             _sfApplyItems(items);
             return;
-        } catch (e) { /* fall through to cache */ }
+        } catch (e) { log('StopFake XML fallback: ' + e.message, 'STOPFAKE'); }
 
         // --- Path 3: STALE cache ---
         _sfShowStale(false);
@@ -6299,6 +6595,7 @@ __PATHS__
             STATE.finance.eur = eur[0].rate;
             STATE.finance.usdChange = STATE.finance.lastUsd ? (STATE.finance.usd - STATE.finance.lastUsd) : 0;
             STATE.finance.eurChange = STATE.finance.lastEur ? (STATE.finance.eur - STATE.finance.lastEur) : 0;
+            STATE.finance.lastUpdate = Date.now();   // v5.5: для staleness check
             log(`НБУ: USD=${STATE.finance.usd.toFixed(2)}, EUR=${STATE.finance.eur.toFixed(2)}`, 'FINANCE');
         } catch(e) {
             log('Finance API: ' + e.message, 'FINANCE');
@@ -6309,9 +6606,11 @@ __PATHS__
     // Cyrillic-safe match helper: matches key as a whole word using lookarounds
     // (\b and \w don't work with Cyrillic in JS regex without 'u' flag)
     function _matchCyrillicWord(text, key) {
+        // v5.5: нормалізуємо апострофи для коректного матчингу (придніпров'я, з露天'я)
+        const normalized = (text || '').toLowerCase().replace(/[\u2019\u2018`'’]/g, "'");
         const escKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const re = new RegExp('(?<![а-яєіїґa-z\\-])' + escKey + '(?![а-яєіїґa-z\\-])', 'gi');
-        return text.match(re);
+        return normalized.match(re);
     }
 
     // Map of war-event types → keyword patterns (Ukrainian + Russian variants)
@@ -6414,13 +6713,14 @@ __PATHS__
         const now = new Date();
         STATE.war.day = Math.floor((now - invasionStart) / 86400000);
 
-        // REAL intensity — based on war-event count from news (up to 55),
-        // active alerts (up to 25), fear (up to 12), tension (up to 8)
-        const eventIntensity = clamp(STATE.war.eventCount * 1.6, 0, 55);
-        const alertIntensity = (STATE.alerts.activeCount / Math.max(1, STATE.alerts.totalRegions)) * 100 * 0.25;
-        const fearIntensity = STATE.emotion.fear * 0.12;
-        const tensionIntensity = STATE.tension.index * 0.08;
-        STATE.war.intensity = clamp(eventIntensity + alertIntensity + fearIntensity + tensionIntensity, 0, 100);
+        // v5.5: РОЗІРВАНО від fear/tension — war.intensity тепер НЕЗАЛЕЖНИЙ сигнал.
+        // Тільки об'єктивні воєнні метрики:
+        //   eventIntensity — кількість воєнних подій у новинах (вага 0.6)
+        //   alertIntensity  — активні повітряні тривоги (вага 0.4)
+        // fear/tension прибрано — кореляція war↔fear тепер виявляється, а не задається формулою.
+        const eventIntensity = clamp(STATE.war.eventCount * 2.4, 0, 60);
+        const alertIntensity = clamp((STATE.alerts.activeCount / Math.max(1, STATE.alerts.totalRegions)) * 100 * 0.4, 0, 40);
+        STATE.war.intensity = clamp(eventIntensity + alertIntensity, 0, 100);
 
         // Frontline regions: combine war-event byRegion (sorted desc) + traditional frontline list
         const warRegionsSorted = Object.entries(STATE.war.byRegion).sort((a,b) => b[1] - a[1]);
@@ -6437,10 +6737,11 @@ __PATHS__
 
     async function fetchWikipedia() {
         try {
-            const d = new Date();
-            const y = d.getUTCFullYear();
-            const m = String(d.getUTCMonth()+1).padStart(2,'0');
-            const day = String(d.getUTCDate()-1).padStart(2,'0');   // yesterday — most complete
+            // v5.5: розрахунок "вчора" через UTC-дату з поправкою на місяць/рік (фікс 1-го числа: getUTCDate()-1 давав 0)
+            const yd = new Date(Date.now() - 86400000);
+            const y = yd.getUTCFullYear();
+            const m = String(yd.getUTCMonth()+1).padStart(2,'0');
+            const day = String(yd.getUTCDate()).padStart(2,'0');
             const url = `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/uk.wikipedia/all-access/${y}/${m}/${day}`;
             const r = await fetchJSON(url);
             // skip Main_Page / special pages
@@ -6449,7 +6750,8 @@ __PATHS__
             STATE.consciousness.wikiTop = top ? top.article.replace(/_/g,' ') : '—';
             $('src-info').innerText = 'LIVE';
             $('src-info').className = 'src-ind live';
-            log(`Wiki top: ${STATE.consciousness.wikiTop} (${top ? top.views.toLocaleString() : 0} views)`, 'WIKI');
+            const views = top ? (top.views || 0) : 0;
+            log(`Wiki top: ${STATE.consciousness.wikiTop} (${views.toLocaleString ? views.toLocaleString() : views} views)`, 'WIKI');
         } catch(e) {
             $('src-info').innerText = 'DEAD';
             $('src-info').className = 'src-ind dead';
@@ -6461,13 +6763,15 @@ __PATHS__
     function calcCircadian() {
         // Kyiv local hour (handles DST automatically via Intl). Ukraine is single
         // timezone (Europe/Kyiv, UTC+2/+3 DST). ~35M people in one timezone.
-        const kyivStr = new Date().toLocaleString('en-US', { timeZone:'Europe/Kyiv', hour12:false });
-        const h = parseInt(kyivStr.split(',')[1].trim().split(':')[0], 10);
+        // v5.5: hourCycle:'h23' замість hour12:false — останнє на деяких браузерах дає "24:00"
+        const kyivStr = new Date().toLocaleString('en-GB', { timeZone:'Europe/Kyiv', hour12:false, hourCycle:'h23' });
+        const h = parseInt(kyivStr.split(',')[1].trim().split(':')[0], 10) % 24;
         // Ukrainian society awake curve: peak ~10-13 local, lowest ~3-4 local
         // Different from global curve — Ukraine is monochrome timezone
+        // v5.5: alignment з фазами — day = h>=5 && h<21 (було <=22)
         let awake;
-        if (h >= 5 && h <= 22) {
-            awake = 70 + Math.sin((h - 11) / 9 * Math.PI) * 22;
+        if (h >= 5 && h < 21) {
+            awake = 70 + Math.sin((h - 11) / 8 * Math.PI) * 22;
         } else {
             awake = 30 + Math.sin((h) / 4 * Math.PI) * 8;
         }
@@ -6539,9 +6843,157 @@ __PATHS__
         } else {
             STATE.deep.synch = 'ОЧІКУВАННЯ';
         }
+
+        // v5.6: синхронізуємо AI IBONARIUM разом з deepLayers (5-хв цикл)
+        computeAIIBONARIUM();
     }
 
-    /* ---------- 13. PATTERN DETECTOR ---------- */
+    /* ---------- 12Б. AI IBONARIUM — ШВЕДСКИЙ АНАЛІТИК НООСФЕРИ (v5.6) ---------- */
+    // Штучний інтелект ноосфери: синтезує всі шари в єдину інтерпретацію,
+    // прогнозує ескалацію, виявляє аномалії, генерує три сценарії майбутнього.
+    function computeAIIBONARIUM() {
+        const ai = STATE.aiibonarium;
+        const h = STATE.history;
+        if (h.length < 3) {
+            // Недостатньо даних — початкові значення
+            ai.coherence = 50; ai.escRisk = 30; ai.anomaly = 0;
+            ai.diagnosis = 'Накопичення даних...';
+            ai.scenarioOpt = '—'; ai.scenarioBase = '—'; ai.scenarioPes = '—';
+            ai.trend = 'stable';
+            return;
+        }
+
+        // ── 1. КОГЕРЕНТНІСТЬ (0-100) ─────────────────────────────────────────
+        // Беремо дельти останніх 3 зрізів для 5 ключових метрик
+        const fields = ['gei', 'fear', 'hope', 'tension', 'war'];
+        const recent = h.slice(-3);
+        const deltas = fields.map(f => {
+            const vals = recent.map(p => p[f]).filter(v => v != null && !isNaN(v));
+            if (vals.length < 2) return 0;
+            return vals[vals.length - 1] - vals[0];
+        });
+        // Когерентність = 100 - std(deltas) * k. Чим ближче всі дельти до однакового знаку/величини — тим вища.
+        const meanDelta = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+        const variance = deltas.reduce((a, b) => a + (b - meanDelta) ** 2, 0) / deltas.length;
+        const std = Math.sqrt(variance);
+        ai.coherence = clamp(Math.round(100 - std * 1.8), 0, 100);
+
+        // Тренд: напрямок середньої дельти
+        ai.trend = meanDelta > 0.5 ? 'up' : meanDelta < -0.5 ? 'down' : 'stable';
+
+        // ── 2. ПРОГНОЗ ЕСКАЛАЦІЇ (0-100) ─────────────────────────────────────
+        // Компоненти:
+        //   30% z-score страху від 24-год середнього
+        //   20% зростання тривог за останні 3 зрізи
+        //   20% кореляція fear↔war за 24 год
+        //   15% циркадна фаза (вночі ризик вищий)
+        //   15% поляризація (чим вища — тим нестабільніше)
+        const fearVals = h.slice(-24).map(p => p.fear).filter(v => v != null && !isNaN(v));
+        let zFear = 0;
+        if (fearVals.length >= 4) {
+            const mean = fearVals.reduce((a, b) => a + b, 0) / fearVals.length;
+            const sd = Math.sqrt(fearVals.reduce((a, b) => a + (b - mean) ** 2, 0) / fearVals.length) || 1;
+            zFear = (STATE.emotion.fear - mean) / sd;
+        }
+        const fearComponent = clamp((zFear + 1) * 30, 0, 60);  // z>1 дає >60
+
+        const recentAlerts = h.slice(-3).map(p => p.alerts || 0);
+        const alertGrowth = recentAlerts.length >= 2
+            ? Math.max(0, recentAlerts[recentAlerts.length - 1] - recentAlerts[0]) * 8
+            : 0;
+        const alertComponent = clamp(alertGrowth, 0, 40);
+
+        const fearWarCorr = correlation('fear', 'war', 24);
+        const corrComponent = clamp(Math.abs(fearWarCorr) * 40, 0, 40);
+
+        // Циркадна фаза: вночі (23-5) ризик вищий через типові нічні атаки
+        const kyivHour = parseInt(new Date().toLocaleString('en-GB',
+            { timeZone: 'Europe/Kyiv', hour12: false, hourCycle: 'h23' }).split(',')[1].trim().split(':')[0], 10) % 24;
+        const nightFactor = (kyivHour >= 22 || kyivHour < 6) ? 25 : (kyivHour >= 18 ? 15 : 5);
+        const circadianComponent = nightFactor;
+
+        const polarityAbs = Math.abs(STATE.polarity || 0);
+        const polarityComponent = polarityAbs * 0.4;
+
+        ai.escRisk = clamp(Math.round(
+            fearComponent + alertComponent + corrComponent + circadianComponent + polarityComponent
+        ), 0, 100);
+
+        // ── 3. АНОМАЛІЯ (0-100) ─────────────────────────────────────────────
+        // Порівняння поточного комплексного стану з типовим за останні 24 год.
+        // Метрика відстані поточної точки від центроїда всіх точок.
+        const recent24 = h.slice(-24).filter(p =>
+            p.gei != null && p.fear != null && p.tension != null && p.war != null);
+        if (recent24.length >= 6) {
+            const centroid = ['gei', 'fear', 'tension', 'war'].reduce((acc, f) => {
+                acc[f] = recent24.reduce((s, p) => s + (p[f] || 0), 0) / recent24.length;
+                return acc;
+            }, {});
+            // Середня відстань точки від центроїда (евклідова, нормована)
+            const dists = recent24.map(p => {
+                const d2 = (p.gei - centroid.gei) ** 2 + (p.fear - centroid.fear) ** 2 +
+                           (p.tension - centroid.tension) ** 2 + (p.war - centroid.war) ** 2;
+                return Math.sqrt(d2);
+            });
+            const meanDist = dists.reduce((a, b) => a + b, 0) / dists.length;
+            const sdDist = Math.sqrt(dists.reduce((a, b) => a + (b - meanDist) ** 2, 0) / dists.length) || 1;
+            // Відстань поточної точки від центроїда
+            const curDist = Math.sqrt(
+                (STATE.emotion.index - centroid.gei) ** 2 +
+                (STATE.emotion.fear - centroid.fear) ** 2 +
+                (STATE.tension.index - centroid.tension) ** 2 +
+                (STATE.war.intensity - centroid.war) ** 2
+            );
+            // z-score поточної відстані від середньої відстані
+            const zDist = (curDist - meanDist) / sdDist;
+            // Аномалія = 0-100, де z=0 дає 20, z=1 дає 50, z=2 дає 80, z=3+ дає 100
+            ai.anomaly = clamp(Math.round(20 + zDist * 30), 0, 100);
+        } else {
+            ai.anomaly = 0;
+        }
+
+        // ── 4. AI-ДІАГНОЗ ───────────────────────────────────────────────────
+        // Генерується з комбінації ключових станів.
+        const f = STATE.emotion.fear, hp = STATE.emotion.hope, t = STATE.tension.index;
+        const w = STATE.war.intensity, a = STATE.alerts.activeCount;
+        let diagParts = [];
+
+        // Основний стан
+        if (f > 60 && t > 65)      diagParts.push('криза: страх + напруга синхронно високі');
+        else if (f > 60)            diagParts.push('домінує страх без критичної напруги');
+        else if (hp > 55 && t < 40) diagParts.push('реконвалесценція: надія переважає, напруга низька');
+        else if (t > 60)            diagParts.push('соціальна напруга при стриманому емоційному фоні');
+        else if (f < 30 && hp < 30) diagParts.push('емоційна апатія: і страх, і надія пригнічені');
+        else                         diagParts.push('нейтральна рівновага: помірні показники');
+
+        // Воєнний контекст
+        if (w > 60)            diagParts.push(`війна інтенсивна (${w.toFixed(0)}%)`);
+        else if (a > 5)        diagParts.push(`${a} обл. під тривогою — розумова напруга`);
+        else if (w < 25)       diagParts.push('фронтова пауза');
+
+        // Когерентність
+        if (ai.coherence > 75) diagParts.push(`шари синхронізовані (${ai.coherence}%)`);
+        else if (ai.coherence < 35) diagParts.push('шари розсинхронізовані');
+
+        // Тренд
+        if (ai.trend === 'up')        diagParts.push('загальний тренд ↑');
+        else if (ai.trend === 'down') diagParts.push('загальний тренд ↓');
+
+        // Аномалія
+        if (ai.anomaly > 70) diagParts.push('⚠ аномалія — стан нетиповий для години');
+
+        ai.diagnosis = diagParts.join(' · ') + '.';
+
+        // ── 5. СЦЕНАРІЇ (3) ─────────────────────────────────────────────────
+        // Оптимістичний: всі трендові сигнали у позитивний бік
+        ai.scenarioOpt = `Оптимістичний (3 год): ${hp > 50 ? 'надія утримується' : 'надія зростає до ' + Math.min(95, hp + 15) + '%'}, страх ${Math.max(5, f - 12).toFixed(0)}%, напруга ${Math.max(5, t - 10).toFixed(0)}%, тривоги ${Math.max(0, a - 4).toFixed(0)} обл. Вірогідність ${ai.escRisk < 30 ? 'висока' : ai.escRisk < 60 ? 'помірна' : 'низька'}.`;
+        ai.scenarioBase = `Базовий (3 год): поточний стан утримується. Страх ${f.toFixed(0)}%, надія ${hp.toFixed(0)}%, напруга ${t.toFixed(0)}%, інтенсивність війни ${w.toFixed(0)}%. Найправдоподібніший сценарій.`;
+        ai.scenarioPes = `Песимістичний (3 год): страх ${Math.min(100, f + 15).toFixed(0)}%, напруга ${Math.min(100, t + 12).toFixed(0)}%, тривоги ${Math.min(25, a + 6).toFixed(0)} обл. ${w > 60 ? 'Масштабована ескалація.' : 'Ризик раптового удару.'} Вірогідність ${ai.escRisk > 60 ? 'висока' : ai.escRisk > 30 ? 'помірна' : 'низька'}.`;
+
+        log(`AI IBONARIUM: когерентність ${ai.coherence}%, ризик ескалації ${ai.escRisk}%, аномалія ${ai.anomaly}%`, 'AI');
+    }
+
+/* ---------- 13. PATTERN DETECTOR ---------- */
     function detectPatterns() {
         const patterns = [];
         const f = STATE.emotion.fear, h = STATE.emotion.hope,
@@ -6565,6 +7017,19 @@ __PATHS__
         }
         if (STATE.crypto.fng > 75) {
             patterns.push({ type:'hope', text:`FINANCIAL GREED: F&G=${STATE.crypto.fng} (Extreme Greed).` });
+        }
+        // v5.6: AI IBONARIUM patterns — синтез-патерни на основі всіх шарів
+        if (STATE.aiibonarium.escRisk > 60) {
+            patterns.push({ type:'critical', text:`🧠 AI ESCALATION WARNING: ризик ескалації ${STATE.aiibonarium.escRisk.toFixed(0)}% протягом 1-3 год.` });
+        }
+        if (STATE.aiibonarium.anomaly > 75) {
+            patterns.push({ type:'sync', text:`🧠 AI ANOMALY: стан ноосфери нетиповий для години (аномалія ${STATE.aiibonarium.anomaly.toFixed(0)}%).` });
+        }
+        if (STATE.aiibonarium.coherence > 80 && STATE.aiibonarium.trend === 'up') {
+            patterns.push({ type:'critical', text:`🧠 AI SYNC ESCALATION: синхронна ескалація всіх 5 шарів (когерентність ${STATE.aiibonarium.coherence.toFixed(0)}%).` });
+        }
+        if (STATE.aiibonarium.coherence > 80 && STATE.aiibonarium.trend === 'down') {
+            patterns.push({ type:'hope', text:`🧠 AI SYNC RECOVERY: синхронна деескалація всіх 5 шарів (когерентність ${STATE.aiibonarium.coherence.toFixed(0)}%).` });
         }
         // Weather-based patterns (Ukraine meteo)
         if ([95, 96, 99].includes(STATE.geo.weatherCode)) {
@@ -7025,8 +7490,11 @@ __PATHS__
         $('v-eur').innerHTML = fmt(STATE.finance.eur,2) + ' ₴' + (STATE.finance.eurChange ? ` <span class="m-delta ${STATE.finance.eurChange>0?'down':'up'}">${STATE.finance.eurChange>0?'+':''}${STATE.finance.eurChange.toFixed(2)}</span>` : '');
         const eurusd = (STATE.finance.usd > 0 && STATE.finance.eur > 0) ? (STATE.finance.eur / STATE.finance.usd).toFixed(3) : '--';
         $('v-eurusd').innerText = eurusd;
-        $('src-finance').innerText = STATE.finance.usd > 0 ? 'LIVE' : 'DEAD';
-        $('src-finance').className = 'src-ind ' + (STATE.finance.usd > 0 ? 'live' : 'dead');
+        // v5.5: staleness check — NBU оновлює курс раз на добу (до 16:00). STALE якщо >26 год
+        const finAgeMs = STATE.finance.lastUpdate ? (Date.now() - STATE.finance.lastUpdate) : Infinity;
+        const finStale = finAgeMs > 26 * 3600 * 1000;
+        $('src-finance').innerText = STATE.finance.usd > 0 ? (finStale ? 'STALE' : 'LIVE') : 'DEAD';
+        $('src-finance').className = 'src-ind ' + (STATE.finance.usd > 0 ? (finStale ? 'warn' : 'live') : 'dead');
         const usdDepreciation = STATE.finance.usdChange > 0.3;
         const usdAppreciation = STATE.finance.usdChange < -0.3;
         let fStat, fBadge, fBadgeCls;
@@ -7075,7 +7543,7 @@ __PATHS__
             eDyn = `Індекс ${STATE.emotion.index.toFixed(0)}/100 — критично низький. Страх ${STATE.emotion.fear.toFixed(0)}% домінує над надією ${STATE.emotion.hope.toFixed(0)}%.`;
             eMove = `<span class="${fTrend.cls}">${fTrend.arrow} Страх: ${fTrend.label}</span> · <span class="${hTrend.cls}">${hTrend.arrow} Надія: ${hTrend.label}</span> · <span class="${eTrend.cls}">${eTrend.arrow} GEI: ${eTrend.label}</span>`;
             eCtx = `Психіка колективу під тиском. Негативні сигнали ${STATE.emotion.fear.toFixed(0)}% перевищують базовий рівень. Емоційні хвилі ${STATE.emotion.waves.toFixed(0)} Гц — висока амплітуда коливань.`;
-            eDriver = `Драйвери: аналіз ${STATE.sourcesOk} українських RSS-стрімів (Укрправда, Єп, DefenseExpr, 24Канал та ін.). Кореляція страху з соціальною напругою ${((STATE.emotion.fear + STATE.tension.index)/200*100).toFixed(0)}%.`;
+            eDriver = `Драйвери: аналіз ${STATE.sourcesOk} українських RSS-стрімів (Укрправда, Єп, DefenseExpr, 24Канал та ін.). Кореляція страху з війною: <b>${(correlation('fear','war',12)*100).toFixed(0)}%</b>, з тривогами: <b>${(correlation('fear','alerts',12)*100).toFixed(0)}%</b>, з напругою: <b>${(correlation('fear','tension',12)*100).toFixed(0)}%</b>.`;
             eForecast = eTrend.slope < -1 ? `Прогноз: триває погіршення. Ризик переходу в режим FEAR. Волатильність σ=${eVol.toFixed(1)}.` :
                         eTrend.slope > 1  ? `Прогноз: ознаки відновлення. Спостерігати 2-3 цикли.` :
                         `Прогноз: стан утримується біля дна. σ=${eVol.toFixed(1)}. Діапазон ${geiRange.min.toFixed(0)}–${geiRange.max.toFixed(0)}.`;
@@ -7109,7 +7577,7 @@ __PATHS__
         $('v-fng').innerText = fmt(STATE.crypto.fng,0);
         $('bar-fng').style.width = STATE.crypto.fng + '%';
         $('v-fng-class').innerText = STATE.crypto.fngClass;
-        $('v-btc').innerHTML = (STATE.crypto.btcChange>=0?'+':'') + fmt(STATE.crypto.btcChange,2) + '%' + deltaFmt('fng',0);
+        $('v-btc').innerHTML = (STATE.crypto.btcChange>=0?'+':'') + fmt(STATE.crypto.btcChange,2) + '%' + deltaFmt('btc',2);
         $('v-vol').innerText = fmt(STATE.crypto.volatility,1);
         // Prices
         if (STATE.crypto.btcPrice > 0) $('v-btc-price').innerText = '$' + fmt(STATE.crypto.btcPrice, 0);
@@ -7183,7 +7651,7 @@ __PATHS__
                 trendBox.innerHTML += `<span class="tag hope">${b}</span>`;
             });
         }
-        $('v-att-vol').innerHTML = fmt(STATE.attention.volatility,0) + deltaFmt('focus',0);
+        $('v-att-vol').innerHTML = fmt(STATE.attention.volatility,0) + deltaFmt('volatility',0);
         $('v-focus').innerText = fmt(STATE.attention.focus,0) + '%';
         $('v-uniq').innerText = STATE.attention.uniq;
 
@@ -7364,7 +7832,7 @@ __PATHS__
             tDyn = `Напруга ${STATE.tension.index.toFixed(1)}/100 — критична. Поляризація ${splitA}:${splitB}. Гео-вогнищ: ${STATE.tension.geo.length}.`;
             tMove = `<span class="${tTrend.cls}">${tTrend.arrow} Напруга: ${tTrend.label}</span> · σ=${tVol.toFixed(1)}`;
             tCtx = `Висока конфліктність. Ризик соціальних вибухів та ескалації. Думки розколоті.`;
-            tDriver = `Гео-фокус (укр. регіони): <b>${geoHotspot}</b>. Топ: ${topGeo}. Кореляція страху з напругою: ${((STATE.emotion.fear + STATE.tension.index)/200*100).toFixed(0)}%.`;
+            tDriver = `Гео-фокус (укр. регіони): <b>${geoHotspot}</b>. Топ: ${topGeo}. Кореляція напруги з війною: <b>${(correlation('tension','war',12)*100).toFixed(0)}%</b>, з тривогами: <b>${(correlation('tension','alerts',12)*100).toFixed(0)}%</b>, з страхом: <b>${(correlation('tension','fear',12)*100).toFixed(0)}%</b>.`;
             tForecast = tTrend.slope > 1 ? `Прогноз: ескалація. Режим TENSION активний.` :
                         tTrend.slope < -1 ? `Прогноз: розрядка. Спостерігати 2-3 цикли.` :
                         `Прогноз: утримання на високому рівні. Діапазон ${tRange.min.toFixed(0)}–${tRange.max.toFixed(0)}.`;
@@ -7533,7 +8001,7 @@ __PATHS__
         if (STATE.war.discrepancy && STATE.war.discrepancy.length) {
             wDisc = ` ⚠ Розбіжність: новини повідомляють про події у ${STATE.war.discrepancy.map(d=>d.region).join(', ')} без активної тривоги.`;
         }
-        const wDriver = `Драйвери: військ. події ${STATE.war.eventCount} (до 55%) + тривоги ${STATE.alerts.activeCount}/${STATE.alerts.totalRegions} (25%) + страх ${STATE.emotion.fear.toFixed(0)}% (12%) + напруга ${STATE.tension.index.toFixed(0)} (8%). Типи: ${warTypeStr}.${wDisc}`;
+        const wDriver = `Драйвери (v5.5): військ. події ${STATE.war.eventCount} (60%) + тривоги ${STATE.alerts.activeCount}/${STATE.alerts.totalRegions} (40%). Страх і напруга тепер НЕ входять у формулу — вони окремі шари, кореляція виявляється, не задається. Типи: ${warTypeStr}.${wDisc}`;
         const wForecast = STATE.war.intensity > 60
             ? 'Прогноз: ескалація триває. Високий ризик ударів по інфраструктурі.'
             : STATE.war.intensity > 40
@@ -7647,6 +8115,46 @@ __PATHS__
             <span class="an-ctx">${dCtx}</span>
             <span class="an-driver">${dDriver}</span>
             <span class="an-forecast">🔮 ${dForecast}</span>`;
+
+        // v5.6: AI IBONARIUM — рендеринг на головній панелі
+        const ai = STATE.aiibonarium;
+        $('v-ai-coh').innerHTML = fmt(ai.coherence,0) + '%' + deltaFmt('ai_coh',0);
+        $('bar-ai-coh').style.width = ai.coherence + '%';
+        $('v-ai-esc').innerHTML = fmt(ai.escRisk,0) + '%' + deltaFmt('ai_esc',0);
+        $('bar-ai-esc').style.width = ai.escRisk + '%';
+        $('v-ai-anom').innerHTML = fmt(ai.anomaly,0) + '%' + deltaFmt('ai_anom',0);
+        $('v-ai-diag').innerText = ai.diagnosis.length > 110 ? ai.diagnosis.slice(0, 107) + '…' : ai.diagnosis;
+        // Score = складна метрика: ризик-аномалія дає "інтенсивність AI-уваги"
+        const aiScore = Math.round((ai.escRisk * 0.5 + ai.anomaly * 0.3 + (100 - ai.coherence) * 0.2));
+        $('score-ai').innerText = fmt(aiScore, 0);
+
+        // AI IBONARIUM analytical block (v5.6: aiStat/aiBadge/aiBadgeCls — уникнення конфлікту з alerts-блоком)
+        let aiStat, aiBadge, aiBadgeCls;
+        if (ai.escRisk > 60)      { aiStat='ВИСОКИЙ РИЗИК ЕСКАЛАЦІЇ'; aiBadge='HIGH'; aiBadgeCls='crit'; }
+        else if (ai.escRisk > 35) { aiStat='ПОМІРНА НАПРУГА';         aiBadge='WATCH'; aiBadgeCls='warn'; }
+        else if (ai.anomaly > 70) { aiStat='АНОМАЛІЯ СТАНУ';          aiBadge='ANOM'; aiBadgeCls='warn'; }
+        else if (ai.coherence > 75) { aiStat='СИНХРОНІЗАЦІЯ';         aiBadge='SYNC';  aiBadgeCls='ok'; }
+        else                       { aiStat='СТАБІЛЬНІСТЬ';            aiBadge='STABLE';aiBadgeCls='info'; }
+        const aiDyn = `Когерентність ${ai.coherence}% · Ризик ескалації ${ai.escRisk}% · Аномалія ${ai.anomaly}% · Тренд ${ai.trend==='up'?'↑':ai.trend==='down'?'↓':'→'}`;
+        const aiCtx = ai.escRisk > 60
+            ? 'Синтез усіх шарів вказує на високу вірогідність різкого зростання страху/напруги у найближчі 1-3 години.'
+            : ai.anomaly > 70
+            ? 'Поточний стан нетиповий для цієї години — відхилення від 24-год норми. Перевірити шари вручну.'
+            : ai.coherence > 75
+            ? 'Шари ноосфери синхронізовані — тенденція чиста і прогнозована.'
+            : 'Стандартний стан ноосфери — AI не виявив критичних патернів.';
+        const aiForecast = ai.escRisk > 60
+            ? 'Прогноз: висока вірогідність ескалації. Моніторити тривоги + страх.'
+            : ai.trend === 'up'
+            ? `Прогноз: поточний тренд ↑ може продовжитись. Базовий сценарій — утримання.`
+            : ai.trend === 'down'
+            ? `Прогноз: позитивний тренд ↓ продовжує деескалацію.`
+            : `Прогноз: стабілізація. Базовий сценарій найправдоподібніший.`;
+        $('desc-ai').innerHTML = `
+            <span class="an-state">${aiStat} <span class="badge ${aiBadgeCls}">${aiBadge}</span></span>
+            <span class="an-dyn">🧠 ${aiDyn}</span>
+            <span class="an-ctx">${aiCtx}</span>
+            <span class="an-forecast">🔮 ${aiForecast}</span>`;
 
         // PATTERNS
         const patterns = detectPatterns();
