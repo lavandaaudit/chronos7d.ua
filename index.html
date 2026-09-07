@@ -183,6 +183,23 @@
         .card-h .src-ind.live { color: var(--accent-hope); }
         .card-h .src-ind.dead { color: var(--accent-warn); }
 
+        /* NEPTUN API attribution line (required by https://neptun.in.ua/developers) */
+        .attr-line {
+            font-size: 7px;
+            color: #556;
+            padding: 4px 0 0 0;
+            margin-top: 2px;
+            border-top: 1px dashed rgba(255,255,255,0.06);
+            text-align: right;
+            letter-spacing: 0.2px;
+        }
+        .attr-line a {
+            color: var(--accent-sec);
+            text-decoration: underline;
+            text-underline-offset: 1px;
+        }
+        .attr-line a:hover { color: var(--white); }
+
         .m-row {
             display: flex; justify-content: space-between; align-items: center;
             padding: 2px 0;
@@ -1545,6 +1562,8 @@
                     <div id="v-alerts-regions" style="display:flex; flex-wrap:wrap; gap:2px;"></div>
                 </div>
                 <div class="m-sub" id="desc-alerts">// Моніторинг тривог...</div>
+                <!-- NEPTUN API attribution (required by NEPTUN ToS — https://neptun.in.ua/developers) -->
+                <div class="attr-line">Дані тривог: <a href="https://neptun.in.ua" target="_blank" rel="noopener noreferrer">NEPTUN API</a></div>
             </div>
 
             <!-- 1C. UA FINANCE (курс НБУ) -->
@@ -5419,17 +5438,81 @@ __PATHS__
 
     /* ---------- 10.7 UA-SPECIFIC FETCHERS ---------- */
 
-    /* ---------- 10.7a AIR ALERT MONITOR — alerts.in.ua via Ubilling (primary) + Telegram (backup) ---------- */
-    // alerts.in.ua is THE official air alert API used by all major apps.
-    // Direct access blocked by Cloudflare, so we use Ubilling's server-side proxy
-    // (ubilling.net.ua/aerialalerts/?source=aiu) which bypasses CF and returns
-    // clean JSON with {states: {"Область": {alertnow: bool}}}. No keys/auth.
-    // 3-sec server-side cache. Routed through cors.sh for browser CORS.
-    // Telegram @air_alert_ua kept as last-resort fallback.
-    // v5.4 FIX: прибрано мертвий proxy.cors.sh (DNS не резолвиться).
-    // Обидва джерела тепер ідуть через fetchViaProxy (гонка 7 CORS-проксі).
+    /* ---------- 10.7a AIR ALERT MONITOR — NEPTUN API (primary) + Ubilling + Telegram (fallbacks) ---------- */
+    // v5.5: PRIMARY source switched to NEPTUN API (https://neptun.in.ua/api/v1/alerts).
+    //   - Open CORS (access-control-allow-origin: *), no auth, no API key required.
+    //   - Returns {raions:[{oblast, since}], oblasts:[{name, oblast, since}], updatedAt}.
+    //   - Direct browser fetch — no CORS proxy needed. ~5x faster and far more reliable
+    //     than the Ubilling/Telegram route via 7 third-party CORS proxies.
+    //   - ToS requires visible textual attribution (see .attr-line inside #card-alerts).
+    // FALLBACK 1: alerts.in.ua via Ubilling proxy (fetchViaProxy race of 7 CORS proxies).
+    // FALLBACK 2: Telegram @air_alert_ua web preview.
+    // Last-known-good cache survives a total outage for up to 5 minutes.
+    const NEPTUN_ALERTS_URL = 'https://neptun.in.ua/api/v1/alerts';
     const UBILLING_AIU_URL = 'https://ubilling.net.ua/aerialalerts/?source=aiu';
     const TG_URL = 'https://t.me/s/air_alert_ua';
+
+    // Parse NEPTUN API JSON → active oblasts in OBLAST_DATA short-key format.
+    // NEPTUN returns district-level + oblast-level alerts. We aggregate to oblast
+    // granularity (matching the dashboard's existing model) and use the most
+    // recent `since` timestamp as `lastChange`. The `oblasts[]` array typically
+    // holds long-running whole-oblast alerts (Crimea, Luhansk, Sevastopol).
+    function _parseNeptunAlerts(payload) {
+        let data;
+        if (typeof payload === 'string') {
+            data = JSON.parse(payload);
+        } else if (payload && typeof payload === 'object') {
+            data = payload;
+        } else {
+            throw new Error('invalid neptun response');
+        }
+        if (!Array.isArray(data.raions) && !Array.isArray(data.oblasts)) {
+            throw new Error('no raions/oblasts in neptun response');
+        }
+        const activeSet = new Set();
+        const rawStates = [];
+        let lastSince = null;
+        const addEntry = (apiName, since) => {
+            if (!apiName) return;
+            const obKey = UBILLING_NAME_MAP[apiName] || apiName.replace(' область','');
+            rawStates.push({ name: apiName, alert: true, changed: since || null });
+            if (obKey && OBLAST_DATA[obKey]) activeSet.add(obKey);
+            if (since) {
+                const d = new Date(since);
+                if (!isNaN(d) && (!lastSince || d > lastSince)) lastSince = d;
+            }
+        };
+        (data.raions || []).forEach(r => addEntry(r.oblast, r.since));
+        (data.oblasts || []).forEach(o => addEntry(o.oblast || o.name, o.since));
+        return {
+            active: Array.from(activeSet),
+            total: Object.keys(OBLAST_DATA).length,
+            lastChange: lastSince ? lastSince.toISOString() : (data.updatedAt || new Date().toISOString()),
+            raw: rawStates,
+            sourceLabel: 'NEPTUN API'
+        };
+    }
+
+    // Direct fetch helper for NEPTUN API — uses native fetch (CORS is open, no proxy needed).
+    // AbortController enforces a 7s timeout to keep the dashboard responsive.
+    async function fetchNeptunAlerts(timeoutMs = 7000) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+        STATE.apiCalls++;
+        try {
+            const r = await fetch(NEPTUN_ALERTS_URL, {
+                signal: ctrl.signal,
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!r.ok) throw new Error('NEPTUN HTTP ' + r.status);
+            const text = await r.text();
+            if (!text || text.length < 50) throw new Error('NEPTUN empty response');
+            return _parseNeptunAlerts(text);
+        } finally {
+            clearTimeout(tid);
+            $('api-calls').innerText = STATE.apiCalls;
+        }
+    }
 
     // Map Ubilling API full names ("Київська область", "м. Київ") → OBLAST_DATA short keys
     const UBILLING_NAME_MAP = {
@@ -5766,32 +5849,39 @@ __PATHS__
     }
 
     async function fetchAlerts() {
-        // v5.4 FIX: колись Promise.allSettled по ALERT_SOURCES через мертвий
-        // proxy.cors.sh → обидва джерела падали і картка 1Б не працювала.
-        // v5.4.1 SPEED: Ubilling і Telegram стартують ПАРАЛЕЛЬНО (а не
-        // послідовно) — Teleграм вже в дорозі, якщо Ubilling впаде.
-        STATE.alerts.sourcesTotal = 2;
-        let ubillingParsed = null, tgParsed = null;
+        // v5.5: NEPTUN API is now PRIMARY — open CORS, no auth, no proxy.
+        //       Falls back to Ubilling → Telegram → last-known-good cache.
+        //       The previous v5.4 design depended entirely on the 7-proxy
+        //       fetchViaProxy race, which is why card 1Б kept going DEAD.
+        STATE.alerts.sourcesTotal = 3;
+        let neptunParsed = null, ubillingParsed = null, tgParsed = null;
 
-        // Обидві гонки проксі стартують одночасно
-        const ubP = (async () => {
-            const txt = await fetchViaProxy(UBILLING_AIU_URL, 9000, t => t.includes('"states"'));
-            return _parseUbillingAlerts(txt, 'alerts.in.ua');
-        })();
-        const tgP = (async () => {
-            const html = await fetchViaProxy(TG_URL, 9000, t => t.includes('tgme_widget_message'));
-            return _parseTelegramAlerts(html);
-        })().catch(() => null);   // resolve-to-null: без unhandled rejection
-
-        // 1) Ubilling (alerts.in.ua) — authoritative, exact per-oblast state
-        try { ubillingParsed = await ubP; } catch (e) { /* fall through to Telegram */ }
-
-        // 2) Telegram @air_alert_ua — only when Ubilling failed (уже летить!)
-        if (!ubillingParsed) {
-            try { tgParsed = await tgP; } catch (e) { /* both dead */ }
+        // 1) NEPTUN — direct fetch (no proxy). Fast and authoritative.
+        try {
+            neptunParsed = await fetchNeptunAlerts(7000);
+        } catch (e) {
+            log(`NEPTUN недоступний: ${e.message} → перехід на Ubilling/Telegram`, 'ALERTS');
         }
 
-        const ok = [ubillingParsed, tgParsed].filter(p => p && Array.isArray(p.active));
+        // 2) Ubilling (alerts.in.ua) — kick off via proxy only if NEPTUN failed.
+        //    The proxy race is slow (~3-9s) and flaky, so we don't pay its cost
+        //    unless we actually need it.
+        if (!neptunParsed) {
+            try {
+                const txt = await fetchViaProxy(UBILLING_AIU_URL, 9000, t => t.includes('"states"'));
+                ubillingParsed = _parseUbillingAlerts(txt, 'alerts.in.ua');
+            } catch (e) { /* fall through to Telegram */ }
+        }
+
+        // 3) Telegram @air_alert_ua — last-resort fallback.
+        if (!neptunParsed && !ubillingParsed) {
+            try {
+                const html = await fetchViaProxy(TG_URL, 9000, t => t.includes('tgme_widget_message'));
+                tgParsed = _parseTelegramAlerts(html);
+            } catch (e) { /* all sources dead */ }
+        }
+
+        const ok = [neptunParsed, ubillingParsed, tgParsed].filter(p => p && Array.isArray(p.active));
         STATE.alerts.sourcesOk = ok.length;
 
         if (!ok.length) {
@@ -5822,25 +5912,30 @@ __PATHS__
             }
             $('src-alerts').innerText = 'DEAD';
             $('src-alerts').className = 'src-ind dead';
-            log('Усі джерела тривог недоступні (проксі не відповідають)', 'ALERTS');
+            log('Усі джерела тривог недоступні (NEPTUN + проксі не відповідають)', 'ALERTS');
             return;
         }
 
-        // Priority-merge: Ubilling (alerts.in.ua) is authoritative.
-        // If Ubilling responded, use ONLY its data — it has exact per-oblast state.
-        // Telegram is only used as fallback when Ubilling fails.
-        // This prevents Telegram's stale localStorage from overriding correct Ubilling data.
+        // Priority-merge: the FIRST available source in [NEPTUN → Ubilling → Telegram]
+        // is authoritative. NEPTUN is preferred because it is a direct, key-less
+        // official-grade API; Ubilling+Telegram are kept strictly as fallbacks so
+        // we never re-introduce the DEAD-card scenario from v5.4.
         const activeSet = new Set();
         let total = 0, lastChange = null, bestSource, rawStates = [];
 
-        if (ubillingParsed) {
-            // Authoritative source available — use it exclusively
+        if (neptunParsed) {
+            neptunParsed.active.forEach(a => activeSet.add(a));
+            total = neptunParsed.total;
+            if (neptunParsed.lastChange) lastChange = neptunParsed.lastChange;
+            if (neptunParsed.raw) rawStates = neptunParsed.raw;
+            bestSource = neptunParsed.sourceLabel || 'NEPTUN API';
+        } else if (ubillingParsed) {
             ubillingParsed.active.forEach(a => activeSet.add(a));
             total = ubillingParsed.total;
             if (ubillingParsed.lastChange) lastChange = ubillingParsed.lastChange;
             if (ubillingParsed.raw) rawStates = ubillingParsed.raw;
             bestSource = ubillingParsed.sourceLabel || 'alerts.in.ua';
-            // Clear stale Telegram localStorage for oblasts that Ubilling says are clear
+            // Clear stale Telegram localStorage for oblasts the proxy says are clear
             try {
                 const stored = JSON.parse(localStorage.getItem('_alertOblastState') || '{}');
                 let dirty = false;
@@ -5852,8 +5947,7 @@ __PATHS__
                 }
                 if (dirty) localStorage.setItem('_alertOblastState', JSON.stringify(stored));
             } catch(e) {}
-        } else {
-            // Ubilling failed — fall back to Telegram
+        } else if (tgParsed) {
             const r = tgParsed;
             r.active.forEach(a => activeSet.add(a));
             total = Math.max(total, r.total);
@@ -6914,7 +7008,7 @@ __PATHS__
         const alCtx = STATE.alerts.activeCount === 0
             ? 'Повітряний простір під контролем ППО. Психіка населення розслаблена.'
             : `Тривога активна. ${STATE.alerts.activeCount >= 10 ? 'Масштабна атака — психологічний стрес високий.' : 'Локальна загроза — стрес у регіоні.'}`;
-        const alDriver = `Джерело: ${STATE.alerts.source || 'alerts.com.ua'} · ${STATE.alerts.sourcesOk}/${STATE.alerts.sourcesTotal} проксі онлайн. Кореляція зі страхом: ${((STATE.alerts.activeCount * 5) > STATE.emotion.fear ? 'висока' : 'помірна')}.`;
+        const alDriver = `Джерело: ${STATE.alerts.source || 'NEPTUN API'} · ${STATE.alerts.sourcesOk}/${STATE.alerts.sourcesTotal} джерел онлайн. Кореляція зі страхом: ${((STATE.alerts.activeCount * 5) > STATE.emotion.fear ? 'висока' : 'помірна')}.`;
         const alForecast = STATE.alerts.activeCount > 0
             ? `Прогноз: тривога триватиме 30-90 хв. Моніторити відбій.`
             : `Прогноз: спокій зберігається. Моніторинг триває.`;
