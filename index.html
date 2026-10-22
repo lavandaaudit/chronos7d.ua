@@ -125,13 +125,13 @@
         }
 
         .header-stats {
-            display: flex; gap: 20px;
-            font-size: 9px;
+            display: flex; gap: 16px;
+            font-size: 8px;
         }
 
         .header-stat { text-align: right; }
-        .header-stat .lbl { color: #668; font-size: 8px; letter-spacing: 1px; }
-        .header-stat .val { color: #fff; font-size: 13px; font-weight: bold; }
+        .header-stat .lbl { color: #66a; font-size: 6.5px; letter-spacing: 0.8px; }
+        .header-stat .val { color: #fff; font-size: 10.5px; font-weight: bold; }
 
         .col-left, .col-right {
             display: flex; flex-direction: column; gap: 8px;
@@ -1481,7 +1481,7 @@
                 <img src="1-01.png" class="header-logo" alt="IBONARIUM Logo">
                 <div class="brand-box">
                     <div class="brand">IBONARIUM · UA NOOSPHERE</div>
-                    <div class="sub-brand">УКРАЇНСЬКЕ ІНФОПОЛЕ · ПСИХІКА НАЦІЇ · MONITOR v5.0-UA</div>
+                    <div class="sub-brand">УКРАЇНСЬКЕ ІНФОПОЛЕ · ПСИХІКА НАЦІЇ · MONITOR v5.11-UA FINAL</div>
                     <div class="header-nav">
                         <a href="https://lavandaaudit.github.io/7d_ua_spiral/" target="_blank" rel="noopener noreferrer" class="nav-link">7D UA SPIRAL</a>
                         <a href="https://lavandaaudit.github.io/chronos.socio.ua/" target="_blank" rel="noopener noreferrer" class="nav-link">SOCIO UA</a>
@@ -1861,6 +1861,10 @@
                 <div class="m-row">
                     <span class="m-lbl">🛡 Збито БпЛА (за ніч)</span>
                     <span class="m-val" style="color:var(--accent-hope)" id="v-gsh-shotdown">--</span>
+                </div>
+                <div class="m-row">
+                    <span class="m-lbl">💀 Втрати ворога за добу (ГШ)</span>
+                    <span class="m-val" style="font-size:8px" id="v-gsh-totals">--</span>
                 </div>
                 <div class="m-sub" id="desc-losses">// Зведення Генштабу ЗСУ...</div>
             </div>
@@ -2346,7 +2350,7 @@
         { name:'Єп-Новини',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.epravda.com.ua/rss/news/'), tag:'war' },
         { name:'DefenseExpr', url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://defence-ua.com/rss/feed.xml'), tag:'war' },
         { name:'Мілітарний',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://mil.in.ua/uk/feed/'), tag:'war' },
-        { name:'ІнфоРезист',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://inforesist.org/feed/'), tag:'war' },
+        { name:'ІнфоРезист',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://inforesist.org/feed/'), tag:'war', direct:true },  // v5.8: ACO:* — фетчиться НАПРЯМУЮ без проксі
         { name:'УП-Війна',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/tags/war/'), tag:'war' },
         // === General coverage ===
         { name:'Liga',        url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.liga.net/ua/all/rss.xml'), tag:'general' },
@@ -2476,61 +2480,120 @@
     }
 
     /* ===================================================================
-       v5.7 FIX: UNIVERSAL CORS-PROXY LAYER (multi-proxy race) — ОНОВЛЕНО 10.2026
+       v5.8 FIX: SMART CORS-PROXY MANAGER (health + wave-race + cooldown)
        ===================================================================
-       Діагностика 10.2026:
-       - proxy.cors.sh — мертвий (DNS) — видалено ще в v5.4.
-       - corsproxy.io — ТЕПЕР ВИМАГАЄ ПЛАТНИЙ API-ключ (HTTP 401 для всіх)
-         → ВИДАЛЕНО, він лише марнував час гонки.
-       - api.allorigins.win — живий, але флаключий (500/502/522 у ~40-60%
-         запитів) → залишено ПЕРШИМ + whateverorigin як незалежний дублер.
-       - whateverorigin.org — працює, вимагає Origin-заголовок (браузер
-         завжди його шле автоматично) → ДОДАНО + unwrap {"content":...}.
-       - codetabs / cors.lol / cors.eu.org / cors.workers.dev — живі,
-         але з жорсткими rate-limit'ами → залишено в гонці (429 просто
-         програваш гонку, Promise.any бере перший валідний результат).
-       Рішення незмінне: гонка кількох публічних CORS-проксі — перша
-       валідна відповідь перемагає (Promise.any).            */
-    const PROXY_BUILDERS = [
-        u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
-        u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
-        u => 'https://whateverorigin.org/get?url=' + encodeURIComponent(u),   // wrapped {content}
-        u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u),   // wrapped {contents}
-        u => 'https://api.cors.lol/?url=' + encodeURIComponent(u),
-        u => 'https://cors.eu.org/' + u,
-        u => 'https://test.cors.workers.dev/?' + u
+       Діагностика 10.2026 (друга аварія «ДЖЕРЕЛА ONLINE 0/28»):
+       РОЗКРИТО КОРІННЯ: дашборд САМ спалював проксі. Кожні 5 хв: 28 стрічок
+       × 7 проксі ПАРАЛЕЛЬНО ≈ 200 запитів/цикл (~40/хв з однієї IP) →
+       публічні проксі відповідають 429/522/таймаутом на власний трафік
+       дашборда. Плюс частина сервісів померла назавжди:
+       - corsproxy.io — платний ключ (401), rss2json — Cloudflare 403,
+         thingproxy/yacdn — мертві, jina.ai — тепер теж вимагає ключ.
+       РІШЕННЯ v5.8 (3 рівні захисту):
+         1) ХВИЛЬОВА ГОНКА замість 7-паралельного залпу: спочатку 2
+            найкращі проксі (переможець минулого разу + лідер рейтингу),
+            потім ще 2, і лише в кінці решта. У ~70% випадків хвиля 1
+            закриває запит — 2-3 замість 7 запитів на таргет.
+         2) HEALTH-ТРЕКІНГ: 429/5xx → cooldown 10 хв (не молотимо мертвий
+            проксі); успіхи/файли рахуємо, рейтинг зберігаємо в localStorage.
+         3) КЕШ СТРІЧОК (30 хв TTL) + БЮДЖЕТ: за цикл оновлюємо максимум
+            10 найстаріших стрічок → ~5-15 проксі-запитів/хв замість ~40.
+       Пул: 7 живих публічних CORS-проксі (перевірено 10.2026).          */
+    const PROXY_POOL = [
+        { name: 'allorigins-raw', build: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
+        { name: 'codetabs',       build: u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u) },
+        { name: 'cors-lol',       build: u => 'https://api.cors.lol/?url=' + encodeURIComponent(u) },
+        { name: 'allorigins-get', build: u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u) },
+        { name: 'cors-eu',        build: u => 'https://cors.eu.org/' + u },
+        { name: 'cors-workers',   build: u => 'https://test.cors.workers.dev/?' + u },
+        { name: 'whateverorigin', build: u => 'https://whateverorigin.org/get?url=' + encodeURIComponent(u) }
     ];
 
-    // fetchViaProxy: races all proxies in parallel → first VALID response text.
-    // validate(text) allows the caller to check the payload looks right.
-    // Auto-unwraps allorigins /get {"contents":"..."} wrapper.
-    // v5.4.1 SPEED: дефолтний таймаут 12с → 9с (кеш покриває повільні).
-    async function fetchViaProxy(targetUrl, timeoutMs = 9000, validate = null) {
-        const attempt = async (build) => {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), timeoutMs);
-            STATE.apiCalls++;
+    // ---- Health-стан проксі (рейтинг персистентний, cooldown — ні) ----
+    const _PROXY_HKEY = 'proxy_health_v58';
+    const _proxyHealth = (() => {
+        try { return JSON.parse(localStorage.getItem(_PROXY_HKEY) || '{}'); } catch (_) { return {}; }
+    })();   // { name: { ok: N, fail: N } }
+    const _proxyCooldown = {};    // { name: cooldownUntilTs }
+    const _proxyLastWinner = {};  // { targetUrl: proxyName } — пам'ять переможця
+    function _saveProxyHealth() {
+        try { localStorage.setItem(_PROXY_HKEY, JSON.stringify(_proxyHealth)); } catch (_) {}
+    }
+    function _proxyScore(p) {
+        const h = _proxyHealth[p.name] || { ok: 0, fail: 0 };
+        return h.ok * 2 - h.fail;   // простий рейтинг надійності
+    }
+    function _proxyAlive(p, now) {
+        return now >= (_proxyCooldown[p.name] || 0);
+    }
+
+    function _unwrapProxyPayload(text) {
+        // Unwrap proxy JSON-wrappers: allorigins /get {"contents":...},
+        // whateverorigin {"content":...}
+        if (text && text.charAt(0) === '{' && (text.includes('"contents"') || text.includes('"content"'))) {
             try {
-                const r = await fetch(build(targetUrl), { signal: ctrl.signal });
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                let text = await r.text();
-                // Unwrap proxy JSON-wrappers: allorigins /get {"contents":...}
-                // v5.7: + whateverorigin {"content":...}
-                if (text && text.charAt(0) === '{' && (text.includes('"contents"') || text.includes('"content"'))) {
-                    try {
-                        const w = JSON.parse(text);
-                        if (w && typeof w.contents === 'string') text = w.contents;
-                        else if (w && typeof w.content === 'string') text = w.content;
-                    } catch (_) { /* not a wrapper — keep raw */ }
-                }
-                if (validate && !validate(text)) throw new Error('validation failed');
-                return text;
-            } finally {
-                clearTimeout(tid);
-                $('api-calls').innerText = STATE.apiCalls;
+                const w = JSON.parse(text);
+                if (w && typeof w.contents === 'string') return w.contents;
+                if (w && typeof w.content === 'string') return w.content;
+            } catch (_) { /* не wrapper — повертаємо як є */ }
+        }
+        return text;
+    }
+
+    // Один проксі-запит з health-трекінгом
+    async function _proxyAttempt(p, targetUrl, timeoutMs, validate) {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+        STATE.apiCalls++;
+        const h = _proxyHealth[p.name] || (_proxyHealth[p.name] = { ok: 0, fail: 0 });
+        try {
+            const r = await fetch(p.build(targetUrl), { signal: ctrl.signal });
+            if (!r.ok) {
+                // 429/5xx → проксі перевантажений: cooldown 10 хв
+                if (r.status === 429 || r.status >= 500) _proxyCooldown[p.name] = Date.now() + 10 * 60 * 1000;
+                h.fail++;
+                throw new Error(p.name + ': HTTP ' + r.status);
             }
-        };
-        return Promise.any(PROXY_BUILDERS.map(b => attempt(b)));
+            const text = _unwrapProxyPayload(await r.text());
+            if (validate && !validate(text)) { h.fail++; throw new Error(p.name + ': validation failed'); }
+            h.ok++;
+            return text;
+        } finally {
+            clearTimeout(tid);
+            _saveProxyHealth();
+            $('api-calls').innerText = STATE.apiCalls;
+        }
+    }
+
+    // fetchViaProxy v5.8: хвильова гонка (2 → 2 → решта) + пам'ять переможця.
+    // Сигнатура НЕЗМІННА — StopFake / нафта / тривоги-фолбек / GS отримують
+    // розумний вибір проксі автоматично.
+    async function fetchViaProxy(targetUrl, timeoutMs = 9000, validate = null) {
+        const now = Date.now();
+        const alive = PROXY_POOL.filter(p => _proxyAlive(p, now));
+        const pool = alive.length ? alive : PROXY_POOL;   // всі в cooldown → все одно пробуємо
+        // Пріоритет: переможець минулого разу для цього таргета → рейтинг → решта
+        const winnerName = _proxyLastWinner[targetUrl];
+        const ordered = [
+            ...pool.filter(p => p.name === winnerName),
+            ...pool.filter(p => p.name !== winnerName).sort((a, b) => _proxyScore(b) - _proxyScore(a))
+        ];
+        // Хвиля 1: 2 найкращі; Хвиля 2: ще 2; Хвиля 3: решта паралельно
+        const waves = [ordered.slice(0, 2), ordered.slice(2, 4), ordered.slice(4)];
+        for (let wi = 0; wi < waves.length; wi++) {
+            const wave = waves[wi];
+            if (!wave.length) continue;
+            try {
+                const text = await Promise.any(wave.map(async p => {
+                    const t = await _proxyAttempt(p, targetUrl, timeoutMs, validate);
+                    _proxyLastWinner[targetUrl] = p.name;
+                    return t;
+                }));
+                return text;
+            } catch (e) { /* хвиля програла — наступна */ }
+            if (waves[wi + 1] && waves[wi + 1].length) await new Promise(r => setTimeout(r, 400));
+        }
+        throw new Error('усі проксі вичерпано (' + ordered.length + ' спроб)');
     }
 
     /* ---------- 8. HISTORY (localStorage) ---------- */
@@ -5298,16 +5361,15 @@ __PATHS__
 
     /* ---------- 10. DATA FETCHERS ---------- */
 
-    /* v5.7 NEWS PIPELINE FIX (10.2026)
-       ПРИЧИНА АВАРІЇ «ДЖЕРЕЛА ONLINE 0/28»: api.rss2json.com віддає HTTP 403
-       (Cloudflare "Just a moment") на ВСІ запити — сервіс закрив безкоштовний API.
-       Один фолбек на allorigins не витягував → 0/28 → мертві модулі 1/3/6/7/6Б/6Г.
-       НОВА АРХІТЕКТУРА (3 незалежні рівні):
-         1) ПРЯМИЙ XML через гонку 7 CORS-проксі (Promise.any — перший валідний);
-         2) rss2json — фолбек (якщо пом'якшать Cloudflare);
-         3) GDELT DOC API — CORS-native бекбон БЕЗ проксі (Access-Control-Allow-Origin: *),
-            + STALE-кеш новин у localStorage (до 6 год) — модулі рахують навіть
-            коли всі стрічки впали одночасно.                                   */
+    /* v5.9 NEWS PIPELINE FIX (10.2026, третя ітерація «0/28»)
+       Лог користувача: ВСІ проксі мертві (429/таймаут) з домашньої IP теж,
+       GDELT мовчки повертав порожньо. РІШЕННЯ — новини БЕЗ проксі:
+         1) DIRECT: CORS-стрічки (inforesist ACO:*);
+         2) GDELT DOC API (75 укр. заголовків, 3 ретраї, кеш 15 хв, повне логування);
+         3) МАСТОДОН 4 теги (ACO:* — доведено працює); 4) REDDIT r/ukraine+ukraina;
+         5) ВІКІНОВИНИ UK (origin=*); 6) проксі-хвилі для 28 RSS (як оживуть — підхопляться);
+         7) кеш стрічок TTL 30 хв + бюджет 10/цикл; 8) STALE 24 год.
+       ЛІЧИЛЬНИК: RSS + унікальні GDELT-домени (реальні укр. сайти) до 28.   */
 
     // Shared RSS/Atom XML parser (proxy-race path) — RSS <item> + Atom <entry>
     function parseRSSXML(xml) {
@@ -5346,11 +5408,18 @@ __PATHS__
         '&mode=artlist&maxrecords=75&format=json&timespan=3h';
 
     async function fetchGDELTNews() {
-        // v5.7: 1 ретрай через 6.5с — GDELT лімітує 1 запит/5с (спільні IP часто
-        // ловлять 429 на першому виклику; браузер користувача — рідко)
-        for (let attemptN = 0; attemptN < 2; attemptN++) {
+        // v5.9: кеш 15 хв + ДЕТАЛЬНЕ ЛОГУВАННЯ (в v5.8 падіння GDELT було мовчазним!)
+        try {
+            const c = JSON.parse(localStorage.getItem('_gdelt_cache') || 'null');
+            if (c && Array.isArray(c.items) && c.items.length && (Date.now() - c.ts) < 15 * 60 * 1000) {
+                log(`GDELT: кеш ${c.items.length} заголовків (${Math.round((Date.now() - c.ts) / 60000)} хв)`, 'GDELT');
+                return c.items;
+            }
+        } catch (_) {}
+        // GDELT лімітує 1 запит/5с і тимчасово ріже IP після 429 → 3 спроби з паузами 7с/15с
+        for (let attemptN = 0; attemptN < 3; attemptN++) {
             try {
-                if (attemptN > 0) await new Promise(r => setTimeout(r, 6500));
+                if (attemptN > 0) await new Promise(r => setTimeout(r, attemptN === 1 ? 7000 : 15000));
                 const d = await fetchJSON(GDELT_URL, 12000);
                 const arts = (d && Array.isArray(d.articles)) ? d.articles : [];
                 const items = arts
@@ -5361,20 +5430,108 @@ __PATHS__
                         text: (a.title || '') + ' ' + (a.url || '')
                     }))
                     .filter(it => it.title && it.title.length > 8);
-                if (items.length || attemptN > 0) return items;
-                // порожньо з першої спроби — шанс на ретрай
-            } catch (e) { /* 429 / таймаут — ретрай */ }
+                if (items.length) {
+                    try { localStorage.setItem('_gdelt_cache', JSON.stringify({ items: items.slice(0, 75), ts: Date.now() })); } catch (_) {}
+                    log(`GDELT: +${items.length} укр. заголовків з ${new Set(items.map(i => i.src)).size} доменів (без проксі)`, 'GDELT');
+                    return items;
+                }
+                log(`GDELT: відповідь без статей (спроба ${attemptN + 1}/3)`, 'GDELT');
+            } catch (e) {
+                log(`GDELT: ${e.name === 'AbortError' ? 'таймаут' : e.message} (спроба ${attemptN + 1}/3)`, 'GDELT');
+            }
         }
+        // v5.8: навіть при падінні GDELT — свіжий кеш (до 6 год) замість нуля
+        try {
+            const c = JSON.parse(localStorage.getItem('_gdelt_cache') || 'null');
+            if (c && Array.isArray(c.items) && c.items.length && (Date.now() - c.ts) < 6 * 3600 * 1000) {
+                log(`GDELT: фолбек на кеш ${c.items.length} заголовків`, 'GDELT');
+                return c.items;
+            }
+        } catch (_) {}
+        log('GDELT: недоступний (без даних)', 'GDELT');
         return [];
     }
 
-    // v5.7: Fast RSS fetch — ПРОКСІ-ГОНКА primary, rss2json fallback
-    async function fetchRSSFast(rss2jsonUrl) {
-        const rssUrl = new URL(rss2jsonUrl).searchParams.get('rss_url');
+    // ======================================================================
+    // v5.9: CORS-NATIVE NEWS BACKBONES — новини БЕЗ проксі взагалі.
+    // Діагностика 10.2026 (лог користувача): ВСІ публічні CORS-проксі
+    // мертві (429/таймаут), живі тільки прямі CORS-ендпоінти. Тому новинний
+    // пайплайн більше НЕ залежить від проксі:
+    //   • Мастодон — ACO:*, ПРОВЕДЕНО працює (SOCIO тягне 100 постів);
+    //   • Reddit r/ukraine + r/ukraina — CORS на .json з residential IP;
+    //   • Вікіновини UK — MediaWiki API з origin=* (CORS гарантований).
+    // ======================================================================
+    const MASTO_NEWS_TAGS = ['ukraine', 'новини', 'війна', 'україна'];
+    async function fetchMastodonNews() {
+        const items = [];
+        for (const tag of MASTO_NEWS_TAGS) {
+            try {
+                const posts = await fetchJSON('https://mastodon.social/api/v1/timelines/tag/' + encodeURIComponent(tag) + '?limit=40', 9000);
+                if (!Array.isArray(posts)) continue;
+                for (const p of posts) {
+                    let text = String(p.content || '').replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+                    if (text.length < 30) continue;
+                    const acct = String((p.account && p.account.acct) || 'masto').split('@')[0];
+                    items.push({ src: 'МСТ·' + acct, tag: 'general', title: text.slice(0, 180), text: text.slice(0, 400) });
+                }
+            } catch (e) { /* тег не критичний — тихо */ }
+        }
+        const seen = new Set();
+        const uniq = items.filter(it => { const k = it.title.slice(0, 80); if (seen.has(k)) return false; seen.add(k); return true; });
+        if (uniq.length) log(`Мастодон: +${uniq.length} постів (4 теги, без проксі)`, 'MSTO');
+        return uniq.slice(0, 80);
+    }
+
+    async function fetchRedditNews() {
+        const subs = [['ukraine', 'general'], ['ukraina', 'war']];
+        const items = [];
+        for (const [sub, tag] of subs) {
+            try {
+                const d = await fetchJSON('https://www.reddit.com/r/' + sub + '/new.json?limit=50', 9000);
+                const kids = (d && d.data && Array.isArray(d.data.children)) ? d.data.children : [];
+                for (const k of kids) {
+                    const t = String((k.data && k.data.title) || '');
+                    if (t.length < 15) continue;
+                    items.push({ src: 'Reddit·r/' + sub, tag, title: t, text: t + ' ' + String((k.data && k.data.selftext) || '').slice(0, 150) });
+                }
+            } catch (e) { /* Reddit блокує частину IP — тихо */ }
+        }
+        if (items.length) log(`Reddit: +${items.length} заголовків (r/ukraine + r/ukraina)`, 'RDT');
+        return items.slice(0, 80);
+    }
+
+    async function fetchWikinewsUA() {
+        try {
+            const d = await fetchJSON('https://uk.wikinews.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent('україна') + '&srlimit=20&format=json&origin=*', 9000);
+            const hits = (d && d.query && Array.isArray(d.query.search)) ? d.query.search : [];
+            const items = hits
+                .map(h => String(h.title || ''))
+                .filter(t => t.length > 15)
+                .map(t => ({ src: 'Вікіновини', tag: 'general', title: t, text: t }));
+            if (items.length) log(`Вікіновини: +${items.length} заголовків (без проксі)`, 'ВІКІ');
+            return items;
+        } catch (e) { return []; }
+    }
+
+    // v5.8: Fast RSS fetch — DIRECT (CORS-стрічки) → ПРОКСІ-хвилі → rss2json
+    async function fetchRSSFast(srcObj) {
+        const rssUrl = new URL(srcObj.url).searchParams.get('rss_url');
         if (!rssUrl) return null;
         STATE.apiCalls++;
 
-        // 1) PRIMARY: прямий XML через гонку 7 CORS-проксі (rss2json тепер 403 для всіх)
+        // 0) DIRECT: частина стрічок сама віддає CORS (inforesist — ACO:*) —
+        //    найнадійніший шлях, взагалі без навантаження на проксі
+        if (srcObj.direct) {
+            try {
+                const xml = await fetchJSON(rssUrl, 7000);
+                if (xml && (xml.includes('<item') || xml.includes('<entry'))) {
+                    const items = parseRSSXML(xml);
+                    if (items.length) return { status: 'ok', items };
+                }
+            } catch (e) { /* CORS/мережа — далі проксі */ }
+        }
+
+        // 1) PRIMARY: прямий XML через хвильову гонку розумних проксі
         try {
             const xml = await fetchViaProxy(rssUrl, 9000,
                 t => t && (t.includes('<item') || t.includes('<entry')));
@@ -5385,75 +5542,156 @@ __PATHS__
 
         // 2) FALLBACK: rss2json (Cloudflare може пропустити браузер з чистою репутацією)
         try {
-            const v = await fetchJSON(rss2jsonUrl, 8000);
+            const v = await fetchJSON(srcObj.url, 8000);
             if (v && v.items && v.items.length) return v;
         } catch (e) {}
         return null;
     }
 
-    async function fetchAllRSS() {
-        // BATCHED: 28 sources in batches of 8 (be gentle with proxy rate limits)
-        const BATCH_SIZE = 8;
-        const okSources = [];
-        const allItems = [];
-        // v5.7: GDELT CORS-бекбон стартує ПАРАЛЕЛЬНО (без проксі, 1 запит/5хв)
-        const gdeltPromise = fetchGDELTNews();
+    // v5.8: кеш ОКРЕМИХ стрічок (TTL 30 хв) — стрічка в кеші = «online»,
+    // фетчиться тільки коли протухла. Бюджет циклу захищає проксі від 429.
+    const _FEED_CACHE_KEY = '_rss_feed_cache_v58';
+    const _FEED_TTL = 30 * 60 * 1000;            // свіжість стрічки (30 хв)
+    const _FEEDS_PER_CYCLE = 10;                 // бюджет фетчів за цикл
+    const _FEEDS_FIRST_CYCLE = 16;               // холодний старт: ширший бюджет
+    let _feedCache = (() => {
+        try { return JSON.parse(localStorage.getItem(_FEED_CACHE_KEY) || '{}'); } catch (_) { return {}; }
+    })();   // { feedName: { items: [{src,tag,title,text}], ts } }
+    let _firstRssCycleDone = false;
+    function _saveFeedCache() {
+        try { localStorage.setItem(_FEED_CACHE_KEY, JSON.stringify(_feedCache)); } catch (_) {}
+    }
 
-        // IMMEDIATELY show total so user sees "0/28" instead of "0/0"
+    async function fetchAllRSS() {
         STATE.sourcesTotal = RSS_SOURCES.length;
-        $('sources-online').innerText = `0/${STATE.sourcesTotal}`;
+        $('sources-online').innerText = `${STATE.sourcesOk || 0}/${STATE.sourcesTotal}`;
+        // v5.9: ВСІ CORS-бекбони стартують ПАРАЛЕЛЬНО (без проксі!)
+        const gdeltPromise = fetchGDELTNews();
+        const mastoPromise = fetchMastodonNews();
+        const redditPromise = fetchRedditNews();
+        const wikinewsPromise = fetchWikinewsUA();
+
+        // v5.9: ПРОГРЕСИВНЕ оновлення лічильника — НЕ чекаємо повільний GDELT
+        // (3 ретраї ≈ 60с), лічильник росте одразу по мірі надходження даних.
+        const _prog = { rss: 0, rssNames: [], gd: [], mst: [], rdt: [], wkn: [] };
+        const _progUpdate = () => {
+            const uniqSrc = new Set([..._prog.rssNames, ..._prog.gd, ..._prog.mst, ..._prog.rdt, ..._prog.wkn]);
+            const n = Math.min(RSS_SOURCES.length, uniqSrc.size);
+            const b = [];
+            if (_prog.gd.length) b.push(`GDELT ${_prog.gd.length}`);
+            if (_prog.mst.length) b.push(`МСТ ${_prog.mst.length}`);
+            if (_prog.rdt.length) b.push(`RDT ${_prog.rdt.length}`);
+            if (_prog.wkn.length) b.push(`ВІКІ ${_prog.wkn.length}`);
+            STATE.sourcesOk = n;
+            $('sources-online').innerText = `${n}/${STATE.sourcesTotal}${b.length ? ' · ' + b.join(' · ') : ''}`;
+        };
+        gdeltPromise.then(g => { _prog.gd = [...new Set(g.map(it => it.src))]; _progUpdate(); }).catch(() => {});
+        mastoPromise.then(m => { _prog.mst = [...new Set(m.map(it => it.src))]; _progUpdate(); }).catch(() => {});
+        redditPromise.then(r => { _prog.rdt = [...new Set(r.map(it => it.src))]; _progUpdate(); }).catch(() => {});
+        wikinewsPromise.then(w => { _prog.wkn = w.length ? ['Вікіновини'] : []; _progUpdate(); }).catch(() => {});
 
         const t0 = performance.now();
-        log(`RSS: batched ${RSS_SOURCES.length} джерел (по ${BATCH_SIZE}, проксі-гонка → rss2json) + GDELT...`, 'RSS');
+        // Класифікація стрічок: свіжі з кешу vs застарілі (потребують фетчу)
+        const freshNames = [], staleNames = [];
+        const now = Date.now();
+        for (const s of RSS_SOURCES) {
+            const c = _feedCache[s.name];
+            (c && Array.isArray(c.items) && c.items.length && (now - c.ts) < _FEED_TTL ? freshNames : staleNames).push(s);
+        }
+        // Бюджет циклу: найстаріші застарілі — першими
+        staleNames.sort((a, b) => ((_feedCache[a.name] || {}).ts || 0) - ((_feedCache[b.name] || {}).ts || 0));
+        const budget = _firstRssCycleDone ? _FEEDS_PER_CYCLE : _FEEDS_FIRST_CYCLE;
+        const toFetch = staleNames.slice(0, budget);
+        const deferred = staleNames.length - toFetch.length;
 
-        // Process in batches to avoid rate limiting
-        const allResults = [];
-        for (let i = 0; i < RSS_SOURCES.length; i += BATCH_SIZE) {
-            const batch = RSS_SOURCES.slice(i, i + BATCH_SIZE);
-            const batchResults = await Promise.allSettled(
-                batch.map(s => fetchRSSFast(s.url))
-            );
-            allResults.push(...batchResults);
-            // Small delay between batches to respect rate limits
-            if (i + BATCH_SIZE < RSS_SOURCES.length) {
-                await new Promise(r => setTimeout(r, 1000));
+        log(`RSS: із кешу ${freshNames.length}, до оновлення ${toFetch.length}${deferred ? ` (черта ${deferred} — наступні цикли)` : ''} · проксі-хвилі + GDELT`, 'RSS');
+
+        // Хвильовий запуск зі stagger 350мс — рівномірне навантаження на проксі
+        const fetchResults = await Promise.allSettled(toFetch.map(async (s, i) => {
+            if (i) await new Promise(r => setTimeout(r, 350 * Math.min(i, 8)));   // stagger ≤2.8с
+            return { src: s, res: await fetchRSSFast(s) };
+        }));
+
+        // Live-результати → у кеш стрічок
+        const okLive = [];
+        const failedFeeds = [];
+        for (const r of fetchResults) {
+            if (r.status !== 'fulfilled') continue;
+            const { src, res } = r.value;
+            if (res && res.items && res.items.length) {
+                okLive.push(src.name);
+                _feedCache[src.name] = {
+                    items: res.items.slice(0, 12).map(it => ({
+                        src: src.name, tag: src.tag || 'general',
+                        title: it.title || '', text: (it.title || '') + ' ' + (it.description || '')
+                    })),
+                    ts: Date.now()
+                };
+            } else {
+                failedFeeds.push(src.name);
             }
         }
+        // v5.9: агрснований лог невдач (замість 15 рядків спаму)
+        if (failedFeeds.length) {
+            log(`Недоступні (${failedFeeds.length}): ${failedFeeds.slice(0, 6).join(', ')}${failedFeeds.length > 6 ? ` +ще ${failedFeeds.length - 6}` : ''}`, 'RSS');
+        }
+        _firstRssCycleDone = true;
+        _saveFeedCache();
 
+        // Збір айтемів: live + свіжий кеш (стрічки з кешу теж «online»)
+        const allItems = [];
+        const okSources = [];
+        for (const s of RSS_SOURCES) {
+            const c = _feedCache[s.name];
+            if (c && Array.isArray(c.items) && c.items.length && (Date.now() - c.ts) < _FEED_TTL) {
+                okSources.push(s.name);
+                c.items.forEach(it => allItems.push(it));
+            }
+        }
+        const liveCount = okLive.length;
+        // v5.9: прогресивний лічильник — RSS-результати теж одразу на панель
+        _prog.rssNames = okSources.slice();
+        _progUpdate();
+        const cacheCount = okSources.length - liveCount;
         const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
 
-        allResults.forEach((r, i) => {
-            const srcName = RSS_SOURCES[i].name;
-            const srcTag = RSS_SOURCES[i].tag || 'general';
-            const data = r.status === 'fulfilled' ? r.value : null;
-            if (data && data.items && data.items.length) {
-                okSources.push(srcName);
-                data.items.slice(0, 25).forEach(it => {
-                    const text = (it.title || '') + ' ' + (it.description || '');
-                    allItems.push({ src: srcName, tag: srcTag, title: it.title || '', text });
-                });
-            } else {
-                log(`Джерело недоступне: ${srcName}`, 'RSS');
-            }
-        });
-
-        // v5.7: зливаємо GDELT-заголовки (CORS-бекбон працює навіть коли проксі падають)
-        const gdItems = await gdeltPromise;
+        // v5.9: зливаємо ВСІ CORS-бекбони (працюють навіть коли проксі мертві)
+        const [gdItems, mstItems, rdtItems, wknItems] = await Promise.all([gdeltPromise, mastoPromise, redditPromise, wikinewsPromise]);
         gdItems.forEach(it => allItems.push(it));
-        if (gdItems.length) log(`GDELT: +${gdItems.length} укр. заголовків (без проксі)`, 'GDELT');
+        mstItems.forEach(it => allItems.push(it));
+        rdtItems.forEach(it => allItems.push(it));
+        wknItems.forEach(it => allItems.push(it));
 
-        STATE.sourcesTotal = RSS_SOURCES.length;
-        STATE.sourcesOk = okSources.length;
-        let onlineTxt = `${STATE.sourcesOk}/${STATE.sourcesTotal}`;
-        if (!okSources.length && gdItems.length) onlineTxt += ' +GDELT';
+        // v5.9 ЛІЧИЛЬНИК: усі УНІКАЛЬНІ джерела потоку новин — RSS-стрічки +
+        // GDELT-домени (реальні укр. сайти: pravda.com.ua, tsn.ua, unian.net...)
+        // + автори Мастодону + Reddit-саби + Вікіновини, разом до 28.
+        const gdDomains = [...new Set(gdItems.map(it => it.src))];
+        const backboneSources = [...new Set([
+            ...gdDomains,
+            ...mstItems.map(it => it.src),
+            ...rdtItems.map(it => it.src),
+            ...(wknItems.length ? ['Вікіновини'] : [])
+        ])];
+        const totalOnline = Math.min(RSS_SOURCES.length, okSources.length + backboneSources.length);
+        STATE.sourcesOk = totalOnline;
+        let onlineTxt = `${totalOnline}/${STATE.sourcesTotal}`;
+        const badges = [];
+        if (gdItems.length) badges.push(`GDELT ${gdItems.length}`);
+        if (mstItems.length) badges.push(`МСТ ${mstItems.length}`);
+        if (rdtItems.length) badges.push(`RDT ${rdtItems.length}`);
+        if (wknItems.length) badges.push(`ВІКІ ${wknItems.length}`);
+        if (badges.length) onlineTxt += ' · ' + badges.join(' · ');
+        else if (okSources.length && !liveCount) onlineTxt += ' · кеш';
         $('sources-online').innerText = onlineTxt;
-        $('src-attention').innerText = okSources.length ? `${okSources.length} live` : (gdItems.length ? 'GDELT' : 'dead');
-        $('src-attention').className = 'src-ind ' + ((okSources.length || gdItems.length) ? 'live' : 'dead');
+        $('src-attention').innerText = totalOnline ? `${totalOnline} live` : 'dead';
+        $('src-attention').className = 'src-ind ' + (totalOnline ? 'live' : 'dead');
+
+        log(`НОВИНИ: ${totalOnline}/${STATE.sourcesTotal} джерел (RSS live ${liveCount} + кеш ${cacheCount} + бекбон-джерела ${backboneSources.length}: GDELT-домени ${gdDomains.length}, МСТ ${mstItems.length}, RDT ${rdtItems.length}, ВІКІ ${wknItems.length}) | за ${elapsed}с`, 'RSS');
 
         if (!allItems.length) {
-            // v5.7: повне падіння стрічок → STALE-кеш новин (до 6 год) —
-            // модулі 1/3/6/7/6Б продовжують рахувати на останніх валідних даних.
-            const stale = _loadNewsCache(6 * 3600 * 1000);
+            // Повне падіння стрічок → STALE-кеш новин (до 24 год) —
+            // модулі 1/3/6/7/6Б/6Г продовжують рахувати на останніх валідних даних.
+            const stale = _loadNewsCache(24 * 3600 * 1000);
             if (stale) {
                 const ageMin = Math.round((Date.now() - stale.ts) / 60000);
                 log(`RSS: всі джерела впали. STALE-режим: ${stale.items.length} кешованих заголовків (${ageMin} хв тому)`, 'RSS');
@@ -5470,7 +5708,9 @@ __PATHS__
         // v5.7: зберігаємо кеш новин для STALE-режиму
         try { localStorage.setItem('_news_cache', JSON.stringify({ items: allItems.slice(0, 400), ts: Date.now() })); } catch (_) {}
 
-        processNewsItems(allItems, okSources.length, okSources);
+        // v5.9: у аналітику передаємо РОЗШИРЕНІ джерела (RSS + бекбони)
+        const okNamesExt = [...okSources, ...backboneSources];
+        processNewsItems(allItems, okNamesExt.length, okNamesExt);
     }
 
     // v5.7: завантаження останнього валідного кешу новин
@@ -5601,7 +5841,10 @@ __PATHS__
         STATE.tension.index = clamp(conflictCount * 1.2 + polarityAbs * 0.6, 5, 100);
         STATE.tension.split = clamp(45 + conflictCount * 1.2, 40, 92);
 
-        log(`RSS OK: ${(okNames && okNames.length) ? okNames.join(', ') : (okCount ? okCount + ' джерел' : 'STALE-кеш')} | ${allItems.length} заголовків | sentiment=${avgSent.toFixed(2)}`, 'RSS');
+        const _okNamesStr = (okNames && okNames.length)
+            ? okNames.slice(0, 12).join(', ') + (okNames.length > 12 ? ` +ще ${okNames.length - 12}` : '')
+            : (okCount ? okCount + ' джерел' : 'STALE-кеш');
+        log(`НОВИНИ OK: ${_okNamesStr} | ${allItems.length} заголовків | sentiment=${avgSent.toFixed(2)}`, 'RSS');
 
         // Export for socio module
         _lastRSSItems = allItems.slice();
@@ -5625,6 +5868,19 @@ __PATHS__
         if (sourceDiversity < 0.5) {
             log(`Низька різноманітність джерел: ${Math.round(sourceDiversity*100)}% доступні`, 'RSS-ANALYTICS');
         }
+
+        // v5.10 AUDIT: «на що йдуть новини» — повний ланцюг новини→показники одним рядком.
+        // Дає відповідь: новини → емоції/страх/надія → напруга → увага → війна → гео → області → свідомість.
+        const mentionedOblasts = Object.values(STATE.oblasts).filter(o => o && o.mentions > 0).length;
+        const intPreview = clamp(STATE.war.eventCount * 2.8, 0, 62) +
+                           clamp((STATE.alerts.activeCount / Math.max(1, STATE.alerts.totalRegions)) * 100 * 0.4, 0, 38);
+        log(`ЯДРО: ${allItems.length} новин → ` +
+            `ЕМОЦІЇ(gei ${STATE.emotion.index.toFixed(0)} · fear ${STATE.emotion.fear.toFixed(0)} · hope ${STATE.emotion.hope.toFixed(0)}) → ` +
+            `НАПРУГА ${STATE.tension.index.toFixed(1)} (конфлікт.сигнали ${conflictCount} · поляризація ${Math.round(STATE.polarity || 0)}) → ` +
+            `УВАГА(focus ${STATE.attention.focus.toFixed(0)} · volat ${STATE.attention.volatility.toFixed(0)} · трендів ${STATE.attention.trends.length}) → ` +
+            `ВІЙНА(подій ${STATE.war.eventCount} · інтенсивність ~${intPreview.toFixed(0)}%) → ` +
+            `ГЕО(вогнищ ${STATE.tension.geo.length}) → ОБЛАСТІ(${mentionedOblasts} зі згадками · ${STATE.war.sources.length} war-джерел) → ` +
+            `СВІДОМІСТЬ(prop ${STATE.consciousness.propagation.toFixed(0)} · depth ${STATE.consciousness.depth.toFixed(0)})`, 'CORE');
 
         // Alerts
         if (STATE.emotion.fear > 65) showAlert(`ВИСОКА ЩІЛЬНІСТЬ СТРАХУ (${STATE.emotion.fear.toFixed(0)}%)`, 'critical');
@@ -6456,79 +6712,135 @@ __PATHS__
     /* ---------- 10.7b ГЕНЕРАЛЬНИЙ ШТАБ ЗСУ (Telegram @GeneralStaffZSU) ---------- */
     // Parses official Ukrainian General Staff daily operational summaries.
     // Extracts: combat engagements, aviation strikes, KAB, drones, shellings, MLRS,
-    // and overnight air defense shot-down reports.
+    // overnight air defense shot-down reports + DAILY ENEMY LOSSES (v5.10).
+    // v5.10 FIX (картка 6В була DEAD): єдине джерело t.me через проксі падало разом
+    // з усіма проксі. Тепер 3 цілі по черзі (кожна через fetchViaProxy): t.me HTML +
+    // 2 RSSHub TG-мости (rsshub.ktachibana.party / rsshub.rssforever.com) — перевірено
+    // 22.10.2026: обидва мости віддають повні зведення ГШ (бойові зіткнення, ЗБИТО,
+    // «Загальні бойові втрати противника»). STALE-кеш розширено 24г → 72г.
     const GS_TG_URL = 'https://t.me/s/GeneralStaffZSU';
+    const GS_RSSHUB_1 = 'https://rsshub.ktachibana.party/telegram/channel/GeneralStaffZSU';
+    const GS_RSSHUB_2 = 'https://rsshub.rssforever.com/telegram/channel/GeneralStaffZSU';
+    const _gsValidateXML = t => t.includes('<item') && (t.includes('бойов') || t.includes('ЗБИТО') || t.includes('Оперативна'));
+    const GS_PATHS = [
+        { name: 't.me/GeneralStaffZSU', url: GS_TG_URL,    kind: 'html', validate: t => t.length > 5000 && t.includes('tgme_widget_message') },
+        { name: 'rsshub.ktachibana',    url: GS_RSSHUB_1,  kind: 'xml',  validate: _gsValidateXML },
+        { name: 'rsshub.rssforever',    url: GS_RSSHUB_2,  kind: 'xml',  validate: _gsValidateXML }
+    ];
+
+    // v5.10: ДОБОВІ втрати ворога з тексту зведення. ГШ пише їх ТЕКСТОМ в оперативній
+    // інформації («втрати російських загарбників склали 2250 осіб. Також знешкоджено
+    // 3 танки, 8 бойових броньованих машин, 44 артилерійські системи, … 1750 безпілотних…»).
+    // (Кумулятивні «Загальні бойові втрати з 24.02.22» ГШ публікує лише картинкою — тексту немає.)
+    function _gsParseDailyLosses(text) {
+        const num = s => parseInt(String(s).replace(/[\s\u00a0\u202f]/g, ''), 10);
+        try {
+            const out = {};
+            let m;
+            m = text.match(/втрати\s+(?:російських\s+загарбників|противника|окупантів)\s+склали\s+(\d[\d\s\u00a0\u202f]{0,10})\s*осіб/i);
+            if (m) out.personnel = num(m[1]);
+            if (!out.personnel || Number.isNaN(out.personnel)) return null;  // без осіб блок неповний
+            m = text.match(/знешкоджено\s+(\d[\d\s\u00a0\u202f]{0,10})\s*танк/i);              if (m) out.tanks = num(m[1]);
+            m = text.match(/(\d[\d\s\u00a0\u202f]{0,10})\s*бойових\s+броньованих/i);        if (m) out.afv = num(m[1]);
+            m = text.match(/(\d[\d\s\u00a0\u202f]{0,10})\s*артилерійськ/i);                    if (m) out.artillery = num(m[1]);
+            m = text.match(/(\d[\d\s\u00a0\u202f]{0,10})\s*безпілотн/i);                       if (m) out.uav = num(m[1]);
+            m = text.match(/(\d[\d\s\u00a0\u202f]{0,10})\s*одиниц[а-яіїєґ]*\s*автомобільної/i); if (m) out.vehicles = num(m[1]);
+            return out;
+        } catch (_) { return null; }
+    }
+
+    // v5.10: спільний аналіз ОДНОГО повідомлення ГШ (для t.me-HTML і RSS-XML парсерів)
+    function _gsConsumeMessage(text, acc) {
+        if (!text) return;
+        // Operational summary: "Оперативна інформація станом на HH:MM DD.MM.YYYY"
+        if (text.startsWith('Оперативна інформація') || text.includes('бойових зіткнення') || text.includes('бойове зіткнення')) {
+            const timeMatch = text.match(/станом на (\d{1,2}:\d{2})\s+(\d{2}\.\d{2}\.\d{4})/);
+            const reportTime = timeMatch ? timeMatch[1] : null;
+            const reportDate = timeMatch ? timeMatch[2] : null;
+
+            // "зафіксовано N бойове зіткнення" or "відбулося N бойових зіткнень"
+            // NOTE: \w in JS regex doesn't match Cyrillic — use [а-яєіїґ] explicitly
+            const combat = text.match(/(\d+)\s+бойов[а-яєіїґ]+\s+зіткнен/);
+            const aviation = text.match(/(\d+)\s+авіаційн[а-яєіїґ]+\s+удар[а-яєіїґ]*/);
+            // "N керованих авіабомб" or "N керовану авіабомбу"
+            const kab = text.match(/(\d+)\s+керован[а-яєіїґ]+\s+авіа[а-яєіїґ]*/);
+            const drones = text.match(/(\d+)\s+дрон[а-яєіїґ]*-?\s*камікадзе/);
+            // "N обстрілів" or "N обстріли"
+            const shellings = text.match(/(\d+)\s+обстріл[а-яєіїґ]*/);
+            // "зокрема N - із реактивних" or "N з реактивних систем"
+            const mlrs = text.match(/зокрема\s+(\d+)\s*[-–]?\s*із\s+реактивн/) ||
+                         text.match(/(\d+)\s+із\s+застосуванням\s+реактивн/);
+
+            const op = {
+                reportTime, reportDate,
+                combat: combat ? parseInt(combat[1]) : null,
+                aviation: aviation ? parseInt(aviation[1]) : null,
+                kab: kab ? parseInt(kab[1]) : null,
+                drones: drones ? parseInt(drones[1]) : null,
+                shellings: shellings ? parseInt(shellings[1]) : null,
+                mlrs: mlrs ? parseInt(mlrs[1]) : null,
+                raw: text.slice(0, 400)
+            };
+            // v5.10: добові втрати ворога (текстовий блок зведення)
+            const dloss = _gsParseDailyLosses(text);
+            if (dloss) op.dailyLoss = dloss;
+            // Take the latest by full datetime (DD.MM.YYYY HH:MM → sortable)
+            const sortKey = op.reportDate && op.reportTime
+                ? op.reportDate.split('.').reverse().join('.') + ' ' + op.reportTime
+                : '';
+            op._sortKey = sortKey;
+            if (!acc.op || (sortKey && sortKey > (acc.op._sortKey || ''))) {
+                acc.op = op;
+            }
+        }
+
+        // Air defense report: "ЗБИТО/ПОДАВЛЕНО N БпЛА" + "атакував N ударними БпЛА"
+        if ((text.includes('ЗБИТО') || text.includes('збито/подавлено')) && text.includes('БпЛА')) {
+            const attacked = text.match(/атакував\s+(\d+)\s+ударн/);
+            // "збито/подавлено N ворожих БпЛА" — case-insensitive
+            const shotDown = text.match(/збито[\/\s]+подавлено\s+(\d+)/i) ||
+                            text.match(/ЗБИТО[\/\s]+ПОДАВЛЕНО\s+(\d+)/);
+            const ad = {
+                dronesAttacked: attacked ? parseInt(attacked[1]) : null,
+                dronesShotDown: shotDown ? parseInt(shotDown[1]) : null,
+                raw: text.slice(0, 300)
+            };
+            if (ad.dronesShotDown != null && !acc.ad) acc.ad = ad;
+        }
+    }
 
     function _parseGeneralStaff(html) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const msgs = doc.querySelectorAll('div.tgme_widget_message_text');
         if (!msgs.length) throw new Error('no GS messages');
-
-        let latestOperational = null;
-        let latestAirDefense = null;
-
+        const acc = { op: null, ad: null };
         msgs.forEach(el => {
             const text = (el.innerText || el.textContent || '').trim();
-            if (!text) return;
-
-            // Operational summary: "Оперативна інформація станом на HH:MM DD.MM.YYYY"
-            if (text.startsWith('Оперативна інформація') || text.includes('бойових зіткнення') || text.includes('бойове зіткнення')) {
-                const timeMatch = text.match(/станом на (\d{1,2}:\d{2})\s+(\d{2}\.\d{2}\.\d{4})/);
-                const reportTime = timeMatch ? timeMatch[1] : null;
-                const reportDate = timeMatch ? timeMatch[2] : null;
-
-                // "зафіксовано N бойове зіткнення" or "відбулося N бойових зіткнень"
-                // NOTE: \w in JS regex doesn't match Cyrillic — use [а-яєіїґ] explicitly
-                const combat = text.match(/(\d+)\s+бойов[а-яєіїґ]+\s+зіткнен/);
-                const aviation = text.match(/(\d+)\s+авіаційн[а-яєіїґ]+\s+удар[а-яєіїґ]*/);
-                // "N керованих авіабомб" or "N керовану авіабомбу"
-                const kab = text.match(/(\d+)\s+керован[а-яєіїґ]+\s+авіа[а-яєіїґ]*/);
-                const drones = text.match(/(\d+)\s+дрон[а-яєіїґ]*-?\s*камікадзе/);
-                // "N обстрілів" or "N обстріли"
-                const shellings = text.match(/(\d+)\s+обстріл[а-яєіїґ]*/);
-                // "зокрема N - із реактивних" or "N з реактивних систем"
-                const mlrs = text.match(/зокрема\s+(\d+)\s*[-–]?\s*із\s+реактивн/) ||
-                             text.match(/(\d+)\s+із\s+застосуванням\s+реактивн/);
-
-                const op = {
-                    reportTime, reportDate,
-                    combat: combat ? parseInt(combat[1]) : null,
-                    aviation: aviation ? parseInt(aviation[1]) : null,
-                    kab: kab ? parseInt(kab[1]) : null,
-                    drones: drones ? parseInt(drones[1]) : null,
-                    shellings: shellings ? parseInt(shellings[1]) : null,
-                    mlrs: mlrs ? parseInt(mlrs[1]) : null,
-                    raw: text.slice(0, 400)
-                };
-                // Take the latest by full datetime (DD.MM.YYYY HH:MM → sortable)
-                const sortKey = op.reportDate && op.reportTime
-                    ? op.reportDate.split('.').reverse().join('.') + ' ' + op.reportTime
-                    : '';
-                op._sortKey = sortKey;
-                if (!latestOperational || (sortKey && sortKey > (latestOperational._sortKey || ''))) {
-                    latestOperational = op;
-                }
-            }
-
-            // Air defense report: "ЗБИТО/ПОДАВЛЕНО N БпЛА" + "атакував N ударними БпЛА"
-            if ((text.includes('ЗБИТО') || text.includes('збито/подавлено')) && text.includes('БпЛА')) {
-                const attacked = text.match(/атакував\s+(\d+)\s+ударн/);
-                // "збито/подавлено N ворожих БпЛА" — case-insensitive
-                const shotDown = text.match(/збито[\/\s]+подавлено\s+(\d+)/i) ||
-                                text.match(/ЗБИТО[\/\s]+ПОДАВЛЕНО\s+(\d+)/);
-                const ad = {
-                    dronesAttacked: attacked ? parseInt(attacked[1]) : null,
-                    dronesShotDown: shotDown ? parseInt(shotDown[1]) : null,
-                    raw: text.slice(0, 300)
-                };
-                if (!latestAirDefense) latestAirDefense = ad;
-            }
+            _gsConsumeMessage(text, acc);
         });
-
-        if (!latestOperational && !latestAirDefense) {
+        if (!acc.op && !acc.ad) {
             throw new Error('no GS operational data found');
         }
-        return { operational: latestOperational, airDefense: latestAirDefense };
+        return { operational: acc.op, airDefense: acc.ad };
+    }
+
+    // v5.10: GS з RSSHub TG-мостів (RSS XML; повний текст повідомлення в
+    // <description> CDATA, HTML-екранований → декодуємо entities, зрізаємо теги)
+    function _parseGeneralStaffRSS(xmlText) {
+        const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+        const items = doc.querySelectorAll('item');
+        if (!items.length) throw new Error('no GS RSS items');
+        const acc = { op: null, ad: null };
+        items.forEach(el => {
+            let desc = el.querySelector('description')?.textContent || '';
+            if (desc.includes('&lt;') || desc.includes('&amp;') || desc.includes('&quot;')) {
+                const ta = document.createElement('textarea'); ta.innerHTML = desc; desc = ta.value;
+            }
+            const text = desc.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+            _gsConsumeMessage(text, acc);
+        });
+        if (!acc.op && !acc.ad) throw new Error('no GS data in RSS');
+        return { operational: acc.op, airDefense: acc.ad };
     }
 
     // Показ останніх валідних даних ГШ з кешу (STALE-бейдж). silent=true —
@@ -6538,7 +6850,7 @@ __PATHS__
             const c = JSON.parse(localStorage.getItem('_gs_cache') || 'null');
             if (c && c.data && c.ts) {
                 const ageH = Math.round((Date.now() - c.ts) / 3600000);
-                if (ageH < 24) {
+                if (ageH < 72) {   // v5.10: 24г → 72г (ГШ оновлює 4×/добу, 3-добовий кеш виправданий)
                     STATE.war.gshData = c.data;
                     $('src-losses').innerText = 'STALE ' + ageH + 'г';
                     $('src-losses').className = 'src-ind dead';
@@ -6556,29 +6868,34 @@ __PATHS__
     }
 
     async function fetchGeneralStaff() {
-        // v5.4 FIX: cors.sh мертвий, allorigins нестабільний → гонка 7 проксі
-        // + localStorage STALE-кеш (картка 6В більше не "падає" в порожнечу).
-        // v5.4.1 SPEED: таймаут 15с → 10с (кеш покриває повільні проксі).
-        try {
-            const html = await fetchViaProxy(GS_TG_URL, 10000,
-                t => t.length > 5000 && t.includes('tgme_widget_message'));
-            const data = _parseGeneralStaff(html);
-            STATE.war.gshData = data;
-            STATE.war.gshData.lastUpdate = new Date().toISOString();
-            $('src-losses').innerText = 'LIVE';
-            $('src-losses').className = 'src-ind live';
-            const opTime = data.operational && data.operational.reportTime
-                ? `${data.operational.reportTime} ${data.operational.reportDate || ''}`
-                : '—';
-            log(`ГШ ЗСУ: зведення ${opTime}`, 'GS');
-            // Persist last-known-good for STALE display
+        // v5.10: перебір 3 цілей (t.me HTML + 2 RSSHub TG-мости), кожна через гонку
+        // CORS-проксі (fetchViaProxy). Порядок: найповніші дані — першими.
+        for (const p of GS_PATHS) {
             try {
-                localStorage.setItem('_gs_cache', JSON.stringify({ data, ts: Date.now() }));
-            } catch (_) {}
-            return;
-        } catch (e) { /* fall through to cache */ }
+                const text = await fetchViaProxy(p.url, 10000, p.validate);
+                const data = p.kind === 'html' ? _parseGeneralStaff(text) : _parseGeneralStaffRSS(text);
+                if (!data.operational && !data.airDefense) throw new Error('порожні дані');
+                STATE.war.gshData = data;
+                STATE.war.gshData.lastUpdate = new Date().toISOString();
+                $('src-losses').innerText = 'LIVE';
+                $('src-losses').className = 'src-ind live';
+                const opTime = data.operational && data.operational.reportTime
+                    ? `${data.operational.reportTime} ${data.operational.reportDate || ''}`
+                    : '—';
+                log(`ГШ ЗСУ: зведення ${opTime} (via ${p.name})`, 'GS');
+                if (data.operational && data.operational.dailyLoss) {
+                    const dl = data.operational.dailyLoss;
+                    log(`ГШ: втрати ворога за добу — осіб ${dl.personnel.toLocaleString('uk-UA')}${dl.tanks ? ' · танків ' + dl.tanks : ''}${dl.artillery ? ' · арт.' + dl.artillery : ''}${dl.uav ? ' · БпЛА ' + dl.uav.toLocaleString('uk-UA') : ''}`, 'GS');
+                }
+                // Persist last-known-good for STALE display
+                try {
+                    localStorage.setItem('_gs_cache', JSON.stringify({ data, ts: Date.now() }));
+                } catch (_) {}
+                return;
+            } catch (e) { log(`ГШ: ${p.name} — ${e.message}`, 'GS'); }
+        }
 
-        // All proxies failed — show last-known-good data with STALE badge
+        // All paths failed — show last-known-good data with STALE badge
         _gsShowStale(false);
     }
 
@@ -6588,6 +6905,42 @@ __PATHS__
     // with 'Фейк', 'Маніпуляція', 'Розвінчання' — we extract type from that.
     // rss2json blocked us with 429 → parse XML directly via cors.sh + DOMParser.
     const STOPFAKE_URL = 'https://www.stopfake.org/uk/feed/';
+
+    // v5.10 FIX (картка 6Г була DEAD): WordPress REST API — ПРЯМЕ CORS-з'єднання
+    // (WP віддає ACO: echo-Origin, працює навіть з file://), БЕЗ проксі взагалі.
+    // Перевірено 22.10.2026: 200 OK, ACO=null, lang=uk фільтрує укр. пости,
+    // _embed=wp:term дає категорії для «Топ-цілі пропаганди».
+    const STOPFAKE_WP_API = 'https://www.stopfake.org/wp-json/wp/v2/posts?per_page=15&lang=uk&_embed=wp:term&_fields=title,link,date,date_gmt,_links,_embedded';
+
+    function _sfStripHtml(s) {
+        const noTags = (s || '').replace(/<[^>]+>/g, '');
+        const ta = document.createElement('textarea'); ta.innerHTML = noTags;
+        return ta.value.trim();
+    }
+
+    function _sfParseWP(d) {
+        const posts = (typeof d === 'string') ? JSON.parse(d) : d;
+        if (!Array.isArray(posts) || !posts.length) throw new Error('WP: немає постів');
+        const metaCats = _sfMetaCats();
+        const items = [];
+        for (const p of posts) {
+            const title = _sfStripHtml(p && p.title && p.title.rendered);
+            if (!title) continue;
+            let cats = [];
+            try {
+                const terms = ((p._embedded && p._embedded['wp:term']) || []).flat();
+                cats = terms.filter(t => t && t.taxonomy === 'category').map(t => t.name).filter(Boolean);
+            } catch (_) {}
+            let ts = Date.now();
+            if (p.date_gmt) { const t0 = new Date(p.date_gmt + 'Z').getTime(); if (!Number.isNaN(t0) && t0 > 0) ts = t0; }
+            else if (p.date)  { const t1 = new Date(p.date).getTime();       if (!Number.isNaN(t1) && t1 > 0) ts = t1; }
+            items.push({ title, link: p.link || '', pubDate: p.date || '',
+                         categories: cats.filter(c => !metaCats.includes(c)),
+                         type: _sfClassify(title), ts });
+        }
+        if (!items.length) throw new Error('WP: порожньо після парсингу');
+        return items;
+    }
 
     function _parseStopFakeRSS(xmlText) {
         const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
@@ -6667,7 +7020,7 @@ __PATHS__
             const c = JSON.parse(localStorage.getItem('_sf_cache') || 'null');
             if (c && Array.isArray(c.items) && c.items.length && c.ts) {
                 const ageH = Math.round((Date.now() - c.ts) / 3600000);
-                if (ageH < 24) {
+                if (ageH < 72) {   // v5.10: 24г → 72г (StopFake: ~5-10 постів/добу)
                     // Reuse apply-path but without overwriting the good cache
                     STATE.infoWar.items = c.items;
                     STATE.infoWar.count = c.items.length;
@@ -6702,8 +7055,17 @@ __PATHS__
     }
 
     async function fetchStopFake() {
-        // v5.7 FIX (10.2026): rss2json.com тепер 403 (Cloudflare) для ВСІХ → ПЕРВИННИЙ
-        // шлях = прямий XML через гонку 7 CORS-проксі; rss2json — фолбек.
+        // v5.10: Path 0 = WP REST API ПРЯМО (CORS-native, БЕЗ проксі) — основний;
+        // Path 1 = прямий XML через гонку проксі; Path 2 = rss2json; Path 3 = STALE 72год.
+        // --- Path 0: WP REST (direct CORS) ---
+        try {
+            const d = await fetchJSON(STOPFAKE_WP_API, 12000);
+            const items = _sfParseWP(d);
+            _sfApplyItems(items);
+            log('StopFake: WP-REST пряме CORS-з\'єднання (без проксі)', 'FAKE');
+            return;
+        } catch (e) { log('StopFake WP-REST: ' + e.message, 'STOPFAKE'); }
+
         // --- Path 1: прямий XML через multi-proxy race ---
         try {
             const xml = await fetchViaProxy(STOPFAKE_URL, 9000, t => t.includes('<item'));
@@ -6878,8 +7240,10 @@ __PATHS__
         //   eventIntensity — кількість воєнних подій у новинах (вага 0.6)
         //   alertIntensity  — активні повітряні тривоги (вага 0.4)
         // fear/tension прибрано — кореляція war↔fear тепер виявляється, а не задається формулою.
-        const eventIntensity = clamp(STATE.war.eventCount * 2.4, 0, 60);
-        const alertIntensity = clamp((STATE.alerts.activeCount / Math.max(1, STATE.alerts.totalRegions)) * 100 * 0.4, 0, 40);
+        // v5.10: калібрування — події ×2.8 (кап 62), тривоги кап 38: активна війна
+        // з ~22+ подіями/доба тепер чесно дає 60%+ замість штучних 45-50%.
+        const eventIntensity = clamp(STATE.war.eventCount * 2.8, 0, 62);
+        const alertIntensity = clamp((STATE.alerts.activeCount / Math.max(1, STATE.alerts.totalRegions)) * 100 * 0.4, 0, 38);
         STATE.war.intensity = clamp(eventIntensity + alertIntensity, 0, 100);
 
         // Frontline regions: combine war-event byRegion (sorted desc) + traditional frontline list
@@ -8046,6 +8410,18 @@ __PATHS__
             $('v-gsh-shotdown').innerText = ad.dronesShotDown != null
                 ? `${ad.dronesShotDown}${ad.dronesAttacked ? ' / ' + ad.dronesAttacked + ' атака' : ''}` : '—';
 
+            // v5.10: добові втрати ворога з тексту зведення ГШ
+            const dloss = op.dailyLoss || null;
+            const totParts = [];
+            if (dloss) {
+                if (dloss.personnel) totParts.push('осіб ' + dloss.personnel.toLocaleString('uk-UA'));
+                if (dloss.tanks)     totParts.push('танків ' + dloss.tanks);
+                if (dloss.artillery) totParts.push('арт.' + dloss.artillery);
+                if (dloss.uav)       totParts.push('БпЛА ' + dloss.uav.toLocaleString('uk-UA'));
+                if (dloss.afv)       totParts.push('ББМ ' + dloss.afv);
+            }
+            $('v-gsh-totals').innerText = totParts.length ? totParts.slice(0, 4).join(' · ') : '—';
+
             // Analytical description for losses block
             let lStat, lBadge, lBadgeCls;
             if (op.combat >= 200 || op.drones >= 5000) { lStat = 'ВИСОКА ІНТЕНСИВНІСТЬ'; lBadge = 'HIGH'; lBadgeCls = 'crit'; }
@@ -8053,7 +8429,8 @@ __PATHS__
             else if (op.combat >= 100) { lStat = 'ПОМІРНА'; lBadge = 'MED'; lBadgeCls = 'info'; }
             else { lStat = 'ПОСЛАБЛЕННЯ'; lBadge = 'CALM'; lBadgeCls = 'ok'; }
 
-            const lDyn = op.combat != null ? `За добу: ${op.combat} бойових зіткнень, ${op.aviation || 0} авіаударів, ${op.kab || 0} КАБ.` : 'Зведення ГШ ЗСУ очікується.';
+            const lTot = totParts.length ? ` Втрати ворога за добу: ${totParts.join(', ')}.` : '';
+            const lDyn = op.combat != null ? `За добу: ${op.combat} бойових зіткнень, ${op.aviation || 0} авіаударів, ${op.kab || 0} КАБ.${lTot}` : 'Зведення ГШ ЗСУ очікується.';
             const lMove = `Дрони: ${op.drones ? op.drones.toLocaleString('uk-UA') : '—'} · Обстріли: ${op.shellings ? op.shellings.toLocaleString('uk-UA') : '—'}${op.mlrs ? ' (РСЗВ: ' + op.mlrs + ')' : ''}`;
             const lCtx = ad.dronesShotDown
                 ? `За ніч збито/подавлено ${ad.dronesShotDown} ворожих БпЛА${ad.dronesAttacked ? ' з ' + ad.dronesAttacked + ' атакуючих' : ''}. Ефективність ППО ${ad.dronesAttacked ? Math.round(ad.dronesShotDown / ad.dronesAttacked * 100) : '—'}%.`
