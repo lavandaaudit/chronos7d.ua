@@ -2317,10 +2317,17 @@
         'Севастополь':   { population: 0.51,  area: 864,   cities: ['Севастополь','Інкерман','Балаклава'],type: 'occupied',  region: 'Південь', info: 'Анексований РФ у 2014. Військова база ЧФ РФ.' }
     };
 
-    /* ---------- 4. RSS sources (UKRAINIAN) — 19 verified-working feeds ---------- */
-    // Each feed has been tested through rss2json.com proxy. Failed/blocked feeds
-    // (BBC-UA, Hromadske, Suspilne, ISW, Mil.in.ua, Censor, Ukrinform, NV) are NOT
-    // included because they return 403/404/empty — they would waste request budget.
+    /* ---------- 4. RSS sources (UKRAINIAN) — 28 feeds, v5.7 оновлено 10.2026 ---------- */
+    // v5.7 ДІАГНОСТИКА 10.2026: головна причина «ДЖЕРЕЛА 0/28» — api.rss2json.com
+    // тепер за Cloudflare-захистом (HTTP 403 "Just a moment" для всіх клієнтів).
+    // Відновлення: fetchRSSFast тепер тягне ПРЯМИЙ XML через гонку 7 проксі
+    // (rss2json — лише фолбек), + GDELT CORS-бекбон + кеш новин (STALE-режим).
+    // ЗАМІНЕНО МЕРТВІ СТРІЧКИ (перевірено curl 10.2026):
+    //   Укрінформ /rss → 404 → ІнфоРезист (inforesist.org/feed/, 200 OK, 50 itemів)
+    //   Mil.gov.ua /rss → 404 → УАТВ (uatv.ua/feed/, 200 OK, 10 itemів)
+    //   Minfin /rss/news → 404 → Мілітарний (mil.in.ua/uk/feed/ — через проксі)
+    //   ГолосUA → мертвий (301→404) → Гром. Радіо (hromadske.radio/rss, 200 OK, 20 itemів)
+    //   Хвилі /rss/ → 404 → /feed/ (200 OK, 22 itemів)
     // tag:'war' marks feeds that predominantly cover the front line.
     const RSS_SOURCES = [
         // === Core feeds (verified working) ===
@@ -2331,14 +2338,15 @@
         { name:'Євроінтегр',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.eurointegration.com.ua/rss/'), tag:'general' },
         { name:'Уніан',       url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.unian.ua/rss'), tag:'general' },
         { name:'ТСН',         url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://tsn.ua/rss'), tag:'general' },
-        { name:'Думська',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://dumskaya.net/rss/'), tag:'general' },
+        { name:'Думська',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://dumskaya.net/rssnews/'), tag:'general' },
         // === War-focused ===
         { name:'УП-Статті',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/articles/'), tag:'war' },
         { name:'УП-Колонки',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/columns/'), tag:'war' },
         { name:'УП-Фото',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/photos/'), tag:'war' },
         { name:'Єп-Новини',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.epravda.com.ua/rss/news/'), tag:'war' },
         { name:'DefenseExpr', url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://defence-ua.com/rss/feed.xml'), tag:'war' },
-        { name:'Mil.gov.ua',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.mil.gov.ua/rss'), tag:'war' },
+        { name:'Мілітарний',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://mil.in.ua/uk/feed/'), tag:'war' },
+        { name:'ІнфоРезист',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://inforesist.org/feed/'), tag:'war' },
         { name:'УП-Війна',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.pravda.com.ua/rss/tags/war/'), tag:'war' },
         // === General coverage ===
         { name:'Liga',        url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.liga.net/ua/all/rss.xml'), tag:'general' },
@@ -2346,14 +2354,13 @@
         { name:'Свобода',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.radiosvoboda.org/rss/'), tag:'general' },
         { name:'Гордон',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://gordonua.com/ukr/api/media/out/rss/lastnews.xml'), tag:'general' },
         { name:'24Канал',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://24tv.ua/rss/all.xml'), tag:'general' },
-        { name:'Факти-ICTV',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://fakty.com.ua/feed'), tag:'general' },
+        { name:'Факти-ICTV',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://fakty.com.ua/ua/feed/'), tag:'general' },
         { name:'Суспільне',   url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://suspilne.media/rss'), tag:'general' },
-        { name:'Укрінформ',  url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.ukrinform.ua/rss'), tag:'general' },
-        { name:'Minfin',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://minfin.com.ua/rss/news/'), tag:'general' },
-        { name:'AIN.UA',     url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://ain.ua/feed'), tag:'general' },
-        { name:'NV.UA',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://nv.ua/rss/all.xml'), tag:'general' },
-        { name:'Хвилі',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://hvylya.net/rss/'), tag:'general' },
-        { name:'ГолосUA',    url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://golos.com.ua/rss/all.xml'), tag:'general' }
+        { name:'УАТВ',        url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://uatv.ua/feed/'), tag:'general' },
+        { name:'AIN.UA',      url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://ain.ua/feed'), tag:'general' },
+        { name:'NV.UA',       url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://nv.ua/rss/all.xml'), tag:'general' },
+        { name:'Хвилі',       url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://hvylya.net/feed/'), tag:'general' },
+        { name:'Гром. Радіо', url:'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://hromadske.radio/rss'), tag:'general' }
     ];
 
     /* ---------- 5. STATE ---------- */
@@ -2469,20 +2476,29 @@
     }
 
     /* ===================================================================
-       v5.4 FIX: UNIVERSAL CORS-PROXY LAYER (multi-proxy race)
+       v5.7 FIX: UNIVERSAL CORS-PROXY LAYER (multi-proxy race) — ОНОВЛЕНО 10.2026
        ===================================================================
-       Причина падіння карток 1Б/6В/6Г: proxy.cors.sh більше НЕ ІСНУЄ
-       (DNS не резолвиться), а api.allorigins.win став нестабільним
-       (520/522/429). Рішення: гонка кількох публічних CORS-проксі —
-       перша валідна відповідь перемагає (Promise.any).            */
+       Діагностика 10.2026:
+       - proxy.cors.sh — мертвий (DNS) — видалено ще в v5.4.
+       - corsproxy.io — ТЕПЕР ВИМАГАЄ ПЛАТНИЙ API-ключ (HTTP 401 для всіх)
+         → ВИДАЛЕНО, він лише марнував час гонки.
+       - api.allorigins.win — живий, але флаключий (500/502/522 у ~40-60%
+         запитів) → залишено ПЕРШИМ + whateverorigin як незалежний дублер.
+       - whateverorigin.org — працює, вимагає Origin-заголовок (браузер
+         завжди його шле автоматично) → ДОДАНО + unwrap {"content":...}.
+       - codetabs / cors.lol / cors.eu.org / cors.workers.dev — живі,
+         але з жорсткими rate-limit'ами → залишено в гонці (429 просто
+         програваш гонку, Promise.any бере перший валідний результат).
+       Рішення незмінне: гонка кількох публічних CORS-проксі — перша
+       валідна відповідь перемагає (Promise.any).            */
     const PROXY_BUILDERS = [
         u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
         u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
-        u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+        u => 'https://whateverorigin.org/get?url=' + encodeURIComponent(u),   // wrapped {content}
+        u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u),   // wrapped {contents}
         u => 'https://api.cors.lol/?url=' + encodeURIComponent(u),
         u => 'https://cors.eu.org/' + u,
-        u => 'https://test.cors.workers.dev/?' + u,
-        u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u)   // wrapped {contents}
+        u => 'https://test.cors.workers.dev/?' + u
     ];
 
     // fetchViaProxy: races all proxies in parallel → first VALID response text.
@@ -2498,11 +2514,13 @@
                 const r = await fetch(build(targetUrl), { signal: ctrl.signal });
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 let text = await r.text();
-                // Unwrap allorigins /get wrapper {"contents":"<payload>"}
-                if (text && text.charAt(0) === '{' && text.includes('"contents"')) {
+                // Unwrap proxy JSON-wrappers: allorigins /get {"contents":...}
+                // v5.7: + whateverorigin {"content":...}
+                if (text && text.charAt(0) === '{' && (text.includes('"contents"') || text.includes('"content"'))) {
                     try {
                         const w = JSON.parse(text);
                         if (w && typeof w.contents === 'string') text = w.contents;
+                        else if (w && typeof w.content === 'string') text = w.content;
                     } catch (_) { /* not a wrapper — keep raw */ }
                 }
                 if (validate && !validate(text)) throw new Error('validation failed');
@@ -5280,72 +5298,113 @@ __PATHS__
 
     /* ---------- 10. DATA FETCHERS ---------- */
 
-    // Fast RSS fetch — rss2json.com primary (fast), allorigins.win fallback (often down)
+    /* v5.7 NEWS PIPELINE FIX (10.2026)
+       ПРИЧИНА АВАРІЇ «ДЖЕРЕЛА ONLINE 0/28»: api.rss2json.com віддає HTTP 403
+       (Cloudflare "Just a moment") на ВСІ запити — сервіс закрив безкоштовний API.
+       Один фолбек на allorigins не витягував → 0/28 → мертві модулі 1/3/6/7/6Б/6Г.
+       НОВА АРХІТЕКТУРА (3 незалежні рівні):
+         1) ПРЯМИЙ XML через гонку 7 CORS-проксі (Promise.any — перший валідний);
+         2) rss2json — фолбек (якщо пом'якшать Cloudflare);
+         3) GDELT DOC API — CORS-native бекбон БЕЗ проксі (Access-Control-Allow-Origin: *),
+            + STALE-кеш новин у localStorage (до 6 год) — модулі рахують навіть
+            коли всі стрічки впали одночасно.                                   */
+
+    // Shared RSS/Atom XML parser (proxy-race path) — RSS <item> + Atom <entry>
+    function parseRSSXML(xml) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, 'text/xml');
+        let entries = doc.querySelectorAll('item');
+        let isAtom = false;
+        if (!entries.length) {
+            entries = doc.querySelectorAll('entry');
+            isAtom = true;
+        }
+        if (!entries.length) return [];
+        return Array.from(entries).slice(0, 25).map(e => {
+            if (isAtom) {
+                return {
+                    title: (e.querySelector('title') || {}).textContent || '',
+                    pubDate: (e.querySelector('published') || e.querySelector('updated') || {}).textContent || '',
+                    link: (e.querySelector('link') || {}).getAttribute('href') || (e.querySelector('link') || {}).textContent || '',
+                    description: (e.querySelector('summary') || e.querySelector('content') || {}).textContent || ''
+                };
+            }
+            return {
+                title: (e.querySelector('title') || {}).textContent || '',
+                pubDate: (e.querySelector('pubDate') || {}).textContent || '',
+                link: (e.querySelector('link') || {}).textContent || '',
+                description: (e.querySelector('description') || {}).textContent || ''
+            };
+        });
+    }
+
+    // GDELT DOC API — CORS-відкритий агрегатор новин (без проксі, без ключів).
+    // Тягне укр.мовні статті за 3 год. Ліміт GDELT: 1 запит/5с — дашборд викликає
+    // 1 раз/5хв. 429/таймаут → тихо пропускаємо (запити RSS незалежні).
+    const GDELT_URL = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' +
+        encodeURIComponent('(україна OR київ OR ЗСУ OR війна) sourcelang:ukr') +
+        '&mode=artlist&maxrecords=75&format=json&timespan=3h';
+
+    async function fetchGDELTNews() {
+        // v5.7: 1 ретрай через 6.5с — GDELT лімітує 1 запит/5с (спільні IP часто
+        // ловлять 429 на першому виклику; браузер користувача — рідко)
+        for (let attemptN = 0; attemptN < 2; attemptN++) {
+            try {
+                if (attemptN > 0) await new Promise(r => setTimeout(r, 6500));
+                const d = await fetchJSON(GDELT_URL, 12000);
+                const arts = (d && Array.isArray(d.articles)) ? d.articles : [];
+                const items = arts
+                    .map(a => ({
+                        src: 'GDELT·' + String(a.domain || 'gdelt').replace(/^www\./, ''),
+                        tag: 'general',
+                        title: a.title || '',
+                        text: (a.title || '') + ' ' + (a.url || '')
+                    }))
+                    .filter(it => it.title && it.title.length > 8);
+                if (items.length || attemptN > 0) return items;
+                // порожньо з першої спроби — шанс на ретрай
+            } catch (e) { /* 429 / таймаут — ретрай */ }
+        }
+        return [];
+    }
+
+    // v5.7: Fast RSS fetch — ПРОКСІ-ГОНКА primary, rss2json fallback
     async function fetchRSSFast(rss2jsonUrl) {
         const rssUrl = new URL(rss2jsonUrl).searchParams.get('rss_url');
         if (!rssUrl) return null;
         STATE.apiCalls++;
 
-        // 1) Primary: rss2json.com (fast, returns JSON directly)
+        // 1) PRIMARY: прямий XML через гонку 7 CORS-проксі (rss2json тепер 403 для всіх)
+        try {
+            const xml = await fetchViaProxy(rssUrl, 9000,
+                t => t && (t.includes('<item') || t.includes('<entry')));
+            const items = parseRSSXML(xml);
+            if (items.length) return { status: 'ok', items };
+        } catch (e) { /* гонка програла — далі rss2json */ }
+        $('api-calls').innerText = STATE.apiCalls;
+
+        // 2) FALLBACK: rss2json (Cloudflare може пропустити браузер з чистою репутацією)
         try {
             const v = await fetchJSON(rss2jsonUrl, 8000);
             if (v && v.items && v.items.length) return v;
-        } catch(e) {}
-        $('api-calls').innerText = STATE.apiCalls;
-
-        // 2) Fallback: allorigins.win (direct XML, but often slow/down)
-        try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 8000);
-            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rssUrl);
-            const resp = await fetch(proxyUrl, { signal: ctrl.signal });
-            clearTimeout(tid);
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
-            const xml = await resp.text();
-            $('api-calls').innerText = STATE.apiCalls;
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(xml, 'text/xml');
-            let entries = doc.querySelectorAll('item');
-            let isAtom = false;
-            if (!entries.length) {
-                entries = doc.querySelectorAll('entry');
-                isAtom = true;
-            }
-            if (!entries.length) return null;
-            const items = Array.from(entries).slice(0, 25).map(e => {
-                if (isAtom) {
-                    return {
-                        title: (e.querySelector('title') || {}).textContent || '',
-                        pubDate: (e.querySelector('published') || e.querySelector('updated') || {}).textContent || '',
-                        link: (e.querySelector('link') || {}).getAttribute('href') || (e.querySelector('link') || {}).textContent || '',
-                        description: (e.querySelector('summary') || e.querySelector('content') || {}).textContent || ''
-                    };
-                }
-                return {
-                    title: (e.querySelector('title') || {}).textContent || '',
-                    pubDate: (e.querySelector('pubDate') || {}).textContent || '',
-                    link: (e.querySelector('link') || {}).textContent || '',
-                    description: (e.querySelector('description') || {}).textContent || ''
-                };
-            });
-            return { status: 'ok', items };
-        } catch(e2) { /* both failed */ }
+        } catch (e) {}
         return null;
     }
 
     async function fetchAllRSS() {
-        // BATCHED: 28 sources in batches of 8 (avoids rss2json rate limit 429)
+        // BATCHED: 28 sources in batches of 8 (be gentle with proxy rate limits)
         const BATCH_SIZE = 8;
         const okSources = [];
         const allItems = [];
-        const allDocs = [];
+        // v5.7: GDELT CORS-бекбон стартує ПАРАЛЕЛЬНО (без проксі, 1 запит/5хв)
+        const gdeltPromise = fetchGDELTNews();
 
         // IMMEDIATELY show total so user sees "0/28" instead of "0/0"
         STATE.sourcesTotal = RSS_SOURCES.length;
         $('sources-online').innerText = `0/${STATE.sourcesTotal}`;
 
         const t0 = performance.now();
-        log(`RSS: batched ${RSS_SOURCES.length} джерел (по ${BATCH_SIZE}, rss2json → allorigins)...`, 'RSS');
+        log(`RSS: batched ${RSS_SOURCES.length} джерел (по ${BATCH_SIZE}, проксі-гонка → rss2json) + GDELT...`, 'RSS');
 
         // Process in batches to avoid rate limiting
         const allResults = [];
@@ -5372,23 +5431,61 @@ __PATHS__
                 data.items.slice(0, 25).forEach(it => {
                     const text = (it.title || '') + ' ' + (it.description || '');
                     allItems.push({ src: srcName, tag: srcTag, title: it.title || '', text });
-                    allDocs.push(text);
                 });
             } else {
                 log(`Джерело недоступне: ${srcName}`, 'RSS');
             }
         });
 
+        // v5.7: зливаємо GDELT-заголовки (CORS-бекбон працює навіть коли проксі падають)
+        const gdItems = await gdeltPromise;
+        gdItems.forEach(it => allItems.push(it));
+        if (gdItems.length) log(`GDELT: +${gdItems.length} укр. заголовків (без проксі)`, 'GDELT');
+
         STATE.sourcesTotal = RSS_SOURCES.length;
         STATE.sourcesOk = okSources.length;
-        $('sources-online').innerText = `${STATE.sourcesOk}/${STATE.sourcesTotal}`;
-        $('src-attention').innerText = okSources.length ? `${okSources.length} live` : 'dead';
-        $('src-attention').className = 'src-ind ' + (okSources.length ? 'live' : 'dead');
+        let onlineTxt = `${STATE.sourcesOk}/${STATE.sourcesTotal}`;
+        if (!okSources.length && gdItems.length) onlineTxt += ' +GDELT';
+        $('sources-online').innerText = onlineTxt;
+        $('src-attention').innerText = okSources.length ? `${okSources.length} live` : (gdItems.length ? 'GDELT' : 'dead');
+        $('src-attention').className = 'src-ind ' + ((okSources.length || gdItems.length) ? 'live' : 'dead');
 
         if (!allItems.length) {
-            log('RSS: немає даних', 'RSS');
+            // v5.7: повне падіння стрічок → STALE-кеш новин (до 6 год) —
+            // модулі 1/3/6/7/6Б продовжують рахувати на останніх валідних даних.
+            const stale = _loadNewsCache(6 * 3600 * 1000);
+            if (stale) {
+                const ageMin = Math.round((Date.now() - stale.ts) / 60000);
+                log(`RSS: всі джерела впали. STALE-режим: ${stale.items.length} кешованих заголовків (${ageMin} хв тому)`, 'RSS');
+                $('sources-online').innerText = `0/${STATE.sourcesTotal} · КЕШ ${ageMin}хв`;
+                $('src-attention').innerText = `КЕШ ${ageMin}хв`;
+                $('src-attention').className = 'src-ind dead';
+                processNewsItems(stale.items, 0, []);
+            } else {
+                log('RSS: немає даних', 'RSS');
+            }
             return;
         }
+
+        // v5.7: зберігаємо кеш новин для STALE-режиму
+        try { localStorage.setItem('_news_cache', JSON.stringify({ items: allItems.slice(0, 400), ts: Date.now() })); } catch (_) {}
+
+        processNewsItems(allItems, okSources.length, okSources);
+    }
+
+    // v5.7: завантаження останнього валідного кешу новин
+    function _loadNewsCache(maxAgeMs) {
+        try {
+            const c = JSON.parse(localStorage.getItem('_news_cache') || 'null');
+            if (c && Array.isArray(c.items) && c.items.length && c.ts && (Date.now() - c.ts) < maxAgeMs) return c;
+        } catch (_) {}
+        return null;
+    }
+
+    // v5.7: ОБРОБКА НОВИН (витягнуто з fetchAllRSS) — викликається і для live-даних,
+    // і для STALE-кешу. okCount/okNames — скільки стрічок відповіли (для логів/аналітики).
+    function processNewsItems(allItems, okCount, okNames) {
+        const allDocs = allItems.map(it => it.text);
 
         // 10.1 Sentiment analysis (AFINN) — v5.5: чутливість +EWMA + розширений поріг
         let sentimentSum = 0, sentimentHits = 0;
@@ -5504,7 +5601,7 @@ __PATHS__
         STATE.tension.index = clamp(conflictCount * 1.2 + polarityAbs * 0.6, 5, 100);
         STATE.tension.split = clamp(45 + conflictCount * 1.2, 40, 92);
 
-        log(`RSS OK: ${okSources.join(', ')} | ${allItems.length} заголовків | sentiment=${avgSent.toFixed(2)}`, 'RSS');
+        log(`RSS OK: ${(okNames && okNames.length) ? okNames.join(', ') : (okCount ? okCount + ' джерел' : 'STALE-кеш')} | ${allItems.length} заголовків | sentiment=${avgSent.toFixed(2)}`, 'RSS');
 
         // Export for socio module
         _lastRSSItems = allItems.slice();
@@ -5524,7 +5621,7 @@ __PATHS__
         }
 
         // Source diversity index (unique sources that actually returned data / total)
-        const sourceDiversity = okSources.length / RSS_SOURCES.length;
+        const sourceDiversity = okCount / RSS_SOURCES.length;
         if (sourceDiversity < 0.5) {
             log(`Низька різноманітність джерел: ${Math.round(sourceDiversity*100)}% доступні`, 'RSS-ANALYTICS');
         }
@@ -5538,32 +5635,74 @@ __PATHS__
         if (STATE.aiibonarium.anomaly > 85) showAlert(`🧠 AI: АНОМАЛІЯ НООСФЕРИ (${STATE.aiibonarium.anomaly.toFixed(0)}%)`, 'sync');
     }
 
+    /* v5.7 FIX (10.2026): картка 2 «ФІНАНСОВИЙ СТРАХ (CRYPTO F&G)» падала ЦІЛИКОМ,
+       бо Promise.all валить все від ОДНОГО невдалого запиту (напр. Binance таймаут
+       чи гео-блок). Тепер 3 незалежні запити (Promise.allSettled):
+         - F&G: api.alternative.me (CORS-open) + STALE-кеш у localStorage (24 год);
+         - BTC/ETH: Binance → data-api.binance.vision (офіц. публічне дзеркало
+           ринкових даних, без гео-обмежень).                                  */
     async function fetchCrypto() {
-        try {
-            const [fng, btc, eth] = await Promise.all([
-                fetchJSON('https://api.alternative.me/fng/?limit=2'),
-                fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
-                fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT')
-            ]);
-            const cur = fng.data[0];
+        const fetchBinanceTicker = async (symbol) => {
+            const hosts = [
+                s => 'https://api.binance.com/api/v3/ticker/24hr?symbol=' + s,
+                s => 'https://data-api.binance.vision/api/v3/ticker/24hr?symbol=' + s
+            ];
+            for (const build of hosts) {
+                try { return await fetchJSON(build(symbol), 8000); } catch (e) { /* next host */ }
+            }
+            throw new Error('Binance недоступний (' + symbol + ')');
+        };
+
+        const [fngR, btcR, ethR] = await Promise.allSettled([
+            fetchJSON('https://api.alternative.me/fng/?limit=2'),
+            fetchBinanceTicker('BTCUSDT'),
+            fetchBinanceTicker('ETHUSDT')
+        ]);
+
+        let fngOk = false, btcOk = false;
+
+        if (fngR.status === 'fulfilled' && fngR.value && fngR.value.data && fngR.value.data.length) {
+            const cur = fngR.value.data[0];
             STATE.crypto.last.fng = STATE.crypto.fng;
-            STATE.crypto.last.btcChange = STATE.crypto.btcChange;
             STATE.crypto.fng = parseInt(cur.value, 10);
             STATE.crypto.fngClass = cur.value_classification;
-            STATE.crypto.btcChange = parseFloat(btc.priceChangePercent);
-            STATE.crypto.btcPrice = parseFloat(btc.lastPrice);
-            STATE.crypto.ethPrice = parseFloat(eth.lastPrice);
-            const ethChange = parseFloat(eth.priceChangePercent);
+            fngOk = true;
+            try { localStorage.setItem('_fng_cache', JSON.stringify({ v: STATE.crypto.fng, c: STATE.crypto.fngClass, ts: Date.now() })); } catch (_) {}
+        } else {
+            // F&G впав → STALE з кешу (до 24 год) — картка не «мертва»
+            try {
+                const c = JSON.parse(localStorage.getItem('_fng_cache') || 'null');
+                if (c && typeof c.v === 'number' && Date.now() - c.ts < 24 * 3600 * 1000) {
+                    STATE.crypto.last.fng = STATE.crypto.fng;
+                    STATE.crypto.fng = c.v;
+                    STATE.crypto.fngClass = c.c + ' · кеш';
+                    fngOk = true;
+                    log(`Crypto F&G: STALE з кешу (${Math.round((Date.now() - c.ts) / 3600000)}г)`, 'CRYPTO');
+                }
+            } catch (_) {}
+        }
+
+        if (btcR.status === 'fulfilled' && btcR.value && btcR.value.lastPrice) {
+            STATE.crypto.last.btcChange = STATE.crypto.btcChange;
+            STATE.crypto.btcChange = parseFloat(btcR.value.priceChangePercent);
+            STATE.crypto.btcPrice = parseFloat(btcR.value.lastPrice);
+            btcOk = true;
+        }
+        if (ethR.status === 'fulfilled' && ethR.value && ethR.value.lastPrice) {
+            STATE.crypto.ethPrice = parseFloat(ethR.value.lastPrice);
+            const ethChange = parseFloat(ethR.value.priceChangePercent);
             // volatility = abs diff between BTC and ETH change, scaled
             STATE.crypto.volatility = clamp(Math.abs(STATE.crypto.btcChange) + Math.abs(ethChange) + Math.abs(STATE.crypto.btcChange - ethChange) * 2, 0, 100);
+        }
 
-            $('src-crypto').innerText = 'LIVE';
+        if (fngOk || btcOk) {
+            $('src-crypto').innerText = (fngOk && btcOk) ? 'LIVE' : 'PART';
             $('src-crypto').className = 'src-ind live';
-            log(`Crypto F&G=${STATE.crypto.fng} (${STATE.crypto.fngClass}), BTC $${STATE.crypto.btcPrice.toFixed(0)} ${STATE.crypto.btcChange.toFixed(2)}%`, 'CRYPTO');
-        } catch(e) {
+            log(`Crypto F&G=${STATE.crypto.fng} (${STATE.crypto.fngClass}), BTC $${STATE.crypto.btcPrice ? STATE.crypto.btcPrice.toFixed(0) : '--'} ${STATE.crypto.btcChange.toFixed(2)}%${btcOk ? '' : ' · BTC-тікер недоступний'}`, 'CRYPTO');
+        } else {
             $('src-crypto').innerText = 'DEAD';
             $('src-crypto').className = 'src-ind dead';
-            log('Crypto API недоступний: ' + e.message, 'CRYPTO');
+            log('Crypto API недоступний (F&G + Binance + дзеркала)', 'CRYPTO');
         }
         // Oil prices — best-effort via CORS proxy, with localStorage cache
         _loadOilCache();
@@ -5584,10 +5723,14 @@ __PATHS__
         const yahooBrent = 'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=1d&interval=1d';
         const yahooWTI   = 'https://query1.finance.yahoo.com/v8/finance/chart/CL=F?range=1d&interval=1d';
 
-        // v5.4 FIX: cors.sh мертвий, s2/s3 ніколи не викликались → єдиний
-        // multi-proxy race для обох тікерів (Yahoo Finance без CORS).
+        // v5.4 FIX: cors.sh мертвий → multi-proxy race для обох тікерів (Yahoo без CORS).
+        // v5.7 FIX: + фолбек на query2.finance.yahoo.com (query1 часто 429 для
+        // датацентрових IP; проксі теж може віддати 429 — друга спроба на query2).
         const getQuote = async (url) => {
-            const txt = await fetchViaProxy(url, 8000, t => t.includes('"chart"') && t.includes('regularMarketPrice'));
+            const tryFetch = async (u) => await fetchViaProxy(u, 8000, t => t.includes('"chart"') && t.includes('regularMarketPrice'));
+            let txt;
+            try { txt = await tryFetch(url); }
+            catch (e) { txt = await tryFetch(url.replace('query1.finance.yahoo.com', 'query2.finance.yahoo.com')); }
             const d = JSON.parse(txt);
             return d?.chart?.result?.[0]?.meta?.regularMarketPrice;
         };
@@ -5648,6 +5791,22 @@ __PATHS__
     ];
 
     async function fetchGeophysical() {
+        // v5.7: 1 ретрай — open-meteo іноді віддає 429/таймаут разово
+        try {
+            await _fetchGeophysicalOnce();
+        } catch (e) {
+            try {
+                await new Promise(r => setTimeout(r, 3000));
+                await _fetchGeophysicalOnce();
+            } catch (e2) {
+                $('src-geo').innerText = 'DEAD';
+                $('src-geo').className = 'src-ind dead';
+                log('Метео API: ' + e2.message, 'METEO');
+            }
+        }
+    }
+
+    async function _fetchGeophysicalOnce() {
         try {
             // Multi-city weather: Open-Meteo supports comma-separated lat/lon
             // for batch requests — single API call returns array of 4 cities.
@@ -5720,6 +5879,7 @@ __PATHS__
             $('src-geo').innerText = 'DEAD';
             $('src-geo').className = 'src-ind dead';
             log('Метео API: ' + e.message, 'METEO');
+            throw e;   // v5.7: прокидаємо далі для ретраю у fetchGeophysical
         }
     }
 
@@ -6542,9 +6702,17 @@ __PATHS__
     }
 
     async function fetchStopFake() {
-        // v5.4 FIX: cors.sh мертвий. Primary = rss2json (той самий сервіс, що
-        // працює для 28 RSS-джерел картки 3), fallback = XML через гонку проксі.
-        // --- Path 1: rss2json (JSON, стабільний) ---
+        // v5.7 FIX (10.2026): rss2json.com тепер 403 (Cloudflare) для ВСІХ → ПЕРВИННИЙ
+        // шлях = прямий XML через гонку 7 CORS-проксі; rss2json — фолбек.
+        // --- Path 1: прямий XML через multi-proxy race ---
+        try {
+            const xml = await fetchViaProxy(STOPFAKE_URL, 9000, t => t.includes('<item'));
+            const items = _parseStopFakeRSS(xml);
+            _sfApplyItems(items);
+            return;
+        } catch (e) { log('StopFake XML: ' + e.message, 'STOPFAKE'); }
+
+        // --- Path 2: rss2json (JSON, фолбек) ---
         try {
             const d = await fetchJSON('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(STOPFAKE_URL), 12000);
             if (d && d.status === 'ok' && Array.isArray(d.items) && d.items.length) {
@@ -6570,14 +6738,6 @@ __PATHS__
             }
             throw new Error('rss2json: bad payload');
         } catch (e) { log('StopFake rss2json fallback: ' + e.message, 'STOPFAKE'); }
-
-        // --- Path 2: direct XML via multi-proxy race ---
-        try {
-            const xml = await fetchViaProxy(STOPFAKE_URL, 9000, t => t.includes('<item'));
-            const items = _parseStopFakeRSS(xml);
-            _sfApplyItems(items);
-            return;
-        } catch (e) { log('StopFake XML fallback: ' + e.message, 'STOPFAKE'); }
 
         // --- Path 3: STALE cache ---
         _sfShowStale(false);
@@ -6738,12 +6898,23 @@ __PATHS__
     async function fetchWikipedia() {
         try {
             // v5.5: розрахунок "вчора" через UTC-дату з поправкою на місяць/рік (фікс 1-го числа: getUTCDate()-1 давав 0)
-            const yd = new Date(Date.now() - 86400000);
-            const y = yd.getUTCFullYear();
-            const m = String(yd.getUTCMonth()+1).padStart(2,'0');
-            const day = String(yd.getUTCDate()).padStart(2,'0');
-            const url = `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/uk.wikipedia/all-access/${y}/${m}/${day}`;
-            const r = await fetchJSON(url);
+            // v5.7: фолбек на day-2/day-3 — API pageviews іноді ще не має даних за вчора
+            const tryDay = async (offsetDays) => {
+                const yd = new Date(Date.now() - offsetDays * 86400000);
+                const y = yd.getUTCFullYear();
+                const m = String(yd.getUTCMonth() + 1).padStart(2, '0');
+                const day = String(yd.getUTCDate()).padStart(2, '0');
+                const url = `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/uk.wikipedia/all-access/${y}/${m}/${day}`;
+                return await fetchJSON(url);
+            };
+            let r = null;
+            for (const off of [1, 2, 3]) {
+                try {
+                    const rr = await tryDay(off);
+                    if (rr && rr.items && rr.items[0] && rr.items[0].articles && rr.items[0].articles.length) { r = rr; break; }
+                } catch (e) { /* пробуємо старшу добу */ }
+            }
+            if (!r) throw new Error('немає даних за 3 доби');
             // skip Main_Page / special pages
             const arts = (r.items && r.items[0] && r.items[0].articles) || [];
             const top = arts.find(a => !a.article.startsWith('Main_Page') && !a.article.includes('Special:'));
@@ -8324,7 +8495,7 @@ __PATHS__
         // === NON-BLOCKING FETCH SEQUENCE ===
         // Fire fast/critical sources first (alerts + crypto + finance), then heavy RSS.
         // Each fetcher calls updateUI() when done so the UI refreshes incrementally.
-        log('Запит до українських RSS-джерел (28 джерел, 7 воєнних)...', 'INIT');
+        log('Запит до українських RSS-джерел (28 джерел, 8 воєнних) + GDELT-бекбон...', 'INIT');
 
         // Wave 1 — fast sources (≤3s typically): alerts, crypto, finance, wiki, GS ZSU, StopFake
         // These provide the most actionable real-time info.
